@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MK Academy</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fc;color:#172b4d}
+header{background:#123b78;color:white;padding:20px;text-align:center}
+header h1{margin:0}
+.hero{padding:55px 20px;text-align:center;background:#e7efff}
+.hero h2{font-size:30px;color:#123b78}
+.hero p{line-height:1.6}
+button{background:#123b78;color:white;border:0;padding:13px 20px;border-radius:7px;font-weight:bold}
+main{padding:25px;max-width:1000px;margin:auto}
+h2{text-align:center;color:#123b78}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
+.card{background:white;padding:18px;border-radius:12px;box-shadow:0 2px 10px #0001}
+.card h3{color:#123b78;font-size:17px}
+.card p{color:#596579;font-size:14px;line-height:1.5}
+.price{font-weight:bold;color:#123b78}
+footer{text-align:center;background:#123b78;color:white;padding:20px;margin-top:35px}
+</style>
+</head>
+<body>
+<header>
+<h1>MK ACADEMY</h1>
+<p>Apprendre • Progresser • Réussir</p>
+</header>
+<section class="hero">
+<h2>Développe tes compétences et construis ton avenir.</h2>
+<p>Des formations pratiques pour apprendre, travailler et entreprendre depuis la RDC.</p>
+<a href="#formations"><button>Découvrir les formations</button></a>
+</section>
+<main id="formations">
+<h2>Nos 10 formations</h2>
+<div class="grid" id="catalogue"></div>
+</main>
+<footer>© 2026 MK Academy — Tous droits réservés.</footer>
+<script>
+const formations=[
+["Intelligence artificielle et ChatGPT",7,5],
+["Marketing digital et vente sur Internet",10,7],
+["Créer un business rentable en RDC",7,5],
+["Design graphique avec son téléphone",10,5],
+["Acheter en Chine avec Alibaba",7,5],
+["Trouver un emploi et réussir ses entretiens",5,3],
+["Informatique de bureau : Word et Excel",10,5],
+["Création de contenu et TikTok",7,5],
+["Créer et gérer une boutique en ligne",7,5],
+["Anglais pratique pour le travail et les affaires",30,10]
+];
+const catalogue=document.getElementById("catalogue");
+formations.forEach((f,i)=>{
+const carte=document.createElement("div");
+carte.className="card";
+const titre=document.createElement("h3");
+titre.textContent=(i+1)+". "+f[0];
+const duree=document.createElement("p");
+duree.textContent="Durée : "+f[1]+" jours";
+const prix=document.createElement("p");
+prix.className="price";
+prix.textContent="Prix : "+f[2]+" USD";
+carte.append(titre,duree,prix);
+catalogue.appendChild(carte);
+});
+</script>
+</body>
+</html>
