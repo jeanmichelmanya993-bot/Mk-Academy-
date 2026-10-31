@@ -4,58 +4,367 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MK Academy</title>
+<meta name="theme-color" content="#101735">
+<title>MK Academy | Apprendre et réussir</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap');
+
+:root{
+ --navy:#101735;
+ --navy2:#19234b;
+ --purple:#6654e8;
+ --purple2:#8274ff;
+ --cyan:#36c9c2;
+ --bg:#f5f6fc;
+ --white:#ffffff;
+ --text:#202747;
+ --muted:#78809b;
+ --border:#e8eaf3;
+ --green:#15966b;
+ --red:#d94b62;
+ --shadow:0 12px 35px rgba(25,35,75,.07);
+}
+
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f4f7fc;color:#172b4d}
-header{background:#123b78;color:white;padding:22px;text-align:center}
-header h1{margin:0}
-main{max-width:1100px;margin:25px auto;padding:15px}
-.panel,.card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 12px #0001;margin-bottom:18px}
-.auth{max-width:470px;margin:30px auto}
-h2,h3{color:#123b78}
-h2{text-align:center}
-input,textarea,select{width:100%;padding:12px;margin:7px 0;border:1px solid #ccd5e2;border-radius:7px;font-size:15px}
-textarea{min-height:85px}
-button{background:#123b78;color:white;border:0;padding:12px 16px;border-radius:7px;font-weight:bold;cursor:pointer;margin:4px}
-button:disabled{opacity:.5}
-.secondary{background:#e7efff;color:#123b78}
-.danger{background:#a52b37}
-.success{background:#167447}
+
+html{scroll-behavior:smooth}
+
+body{
+ margin:0;
+ font-family:'DM Sans',Arial,sans-serif;
+ background:var(--bg);
+ color:var(--text);
+ min-height:100vh;
+}
+
+header{
+ position:relative;
+ overflow:hidden;
+ background:linear-gradient(120deg,#101735 0%,#25265d 55%,#5547b9 100%);
+ color:white;
+ padding:38px 20px 34px;
+ text-align:center;
+}
+
+header:before,
+header:after{
+ content:"";
+ position:absolute;
+ border-radius:50%;
+ background:rgba(255,255,255,.06);
+}
+
+header:before{
+ width:260px;height:260px;
+ top:-150px;left:-60px;
+}
+
+header:after{
+ width:300px;height:300px;
+ bottom:-230px;right:-50px;
+}
+
+header h1{
+ position:relative;
+ margin:0;
+ font-family:'Manrope',sans-serif;
+ font-size:clamp(27px,5vw,38px);
+ font-weight:800;
+ letter-spacing:3px;
+}
+
+header p{
+ position:relative;
+ color:#d8d8ff;
+ margin:9px 0 0;
+ font-size:14px;
+ letter-spacing:1.2px;
+}
+
+main{
+ max-width:1150px;
+ margin:32px auto;
+ padding:0 18px;
+}
+
+.panel,.card{
+ background:var(--white);
+ border:1px solid var(--border);
+ border-radius:20px;
+ box-shadow:var(--shadow);
+ padding:25px;
+ margin-bottom:22px;
+}
+
+.auth{
+ max-width:490px;
+ margin:45px auto;
+ padding:35px;
+ border-radius:24px;
+}
+
+.auth h2{
+ font-size:25px;
+ margin-top:5px;
+}
+
+h2,h3{
+ font-family:'Manrope',sans-serif;
+ color:var(--navy);
+}
+
+h2{
+ text-align:center;
+ font-size:24px;
+ margin:8px 0 23px;
+}
+
+h3{
+ font-size:18px;
+ margin-top:0;
+}
+
+input,textarea,select{
+ display:block;
+ width:100%;
+ padding:14px 15px;
+ margin:10px 0;
+ border:1px solid #e0e3ef;
+ border-radius:12px;
+ background:#fafbff;
+ color:var(--text);
+ font-family:inherit;
+ font-size:15px;
+ outline:none;
+ transition:.2s;
+}
+
+input:focus,textarea:focus,select:focus{
+ border-color:var(--purple);
+ background:white;
+ box-shadow:0 0 0 3px rgba(102,84,232,.11);
+}
+
+input[type="checkbox"]{
+ display:inline-block;
+ width:auto;
+ margin:0 8px 0 0;
+ accent-color:var(--purple);
+ transform:scale(1.15);
+}
+
+textarea{
+ min-height:100px;
+ resize:vertical;
+}
+
+button{
+ border:0;
+ border-radius:11px;
+ padding:13px 18px;
+ background:linear-gradient(135deg,var(--purple),#5142c9);
+ color:white;
+ font-family:inherit;
+ font-size:14px;
+ font-weight:700;
+ cursor:pointer;
+ margin:4px;
+ transition:transform .2s,box-shadow .2s,opacity .2s;
+ box-shadow:0 5px 12px rgba(102,84,232,.16);
+}
+
+button:hover{
+ transform:translateY(-2px);
+ box-shadow:0 8px 18px rgba(102,84,232,.23);
+}
+
+button:active{transform:scale(.98)}
+button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+.secondary{
+ background:#eeedff;
+ color:#5142c9;
+ box-shadow:none;
+}
+
+.secondary:hover{background:#e3e0ff;box-shadow:none}
+
+.danger{
+ background:#fff0f2;
+ color:var(--red);
+ box-shadow:none;
+}
+
+.danger:hover{background:#ffe1e6;box-shadow:none}
+
+.success{
+ background:#e5f8f0;
+ color:#087b55;
+ box-shadow:none;
+}
+
+.success:hover{background:#d2f2e4;box-shadow:none}
+
 .hidden{display:none!important}
-.actions{text-align:center}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:15px}
-.card h3{margin-top:0}
-.price{font-weight:bold;color:#123b78}
-.status{display:inline-block;background:#e7efff;color:#123b78;padding:6px 9px;border-radius:6px;margin:3px}
-nav{display:flex;flex-wrap:wrap;justify-content:center;margin:15px 0}
-nav button{margin:4px}
-.section{margin-top:25px}
-.message{text-align:center;line-height:1.5;margin:12px}
-table{width:100%;border-collapse:collapse;background:white}
-th,td{padding:10px;border-bottom:1px solid #e1e7ef;text-align:left;font-size:14px}
-.table-wrap{overflow-x:auto}
-footer{text-align:center;background:#123b78;color:white;padding:20px;margin-top:35px}
-@media(max-width:600px){th,td{font-size:12px;padding:7px}button{font-size:13px}}
+
+.actions{text-align:center;margin:20px 0}
+
+.actions button{min-width:145px}
+
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(245px,1fr));
+ gap:20px;
+}
+
+.card{
+ margin:0;
+ padding:23px;
+ transition:transform .2s,box-shadow .2s;
+}
+
+.card:hover{
+ transform:translateY(-4px);
+ box-shadow:0 16px 35px rgba(25,35,75,.11);
+}
+
+.card h3{margin-bottom:12px}
+
+.card p{
+ color:var(--muted);
+ line-height:1.65;
+ font-size:14px;
+}
+
+.card .price{
+ color:var(--purple);
+ font-size:19px;
+ font-weight:800;
+}
+
+.card button{margin-top:12px}
+
+.status{
+ display:inline-block;
+ background:#efedff;
+ color:#5948d2;
+ padding:7px 11px;
+ border-radius:20px;
+ margin:3px;
+ font-size:12px;
+ font-weight:700;
+}
+
+nav{
+ display:flex;
+ flex-wrap:wrap;
+ justify-content:center;
+ gap:7px;
+ margin:20px 0 0;
+}
+
+nav button{
+ border-radius:10px;
+ margin:0;
+}
+
+.section{margin-top:30px}
+
+.message{
+ text-align:center;
+ line-height:1.6;
+ margin:14px 0;
+ color:var(--muted);
+ font-size:14px;
+}
+
+#accountType{
+ color:var(--muted);
+ font-weight:600;
+}
+
+#courseForm label{
+ display:inline-flex;
+ align-items:center;
+ color:var(--text);
+ font-size:14px;
+ margin:10px 0;
+}
+
+.table-wrap{
+ overflow-x:auto;
+ border-radius:12px;
+ border:1px solid var(--border);
+}
+
+table{
+ width:100%;
+ border-collapse:collapse;
+ background:white;
+ min-width:650px;
+}
+
+th,td{
+ padding:14px 12px;
+ border-bottom:1px solid var(--border);
+ text-align:left;
+ font-size:13px;
+}
+
+th{
+ background:#f5f4ff;
+ color:#5142c9;
+ font-weight:800;
+}
+
+td{color:var(--text)}
+tr:last-child td{border-bottom:0}
+
+footer{
+ text-align:center;
+ background:var(--navy);
+ color:#d9dcf1;
+ padding:25px 15px;
+ margin-top:55px;
+ font-size:13px;
+}
+
+@media(max-width:650px){
+ header{padding:30px 15px}
+ main{margin:20px auto;padding:0 12px}
+ .panel{padding:18px;border-radius:16px}
+ .auth{padding:25px 19px;margin:25px auto}
+ h2{font-size:21px}
+ nav{display:grid;grid-template-columns:1fr 1fr}
+ nav button{width:100%;font-size:12px;padding:12px 7px}
+ .grid{grid-template-columns:1fr}
+ .card{padding:20px}
+ th,td{font-size:12px;padding:10px}
+ button{font-size:13px}
+}
 </style>
 </head>
+
 <body>
 
 <header>
 <h1>MK ACADEMY</h1>
-<p>Apprendre • Progresser • Réussir</p>
+<p>APPRENDRE • PROGRESSER • RÉUSSIR</p>
 </header>
 
 <main>
 
 <section id="authSection" class="panel auth">
 <h2>Bienvenue sur MK Academy</h2>
-<p style="text-align:center">Crée ton compte ou connecte-toi.</p>
+<p class="message">Développe tes compétences et construis ton avenir avec nos formations.</p>
+
 <div class="actions">
 <button onclick="showForm('signup')">Créer un compte</button>
 <button class="secondary" onclick="showForm('login')">Se connecter</button>
 </div>
+
 <form id="authForm">
 <div id="nameArea">
 <input id="fullname" placeholder="Nom complet">
@@ -72,6 +381,7 @@ footer{text-align:center;background:#123b78;color:white;padding:20px;margin-top:
 <div class="panel">
 <h2 id="welcome"></h2>
 <p id="accountType" style="text-align:center"></p>
+
 <nav>
 <button onclick="showTab('coursesTab')">Formations</button>
 <button onclick="showTab('myTab')" id="myNav">Mes inscriptions</button>
@@ -80,22 +390,20 @@ footer{text-align:center;background:#123b78;color:white;padding:20px;margin-top:
 </nav>
 </div>
 
-<!-- FORMATIONS -->
 <section id="coursesTab" class="section">
 <h2>Nos formations</h2>
+<p class="message">Découvre nos programmes et choisis la formation qui te correspond.</p>
 <div id="catalogue" class="grid"></div>
 <p id="courseMessage" class="message"></p>
 </section>
 
-<!-- ESPACE APPRENANT -->
 <section id="myTab" class="section hidden">
 <h2>Mon espace apprenant</h2>
+<p class="message">Retrouve ici tes demandes d'inscription et leur état.</p>
 <div id="myEnrollments" class="grid"></div>
 </section>
 
-<!-- ADMINISTRATION -->
 <section id="adminTab" class="section hidden">
-
 <h2>Administration MK Academy</h2>
 
 <div class="panel">
@@ -107,10 +415,12 @@ footer{text-align:center;background:#123b78;color:white;padding:20px;margin-top:
 <input id="courseDuration" type="number" min="1" placeholder="Durée en jours" required>
 <input id="coursePrice" type="number" min="0" step="0.01" placeholder="Prix en USD" required>
 <input id="courseOrder" type="number" min="0" placeholder="Ordre d'affichage" value="0">
+
 <label>
-<input id="coursePublished" type="checkbox" checked style="width:auto">
+<input id="coursePublished" type="checkbox" checked>
 Publier immédiatement
 </label>
+
 <br>
 <button type="submit" id="saveCourse">Ajouter la formation</button>
 <button type="button" class="secondary" onclick="resetCourseForm()">Annuler</button>
@@ -125,6 +435,7 @@ Publier immédiatement
 <h3>Demandes d'inscription et paiements</h3>
 <button onclick="loadAdminEnrollments()">Actualiser les demandes</button>
 <p id="enrollmentMessage" class="message"></p>
+
 <div class="table-wrap">
 <table>
 <thead>
@@ -140,7 +451,6 @@ Publier immédiatement
 </table>
 </div>
 </div>
-
 </section>
 </section>
 </main>
@@ -380,14 +690,14 @@ async function loadMyEnrollments(){
   title.textContent=course?.title||"Formation";
 
   const status=document.createElement("p");
-  status.innerHTML="Inscription : ";
+  status.textContent="Inscription : ";
   const badge=document.createElement("span");
   badge.className="status";
   badge.textContent=statusText(item.enrollment_status);
   status.appendChild(badge);
 
   const payment=document.createElement("p");
-  payment.innerHTML="Paiement : ";
+  payment.textContent="Paiement : ";
   const payBadge=document.createElement("span");
   payBadge.className="status";
   payBadge.textContent=statusText(item.payment_status);
@@ -704,7 +1014,7 @@ db.auth.onAuthStateChange((event,session)=>{
 });
 
 initialize();
-
 </script>
+
 </body>
 </html>
