@@ -5,179 +5,189 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101735">
-<title>MK Academy | Apprendre et réussir</title>
+<title>MK Academy</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap');
 
 :root{
- --navy:#101735;
- --navy2:#19234b;
- --purple:#6654e8;
- --purple2:#8274ff;
- --cyan:#36c9c2;
- --bg:#f5f6fc;
- --white:#ffffff;
+ --bg:#f3f4fa;
+ --surface:#ffffff;
+ --surface2:#f8f8fc;
  --text:#202747;
- --muted:#78809b;
- --border:#e8eaf3;
- --green:#15966b;
- --red:#d94b62;
- --shadow:0 12px 35px rgba(25,35,75,.07);
+ --muted:#7d849d;
+ --navy:#101735;
+ --navy2:#1b2550;
+ --purple:#6956e8;
+ --purple2:#8b7bff;
+ --gold:#d6ae62;
+ --border:#e8eaf2;
+ --shadow:0 8px 28px rgba(23,31,67,.07);
+ --radius:18px;
 }
 
 *{box-sizing:border-box}
-
 html{scroll-behavior:smooth}
 
 body{
  margin:0;
  font-family:'DM Sans',Arial,sans-serif;
  background:var(--bg);
+ background-image:var(--wallpaper,none);
+ background-size:cover;
+ background-position:center;
+ background-attachment:fixed;
  color:var(--text);
  min-height:100vh;
+ transition:background-color .3s,color .3s;
+}
+
+body.dark{
+ --bg:#101426;
+ --surface:#191e35;
+ --surface2:#202641;
+ --text:#f0f1fa;
+ --muted:#a3aac1;
+ --border:#303751;
+ --shadow:0 8px 28px rgba(0,0,0,.18);
+}
+
+body.custom-wallpaper .panel,
+body.custom-wallpaper .card,
+body.custom-wallpaper .auth{
+ backdrop-filter:blur(12px);
 }
 
 header{
+ background:linear-gradient(120deg,#101735,#28245e 60%,#5444b2);
+ color:white;
+ text-align:center;
+ padding:35px 18px;
  position:relative;
  overflow:hidden;
- background:linear-gradient(120deg,#101735 0%,#25265d 55%,#5547b9 100%);
- color:white;
- padding:38px 20px 34px;
- text-align:center;
-}
-
-header:before,
-header:after{
- content:"";
- position:absolute;
- border-radius:50%;
- background:rgba(255,255,255,.06);
 }
 
 header:before{
+ content:"";
+ position:absolute;
  width:260px;height:260px;
- top:-150px;left:-60px;
+ border-radius:50%;
+ background:rgba(255,255,255,.05);
+ top:-160px;left:-40px;
 }
 
 header:after{
- width:300px;height:300px;
- bottom:-230px;right:-50px;
+ content:"";
+ position:absolute;
+ width:250px;height:250px;
+ border-radius:50%;
+ background:rgba(214,174,98,.10);
+ bottom:-190px;right:-40px;
 }
 
-header h1{
+.brand{
  position:relative;
- margin:0;
  font-family:'Manrope',sans-serif;
- font-size:clamp(27px,5vw,38px);
+ font-size:34px;
  font-weight:800;
  letter-spacing:3px;
+ margin:0;
+ background:linear-gradient(90deg,#fff0c9,#d6ae62,#fff4d9);
+ -webkit-background-clip:text;
+ background-clip:text;
+ color:transparent;
 }
 
 header p{
  position:relative;
- color:#d8d8ff;
+ color:#e3e1fa;
+ font-size:13px;
+ letter-spacing:1.5px;
  margin:9px 0 0;
- font-size:14px;
- letter-spacing:1.2px;
 }
 
 main{
- max-width:1150px;
- margin:32px auto;
+ max-width:1160px;
+ margin:30px auto;
  padding:0 18px;
 }
 
-.panel,.card{
- background:var(--white);
+.panel,.card,.auth{
+ background:var(--surface);
  border:1px solid var(--border);
- border-radius:20px;
+ border-radius:var(--radius);
  box-shadow:var(--shadow);
- padding:25px;
- margin-bottom:22px;
+ padding:24px;
+ margin-bottom:20px;
+ transition:background .3s,border .3s,box-shadow .25s;
 }
 
 .auth{
  max-width:490px;
- margin:45px auto;
- padding:35px;
- border-radius:24px;
-}
-
-.auth h2{
- font-size:25px;
- margin-top:5px;
+ margin:40px auto;
+ padding:32px;
 }
 
 h2,h3{
  font-family:'Manrope',sans-serif;
- color:var(--navy);
+ color:var(--text);
 }
 
 h2{
  text-align:center;
  font-size:24px;
- margin:8px 0 23px;
+ margin:8px 0 18px;
 }
 
-h3{
- font-size:18px;
- margin-top:0;
-}
+h3{font-size:18px;margin-top:0}
+
+p{line-height:1.6}
 
 input,textarea,select{
  display:block;
  width:100%;
- padding:14px 15px;
+ padding:14px;
  margin:10px 0;
- border:1px solid #e0e3ef;
- border-radius:12px;
- background:#fafbff;
+ border:1px solid var(--border);
+ border-radius:11px;
+ background:var(--surface2);
  color:var(--text);
- font-family:inherit;
- font-size:15px;
+ font:inherit;
  outline:none;
- transition:.2s;
+ transition:border .2s,box-shadow .2s;
 }
 
 input:focus,textarea:focus,select:focus{
  border-color:var(--purple);
- background:white;
- box-shadow:0 0 0 3px rgba(102,84,232,.11);
+ box-shadow:0 0 0 3px rgba(105,86,232,.12);
 }
+
+textarea{min-height:100px;resize:vertical}
 
 input[type="checkbox"]{
  display:inline-block;
  width:auto;
- margin:0 8px 0 0;
+ margin-right:8px;
  accent-color:var(--purple);
- transform:scale(1.15);
-}
-
-textarea{
- min-height:100px;
- resize:vertical;
 }
 
 button{
  border:0;
  border-radius:11px;
- padding:13px 18px;
- background:linear-gradient(135deg,var(--purple),#5142c9);
- color:white;
- font-family:inherit;
- font-size:14px;
- font-weight:700;
- cursor:pointer;
+ padding:12px 17px;
  margin:4px;
+ background:linear-gradient(135deg,var(--purple),#5141c7);
+ color:white;
+ font:700 14px 'DM Sans',sans-serif;
+ cursor:pointer;
+ box-shadow:0 5px 14px rgba(105,86,232,.15);
  transition:transform .2s,box-shadow .2s,opacity .2s;
- box-shadow:0 5px 12px rgba(102,84,232,.16);
 }
 
 button:hover{
  transform:translateY(-2px);
- box-shadow:0 8px 18px rgba(102,84,232,.23);
+ box-shadow:0 9px 19px rgba(105,86,232,.23);
 }
 
 button:active{transform:scale(.98)}
@@ -185,164 +195,236 @@ button:disabled{opacity:.55;cursor:not-allowed;transform:none}
 
 .secondary{
  background:#eeedff;
- color:#5142c9;
+ color:#5142c7;
  box-shadow:none;
 }
-
-.secondary:hover{background:#e3e0ff;box-shadow:none}
 
 .danger{
  background:#fff0f2;
- color:var(--red);
+ color:#c63e58;
  box-shadow:none;
 }
 
-.danger:hover{background:#ffe1e6;box-shadow:none}
-
 .success{
- background:#e5f8f0;
+ background:#e4f7ef;
  color:#087b55;
  box-shadow:none;
 }
 
-.success:hover{background:#d2f2e4;box-shadow:none}
+.gold-button{
+ background:linear-gradient(110deg,#d6ae62,#f0d99d);
+ color:#332747;
+ box-shadow:0 5px 14px rgba(214,174,98,.2);
+}
 
 .hidden{display:none!important}
-
 .actions{text-align:center;margin:20px 0}
 
-.actions button{min-width:145px}
-
-.grid{
- display:grid;
- grid-template-columns:repeat(auto-fit,minmax(245px,1fr));
- gap:20px;
-}
-
-.card{
- margin:0;
- padding:23px;
- transition:transform .2s,box-shadow .2s;
-}
-
-.card:hover{
- transform:translateY(-4px);
- box-shadow:0 16px 35px rgba(25,35,75,.11);
-}
-
-.card h3{margin-bottom:12px}
-
-.card p{
+.message{
+ text-align:center;
  color:var(--muted);
- line-height:1.65;
  font-size:14px;
+ line-height:1.6;
+ margin:14px 0;
 }
 
-.card .price{
- color:var(--purple);
- font-size:19px;
- font-weight:800;
-}
-
-.card button{margin-top:12px}
-
-.status{
- display:inline-block;
- background:#efedff;
- color:#5948d2;
- padding:7px 11px;
- border-radius:20px;
- margin:3px;
- font-size:12px;
- font-weight:700;
-}
+#welcome{text-align:center}
+#accountType{text-align:center;color:var(--muted)}
 
 nav{
  display:flex;
  flex-wrap:wrap;
  justify-content:center;
- gap:7px;
- margin:20px 0 0;
+ gap:8px;
+ margin-top:20px;
 }
 
-nav button{
- border-radius:10px;
- margin:0;
-}
+nav button{margin:0}
 
 .section{margin-top:30px}
 
-.message{
- text-align:center;
- line-height:1.6;
- margin:14px 0;
- color:var(--muted);
- font-size:14px;
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(245px,1fr));
+ gap:19px;
 }
 
-#accountType{
- color:var(--muted);
- font-weight:600;
+.card{
+ margin:0;
+ padding:22px;
 }
 
-#courseForm label{
- display:inline-flex;
- align-items:center;
- color:var(--text);
- font-size:14px;
- margin:10px 0;
+.card:hover{
+ transform:translateY(-4px);
+ box-shadow:0 15px 32px rgba(23,31,67,.12);
+}
+
+.card p{font-size:14px;color:var(--muted)}
+.card .price{font-size:19px;font-weight:800;color:var(--purple)}
+.card button{width:100%;margin-top:10px}
+
+.status{
+ display:inline-block;
+ padding:7px 11px;
+ margin:3px;
+ border-radius:20px;
+ background:#efedff;
+ color:#5746cf;
+ font-size:12px;
+ font-weight:700;
 }
 
 .table-wrap{
  overflow-x:auto;
- border-radius:12px;
  border:1px solid var(--border);
+ border-radius:12px;
 }
 
 table{
  width:100%;
- border-collapse:collapse;
- background:white;
  min-width:650px;
+ border-collapse:collapse;
+ background:var(--surface);
 }
 
 th,td{
- padding:14px 12px;
- border-bottom:1px solid var(--border);
  text-align:left;
+ padding:13px 11px;
+ border-bottom:1px solid var(--border);
  font-size:13px;
+ color:var(--text);
 }
 
-th{
- background:#f5f4ff;
- color:#5142c9;
- font-weight:800;
-}
-
-td{color:var(--text)}
+th{background:var(--surface2);color:var(--purple)}
 tr:last-child td{border-bottom:0}
 
+/* PUBLICITE */
+
+.ad-section{
+ position:relative;
+ overflow:hidden;
+ border-radius:18px;
+ padding:23px;
+ margin:20px 0 28px;
+ background:linear-gradient(115deg,#182047,#30296c);
+ color:white;
+ border:1px solid rgba(214,174,98,.3);
+ box-shadow:0 8px 24px rgba(20,25,65,.10);
+}
+
+.ad-section:after{
+ content:"";
+ position:absolute;
+ width:170px;height:170px;
+ border-radius:50%;
+ background:rgba(214,174,98,.10);
+ right:-60px;top:-90px;
+}
+
+.ad-label{
+ display:inline-block;
+ background:rgba(214,174,98,.18);
+ color:#f2d99f;
+ padding:5px 10px;
+ border-radius:20px;
+ font-size:10px;
+ font-weight:800;
+ letter-spacing:1px;
+}
+
+.ad-section h3{
+ color:white;
+ margin:13px 0 6px;
+ font-size:19px;
+}
+
+.ad-section p{
+ color:#d8d9ee;
+ font-size:13px;
+ margin:0;
+}
+
+.ad-content{
+ position:relative;
+ z-index:1;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:15px;
+ flex-wrap:wrap;
+}
+
+.ad-section .ad-button{
+ background:linear-gradient(110deg,#d6ae62,#f0d99d);
+ color:#282341;
+ box-shadow:none;
+}
+
+.ad-note{
+ text-align:right;
+ font-size:10px!important;
+ color:#aeb4d2!important;
+ margin-top:10px!important;
+}
+
+/* PERSONNALISATION */
+
+.customizer{
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ gap:10px;
+}
+
+.theme-choice{
+ width:42px;
+ height:42px;
+ padding:0;
+ border-radius:50%;
+ border:3px solid var(--surface);
+ outline:1px solid var(--border);
+ box-shadow:none;
+ margin:3px;
+}
+
+.theme-choice:hover{transform:scale(1.1)}
+
+.wallpaper-actions{
+ display:flex;
+ flex-wrap:wrap;
+ gap:8px;
+ align-items:center;
+}
+
+#wallpaperFile{display:none}
+
+.preference-note{
+ font-size:12px;
+ color:var(--muted);
+}
+
 footer{
- text-align:center;
- background:var(--navy);
- color:#d9dcf1;
- padding:25px 15px;
  margin-top:55px;
+ padding:24px;
+ background:#101735;
+ color:#d7daed;
+ text-align:center;
  font-size:13px;
 }
 
 @media(max-width:650px){
- header{padding:30px 15px}
+ header{padding:28px 15px}
+ .brand{font-size:29px}
  main{margin:20px auto;padding:0 12px}
- .panel{padding:18px;border-radius:16px}
- .auth{padding:25px 19px;margin:25px auto}
+ .panel,.card{padding:18px}
+ .auth{padding:23px 18px;margin:25px auto}
  h2{font-size:21px}
  nav{display:grid;grid-template-columns:1fr 1fr}
- nav button{width:100%;font-size:12px;padding:12px 7px}
+ nav button{width:100%;font-size:12px;padding:12px 6px}
  .grid{grid-template-columns:1fr}
- .card{padding:20px}
- th,td{font-size:12px;padding:10px}
- button{font-size:13px}
+ .ad-content{display:block}
+ .ad-section .ad-button{margin-top:15px}
+ th,td{font-size:12px;padding:9px}
 }
 </style>
 </head>
@@ -350,114 +432,180 @@ footer{
 <body>
 
 <header>
-<h1>MK ACADEMY</h1>
-<p>APPRENDRE • PROGRESSER • RÉUSSIR</p>
+ <h1 class="brand">MK ACADEMY</h1>
+ <p>APPRENDRE • PROGRESSER • RÉUSSIR</p>
 </header>
 
 <main>
 
+<!-- AUTHENTIFICATION -->
 <section id="authSection" class="panel auth">
-<h2>Bienvenue sur MK Academy</h2>
-<p class="message">Développe tes compétences et construis ton avenir avec nos formations.</p>
+ <h2>Bienvenue sur MK Academy</h2>
+ <p class="message">Bienvenue sur MK Academy, apprenez, progressez et réussissez.</p>
 
-<div class="actions">
-<button onclick="showForm('signup')">Créer un compte</button>
-<button class="secondary" onclick="showForm('login')">Se connecter</button>
-</div>
+ <div class="actions">
+  <button onclick="showForm('signup')">Créer un compte</button>
+  <button class="secondary" onclick="showForm('login')">Se connecter</button>
+ </div>
 
-<form id="authForm">
-<div id="nameArea">
-<input id="fullname" placeholder="Nom complet">
-</div>
-<input id="email" type="email" placeholder="Adresse e-mail" required>
-<input id="password" type="password" placeholder="Mot de passe" minlength="6" required>
-<button id="submitBtn" style="width:100%">Créer mon compte</button>
-</form>
-<p id="authMessage" class="message"></p>
+ <form id="authForm">
+  <div id="nameArea">
+   <input id="fullname" placeholder="Nom complet">
+  </div>
+  <input id="email" type="email" placeholder="Adresse e-mail" required>
+  <input id="password" type="password" placeholder="Mot de passe" minlength="6" required>
+  <button id="submitBtn" style="width:100%">Créer mon compte</button>
+ </form>
+ <p id="authMessage" class="message"></p>
 </section>
 
+<!-- APPLICATION -->
 <section id="appSection" class="hidden">
 
-<div class="panel">
-<h2 id="welcome"></h2>
-<p id="accountType" style="text-align:center"></p>
+ <div class="panel">
+  <h2 id="welcome"></h2>
+  <p id="accountType"></p>
 
-<nav>
-<button onclick="showTab('coursesTab')">Formations</button>
-<button onclick="showTab('myTab')" id="myNav">Mes inscriptions</button>
-<button onclick="showTab('adminTab')" id="adminNav" class="hidden">Administration</button>
-<button class="danger" onclick="logout()">Déconnexion</button>
-</nav>
-</div>
+  <nav>
+   <button onclick="showTab('coursesTab')">Formations</button>
+   <button onclick="showTab('myTab')">Mes inscriptions</button>
+   <button onclick="showTab('settingsTab')">Personnaliser</button>
+   <button onclick="showTab('adminTab')" id="adminNav" class="hidden">Administration</button>
+   <button class="danger" onclick="logout()">Déconnexion</button>
+  </nav>
+ </div>
 
-<section id="coursesTab" class="section">
-<h2>Nos formations</h2>
-<p class="message">Découvre nos programmes et choisis la formation qui te correspond.</p>
-<div id="catalogue" class="grid"></div>
-<p id="courseMessage" class="message"></p>
-</section>
+ <!-- FORMATIONS -->
+ <section id="coursesTab" class="section">
+  <h2>Nos formations</h2>
+  <p class="message">Découvre nos programmes et choisis la formation qui te correspond.</p>
 
-<section id="myTab" class="section hidden">
-<h2>Mon espace apprenant</h2>
-<p class="message">Retrouve ici tes demandes d'inscription et leur état.</p>
-<div id="myEnrollments" class="grid"></div>
-</section>
+  <!-- ESPACE PUBLICITAIRE -->
+  <div class="ad-section">
+   <div class="ad-content">
+    <div>
+     <span class="ad-label">ESPACE PUBLICITAIRE</span>
+     <h3>Votre marque mérite d'être visible</h3>
+     <p>Présentez vos produits, services ou événements à notre communauté d'apprenants.</p>
+    </div>
+    <div>
+     <button class="ad-button" onclick="contactAdvertising()">Devenir partenaire</button>
+    </div>
+   </div>
+   <p class="ad-note">Emplacement partenaire MK Academy</p>
+  </div>
 
-<section id="adminTab" class="section hidden">
-<h2>Administration MK Academy</h2>
+  <div id="catalogue" class="grid"></div>
+  <p id="courseMessage" class="message"></p>
+ </section>
 
-<div class="panel">
-<h3>Gestion des formations</h3>
-<form id="courseForm">
-<input type="hidden" id="editId">
-<input id="courseTitle" placeholder="Titre de la formation" required>
-<textarea id="courseDescription" placeholder="Description de la formation" required></textarea>
-<input id="courseDuration" type="number" min="1" placeholder="Durée en jours" required>
-<input id="coursePrice" type="number" min="0" step="0.01" placeholder="Prix en USD" required>
-<input id="courseOrder" type="number" min="0" placeholder="Ordre d'affichage" value="0">
+ <!-- ESPACE APPRENANT -->
+ <section id="myTab" class="section hidden">
+  <h2>Mon espace apprenant</h2>
+  <p class="message">Retrouve ici tes demandes d'inscription et leur état.</p>
+  <div id="myEnrollments" class="grid"></div>
+ </section>
 
-<label>
-<input id="coursePublished" type="checkbox" checked>
-Publier immédiatement
-</label>
+ <!-- PERSONNALISATION -->
+ <section id="settingsTab" class="section hidden">
+  <h2>Personnaliser mon espace</h2>
 
-<br>
-<button type="submit" id="saveCourse">Ajouter la formation</button>
-<button type="button" class="secondary" onclick="resetCourseForm()">Annuler</button>
-</form>
-<p id="adminCourseMessage" class="message"></p>
-</div>
+  <div class="panel">
+   <h3>Choisir mon thème</h3>
+   <p class="preference-note">Sélectionne une ambiance pour ton espace personnel.</p>
 
-<h3>Formations enregistrées</h3>
-<div id="adminCourses" class="grid"></div>
+   <div class="customizer">
+    <button class="theme-choice" style="background:#f3f4fa" title="Clair" onclick="setTheme('light')"></button>
+    <button class="theme-choice" style="background:#101426" title="Sombre" onclick="setTheme('dark')"></button>
+    <button class="theme-choice" style="background:linear-gradient(135deg,#101735,#5142c7)" title="Bleu nuit" onclick="setTheme('blue')"></button>
+    <button class="theme-choice" style="background:linear-gradient(135deg,#e9e3d5,#d6ae62)" title="Doré" onclick="setTheme('gold')"></button>
+    <button class="theme-choice" style="background:linear-gradient(135deg,#dff1eb,#73b99c)" title="Nature" onclick="setTheme('nature')"></button>
+   </div>
+  </div>
 
-<div class="panel section">
-<h3>Demandes d'inscription et paiements</h3>
-<button onclick="loadAdminEnrollments()">Actualiser les demandes</button>
-<p id="enrollmentMessage" class="message"></p>
+  <div class="panel">
+   <h3>Mon fond d'écran personnel</h3>
+   <p class="preference-note">Tu peux utiliser une photo de ton téléphone comme fond d'écran.</p>
 
-<div class="table-wrap">
-<table>
-<thead>
-<tr>
-<th>Apprenant</th>
-<th>Formation</th>
-<th>Inscription</th>
-<th>Paiement</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody id="adminEnrollments"></tbody>
-</table>
-</div>
-</div>
-</section>
+   <div class="wallpaper-actions">
+    <button onclick="document.getElementById('wallpaperFile').click()">Choisir une photo</button>
+    <button class="secondary" onclick="removeWallpaper()">Retirer ma photo</button>
+    <input type="file" id="wallpaperFile" accept="image/*">
+   </div>
+   <p id="wallpaperMessage" class="message"></p>
+  </div>
+
+  <div class="panel">
+   <h3>Réinitialiser l'apparence</h3>
+   <p class="preference-note">Revenir au design original de MK Academy.</p>
+   <button class="secondary" onclick="resetAppearance()">Restaurer le thème original</button>
+  </div>
+ </section>
+
+ <!-- ADMINISTRATION -->
+ <section id="adminTab" class="section hidden">
+  <h2>Administration MK Academy</h2>
+
+  <div class="panel">
+   <h3>Gestion des formations</h3>
+   <form id="courseForm">
+    <input type="hidden" id="editId">
+    <input id="courseTitle" placeholder="Titre de la formation" required>
+    <textarea id="courseDescription" placeholder="Description de la formation" required></textarea>
+    <input id="courseDuration" type="number" min="1" placeholder="Durée en jours" required>
+    <input id="coursePrice" type="number" min="0" step="0.01" placeholder="Prix en USD" required>
+    <input id="courseOrder" type="number" min="0" placeholder="Ordre d'affichage" value="0">
+
+    <label>
+     <input id="coursePublished" type="checkbox" checked>
+     Publier immédiatement
+    </label>
+    <br>
+    <button type="submit" id="saveCourse">Ajouter la formation</button>
+    <button type="button" class="secondary" onclick="resetCourseForm()">Annuler</button>
+   </form>
+   <p id="adminCourseMessage" class="message"></p>
+  </div>
+
+  <h3>Formations enregistrées</h3>
+  <div id="adminCourses" class="grid"></div>
+
+  <div class="panel section">
+   <h3>Demandes d'inscription et paiements</h3>
+   <button onclick="loadAdminEnrollments()">Actualiser les demandes</button>
+   <p id="enrollmentMessage" class="message"></p>
+   <div class="table-wrap">
+    <table>
+     <thead>
+      <tr>
+       <th>Apprenant</th>
+       <th>Formation</th>
+       <th>Inscription</th>
+       <th>Paiement</th>
+       <th>Actions</th>
+      </tr>
+     </thead>
+     <tbody id="adminEnrollments"></tbody>
+    </table>
+   </div>
+  </div>
+
+  <div class="panel">
+   <h3>Espace publicitaire</h3>
+   <p>La bannière partenaire est actuellement affichée dans le catalogue des formations.</p>
+   <p class="preference-note">Pour publier une véritable publicité, il faudra ensuite ajouter la gestion des annonces, des images, des liens et des dates de diffusion dans l'administration.</p>
+  </div>
+ </section>
+
 </section>
 </main>
 
-<footer>© 2026 MK Academy — Tous droits réservés.</footer>
+<footer>
+ © 2026 MK Academy — Tous droits réservés.
+</footer>
 
 <script>
+/* CONFIGURATION SUPABASE */
 const SUPABASE_URL="https://symnweeensaeituthxdb.supabase.co";
 const SUPABASE_KEY="sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH";
 
@@ -468,6 +616,8 @@ let currentUser=null;
 let isAdmin=false;
 let enrollmentsMap={};
 
+/* AUTHENTIFICATION */
+
 function showForm(mode){
  currentMode=mode;
  document.getElementById("authMessage").textContent="";
@@ -477,14 +627,13 @@ function showForm(mode){
 }
 
 function showTab(id){
- ["coursesTab","myTab","adminTab"].forEach(tab=>
- document.getElementById(tab).classList.add("hidden")
- );
- document.getElementById(id).classList.remove("hidden");
-}
+ if(id==="adminTab"&&!isAdmin)return;
 
-function safeText(value){
- return value==null?"":String(value);
+ ["coursesTab","myTab","adminTab","settingsTab"].forEach(tab=>{
+  document.getElementById(tab).classList.add("hidden");
+ });
+
+ document.getElementById(id).classList.remove("hidden");
 }
 
 document.getElementById("authForm").addEventListener("submit",async e=>{
@@ -516,7 +665,6 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
    }else{
     message.textContent="Compte créé. Vérifie ton email pour confirmer ton adresse.";
    }
-
   }else{
    const {data,error}=await db.auth.signInWithPassword({email,password});
    if(error)throw error;
@@ -539,7 +687,6 @@ async function enterApp(user){
  "Bienvenue "+(user.user_metadata?.full_name||user.email);
 
  const {data:adminData,error:adminError}=await db.rpc("is_mk_admin");
-
  isAdmin=!adminError&&adminData===true;
 
  document.getElementById("accountType").textContent=
@@ -547,8 +694,10 @@ async function enterApp(user){
 
  document.getElementById("adminNav").classList.toggle("hidden",!isAdmin);
 
- await loadCourses();
+ loadAppearance();
+
  await loadMyEnrollments();
+ await loadCourses();
 
  if(isAdmin){
   await loadAdminCourses();
@@ -558,13 +707,13 @@ async function enterApp(user){
  showTab("coursesTab");
 }
 
+/* CATALOGUE */
+
 async function loadCourses(){
  const catalogue=document.getElementById("catalogue");
  const message=document.getElementById("courseMessage");
 
- catalogue.innerHTML="";
- enrollmentsMap={};
-
+ catalogue.innerHTML="Chargement des formations...";
  const {data,error}=await db.from("courses")
  .select("id,title,description,duration_days,price_usd")
  .eq("is_published",true)
@@ -572,8 +721,11 @@ async function loadCourses(){
 
  if(error){
   message.textContent="Erreur : "+error.message;
+  catalogue.innerHTML="";
   return;
  }
+
+ catalogue.innerHTML="";
 
  if(!data?.length){
   message.textContent="Aucune formation publiée pour le moment.";
@@ -634,18 +786,21 @@ async function enroll(courseId,button){
    throw error;
   }
 
+  enrollmentsMap[courseId]=true;
   button.textContent="Demande envoyée ✓";
+
   document.getElementById("courseMessage").textContent=
   "Ta demande est enregistrée et attend la validation de l'administration.";
 
   await loadMyEnrollments();
-
  }catch(error){
   button.disabled=false;
   button.textContent="S'inscrire à cette formation";
   document.getElementById("courseMessage").textContent=error.message;
  }
 }
+
+/* ESPACE APPRENANT */
 
 async function loadMyEnrollments(){
  const container=document.getElementById("myEnrollments");
@@ -663,11 +818,12 @@ async function loadMyEnrollments(){
 
  if(!data?.length){
   container.textContent="Tu n'as encore aucune inscription.";
-  await loadCatalogueEnrollmentState();
   return;
  }
 
- data.forEach(item=>enrollmentsMap[item.course_id]=item);
+ data.forEach(item=>{
+  enrollmentsMap[item.course_id]=item;
+ });
 
  const courseIds=data.map(item=>item.course_id);
 
@@ -691,6 +847,7 @@ async function loadMyEnrollments(){
 
   const status=document.createElement("p");
   status.textContent="Inscription : ";
+
   const badge=document.createElement("span");
   badge.className="status";
   badge.textContent=statusText(item.enrollment_status);
@@ -698,6 +855,7 @@ async function loadMyEnrollments(){
 
   const payment=document.createElement("p");
   payment.textContent="Paiement : ";
+
   const payBadge=document.createElement("span");
   payBadge.className="status";
   payBadge.textContent=statusText(item.payment_status);
@@ -706,20 +864,6 @@ async function loadMyEnrollments(){
   card.append(title,status,payment);
   container.appendChild(card);
  });
-
- await loadCatalogueEnrollmentState();
-}
-
-async function loadCatalogueEnrollmentState(){
- const {data,error}=await db.from("enrollments")
- .select("course_id")
- .eq("user_id",currentUser.id);
-
- if(!error){
-  enrollmentsMap={};
-  data.forEach(item=>enrollmentsMap[item.course_id]=true);
-  await loadCourses();
- }
 }
 
 function statusText(status){
@@ -732,7 +876,153 @@ function statusText(status){
  return values[status]||status;
 }
 
-/* ADMINISTRATION */
+/* PERSONNALISATION DU FOND D'ECRAN */
+
+function preferenceKey(){
+ return "mk_academy_appearance_"+(currentUser?.id||"guest");
+}
+
+function loadAppearance(){
+ try{
+  const saved=JSON.parse(localStorage.getItem(preferenceKey())||"{}");
+
+  applyTheme(saved.theme||"light");
+
+  if(saved.wallpaper){
+   applyWallpaper(saved.wallpaper);
+  }else{
+   document.body.classList.remove("custom-wallpaper");
+   document.body.style.removeProperty("--wallpaper");
+  }
+ }catch(error){
+  console.warn("Préférences d'apparence indisponibles",error);
+  applyTheme("light");
+ }
+}
+
+function saveAppearance(settings){
+ try{
+  const previous=JSON.parse(localStorage.getItem(preferenceKey())||"{}");
+  localStorage.setItem(preferenceKey(),JSON.stringify({
+   ...previous,...settings
+  }));
+ }catch(error){
+  document.getElementById("wallpaperMessage").textContent=
+   "Impossible de sauvegarder cette image. Essaie une photo plus petite.";
+ }
+}
+
+function applyTheme(theme){
+ document.body.classList.remove("dark");
+ document.body.style.backgroundColor="";
+ document.body.style.removeProperty("--bg");
+
+ if(theme==="dark"){
+  document.body.classList.add("dark");
+ }else if(theme==="blue"){
+  document.body.style.setProperty("--bg","#e9edfa");
+ }else if(theme==="gold"){
+  document.body.style.setProperty("--bg","#f2ebdf");
+ }else if(theme==="nature"){
+  document.body.style.setProperty("--bg","#eaf3ed");
+ }
+}
+
+function setTheme(theme){
+ applyTheme(theme);
+ saveAppearance({theme});
+}
+
+function applyWallpaper(image){
+ document.body.style.setProperty("--wallpaper",'url("'+image+'")');
+ document.body.classList.add("custom-wallpaper");
+}
+
+document.getElementById("wallpaperFile").addEventListener("change",function(e){
+ const file=e.target.files[0];
+ if(!file)return;
+
+ if(!file.type.startsWith("image/")){
+  document.getElementById("wallpaperMessage").textContent="Choisis un fichier image.";
+  return;
+ }
+
+ document.getElementById("wallpaperMessage").textContent="Préparation de la photo...";
+
+ const reader=new FileReader();
+
+ reader.onload=function(event){
+  const image=new Image();
+
+  image.onload=function(){
+   const canvas=document.createElement("canvas");
+   const maxWidth=1000;
+   const scale=Math.min(1,maxWidth/image.width);
+
+   canvas.width=image.width*scale;
+   canvas.height=image.height*scale;
+
+   const context=canvas.getContext("2d");
+   context.drawImage(image,0,0,canvas.width,canvas.height);
+
+   const compressed=canvas.toDataURL("image/jpeg",0.65);
+
+   try{
+    applyWallpaper(compressed);
+    saveAppearance({wallpaper:compressed});
+
+    document.getElementById("wallpaperMessage").textContent=
+     "Ton fond d'écran a été personnalisé.";
+   }catch(error){
+    document.getElementById("wallpaperMessage").textContent=
+     "Cette image est trop volumineuse. Choisis une autre photo.";
+   }
+  };
+
+  image.onerror=function(){
+   document.getElementById("wallpaperMessage").textContent="Impossible de lire cette image.";
+  };
+
+  image.src=event.target.result;
+ };
+
+ reader.onerror=function(){
+  document.getElementById("wallpaperMessage").textContent="Erreur lors de la lecture de la photo.";
+ };
+
+ reader.readAsDataURL(file);
+ e.target.value="";
+});
+
+function removeWallpaper(){
+ document.body.classList.remove("custom-wallpaper");
+ document.body.style.removeProperty("--wallpaper");
+
+ const saved=JSON.parse(localStorage.getItem(preferenceKey())||"{}");
+ delete saved.wallpaper;
+ localStorage.setItem(preferenceKey(),JSON.stringify(saved));
+
+ document.getElementById("wallpaperMessage").textContent="Photo retirée.";
+}
+
+function resetAppearance(){
+ localStorage.removeItem(preferenceKey());
+ document.body.classList.remove("dark","custom-wallpaper");
+ document.body.style.removeProperty("--wallpaper");
+ document.body.style.removeProperty("--bg");
+ document.getElementById("wallpaperMessage").textContent=
+  "Le design original de MK Academy est restauré.";
+}
+
+/* PUBLICITE */
+
+function contactAdvertising(){
+ const subject=encodeURIComponent("Demande de partenariat publicitaire - MK Academy");
+ const body=encodeURIComponent("Bonjour MK Academy,\n\nJe souhaite obtenir des informations sur les possibilités de publicité et de partenariat sur votre plateforme.\n\nCordialement.");
+ window.location.href="mailto:jeanmichelmanya993@gmail.com?subject="+subject+"&body="+body;
+}
+
+/* ADMINISTRATION DES FORMATIONS */
 
 async function loadAdminCourses(){
  if(!isAdmin)return;
@@ -796,7 +1086,6 @@ function slugify(value){
 
 document.getElementById("courseForm").addEventListener("submit",async e=>{
  e.preventDefault();
-
  if(!isAdmin)return;
 
  const id=document.getElementById("editId").value;
@@ -974,6 +1263,8 @@ async function updateEnrollment(id,changes){
  await loadAdminEnrollments();
 }
 
+/* DECONNEXION */
+
 async function logout(){
  const {error}=await db.auth.signOut();
 
@@ -984,12 +1275,20 @@ async function logout(){
 
  currentUser=null;
  isAdmin=false;
+ enrollmentsMap={};
 
  document.getElementById("appSection").classList.add("hidden");
  document.getElementById("authSection").classList.remove("hidden");
  document.getElementById("authForm").reset();
+
+ document.body.classList.remove("dark","custom-wallpaper");
+ document.body.style.removeProperty("--wallpaper");
+ document.body.style.removeProperty("--bg");
+
  showForm("login");
 }
+
+/* INITIALISATION */
 
 async function initialize(){
  const {data,error}=await db.auth.getSession();
@@ -1008,6 +1307,8 @@ db.auth.onAuthStateChange((event,session)=>{
  if(event==="SIGNED_OUT"){
   currentUser=null;
   isAdmin=false;
+  enrollmentsMap={};
+
   document.getElementById("appSection").classList.add("hidden");
   document.getElementById("authSection").classList.remove("hidden");
  }
