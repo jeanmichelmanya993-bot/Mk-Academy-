@@ -4,19 +4,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#101735">
+<meta name="theme-color" content="#101426">
 <title>MK Academy | Apprendre autrement</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 :root{
- --bg:#f5f6fb;--surface:#fff;--surface2:#f8f9fd;
- --text:#18213d;--muted:#7e879f;--navy:#101735;
- --purple:#6956e8;--purple2:#8879ff;--gold:#d9b66e;
- --border:#e9ebf3;--shadow:0 12px 35px rgba(22,31,70,.07);
+ --bg:#101426;
+ --surface:#191f34;
+ --surface2:#222a43;
+ --text:#f4f5fb;
+ --muted:#a2abc1;
+ --border:#303952;
+ --purple:#8975ff;
+ --gold:#e3c477;
+ --shadow:0 12px 35px #0003;
  --radius:20px;
 }
 *{box-sizing:border-box}
@@ -27,15 +30,16 @@ body{
  background-image:var(--wallpaper,none);
  background-size:cover;background-position:center;background-attachment:fixed;
 }
-body.dark{
- --bg:#0e1326;--surface:#171e36;--surface2:#202944;
- --text:#f3f4fc;--muted:#a3acc4;--border:#303a55;
- --shadow:0 12px 35px rgba(0,0,0,.2);
+body.light{
+ --bg:#f3f4fa;--surface:#fff;--surface2:#f5f6fc;
+ --text:#18213d;--muted:#7e879f;--border:#e5e8f1;
+ --shadow:0 12px 35px #17204412;
 }
 button,input,textarea,select{font:inherit}
 button{cursor:pointer;border:0}
 .hidden{display:none!important}
 a{color:inherit;text-decoration:none}
+button:disabled{opacity:.55;cursor:not-allowed}
 
 /* AUTHENTIFICATION */
 .auth-screen{
@@ -43,36 +47,31 @@ a{color:inherit;text-decoration:none}
  background:var(--surface);
 }
 .auth-visual{
- background:linear-gradient(145deg,#101735,#28245e 55%,#6652dc);
- color:white;padding:70px 8%;display:flex;flex-direction:column;
+ background:radial-gradient(circle at 80% 20%,#6554cb 0,transparent 35%),
+ linear-gradient(145deg,#101426,#24234d 60%,#5141a5);
+ color:white;padding:65px 8%;display:flex;flex-direction:column;
  justify-content:space-between;position:relative;overflow:hidden;
 }
-.auth-visual:before,.auth-visual:after{
- content:"";position:absolute;border-radius:50%;
- border:1px solid rgba(255,255,255,.12);
- width:430px;height:430px;right:-180px;top:10%;
+.auth-visual:after{
+ content:"";position:absolute;width:450px;height:450px;
+ border:1px solid #ffffff22;border-radius:50%;right:-180px;top:15%;
+ box-shadow:0 0 0 45px #ffffff08,0 0 0 90px #ffffff05;
 }
-.auth-visual:after{width:300px;height:300px;right:-110px;top:22%}
-.logo{
- font:800 26px 'Manrope',sans-serif;letter-spacing:3px;
- color:#f1d99e;
-}
+.logo{font:800 25px 'Manrope';letter-spacing:3px;color:var(--gold)}
 .auth-visual h1{
- font:800 clamp(38px,5vw,65px) 'Manrope',sans-serif;
+ font:800 clamp(38px,5vw,65px) 'Manrope';
  line-height:1.12;max-width:620px;position:relative;z-index:1;
 }
-.auth-visual h1 span{color:#e4c77f}
-.auth-visual p{color:#d6d9ed;max-width:450px;line-height:1.8}
-.auth-points{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.auth-visual h1 span{color:var(--gold)}
+.auth-visual p{color:#d6d9ed;max-width:460px;line-height:1.8}
+.auth-points{display:flex;flex-wrap:wrap;gap:10px;margin-top:25px}
 .auth-points span{
- border:1px solid rgba(255,255,255,.2);padding:10px 14px;
- border-radius:30px;font-size:12px;color:#f0efff;
+ border:1px solid #ffffff35;padding:10px 14px;
+ border-radius:30px;font-size:12px;
 }
 .auth-side{display:flex;align-items:center;justify-content:center;padding:35px}
-.auth{
- width:100%;max-width:430px;
-}
-.auth h2{font:800 29px 'Manrope',sans-serif;margin:0 0 8px}
+.auth{width:100%;max-width:430px}
+.auth h2{font:800 29px 'Manrope';margin:0 0 8px}
 .auth-sub{color:var(--muted);font-size:14px;margin-bottom:25px}
 .auth input,.field,textarea,select{
  width:100%;padding:14px 15px;border:1px solid var(--border);
@@ -80,154 +79,207 @@ a{color:inherit;text-decoration:none}
  outline:none;margin:8px 0;transition:.2s;
 }
 .auth input:focus,.field:focus,textarea:focus,select:focus{
- border-color:var(--purple);box-shadow:0 0 0 3px #6956e81c;
+ border-color:var(--purple);box-shadow:0 0 0 3px #8975ff25;
 }
 .primary,.secondary,.danger,.success,.gold-button{
  padding:12px 17px;border-radius:12px;font-weight:700;
  transition:.2s;margin:3px;
 }
-.primary{background:linear-gradient(120deg,var(--purple),#5141c7);color:white;box-shadow:0 7px 18px #6956e82a}
-.primary:hover,.gold-button:hover{transform:translateY(-2px)}
-.secondary{background:#eeedff;color:#5142c7}
-.danger{background:#fff0f2;color:#c63e58}
-.success{background:#e4f7ef;color:#087b55}
+.primary{background:linear-gradient(120deg,#8975ff,#5948d0);color:white}
+.secondary{background:#302c55;color:#dcd7ff}
+.danger{background:#6a2d42;color:#ffd9e1}
+.success{background:#174d3e;color:#b8f5dc}
 .gold-button{background:linear-gradient(110deg,#d6ae62,#f0d99d);color:#302744}
+.primary:hover,.gold-button:hover{transform:translateY(-2px)}
 .full{width:100%;margin:12px 0}
 .auth-switch{display:flex;gap:8px;margin:20px 0}
 .auth-switch button{flex:1}
 .message{color:var(--muted);font-size:13px;line-height:1.6}
 
-/* STRUCTURE DE L'APPLICATION */
+/* EN-TÊTE */
 .app-shell{min-height:100vh}
 .topbar{
- height:76px;background:var(--surface);border-bottom:1px solid var(--border);
+ height:72px;background:var(--surface);border-bottom:1px solid var(--border);
  display:flex;align-items:center;justify-content:space-between;
- padding:0 5%;position:sticky;top:0;z-index:20;
+ padding:0 5%;position:sticky;top:0;z-index:30;
 }
-.top-brand{font:800 22px 'Manrope',sans-serif;letter-spacing:2px;color:var(--navy)}
-body.dark .top-brand{color:#f3f4fc}
+.top-brand{font:800 22px 'Manrope';letter-spacing:2px}
 .top-brand span{color:var(--gold)}
-.top-right{display:flex;align-items:center;gap:13px}
+.top-right{display:flex;align-items:center;gap:12px}
+.top-caption{font-size:10px;color:var(--muted);letter-spacing:1px}
 .avatar{
- width:39px;height:39px;border-radius:50%;display:grid;place-items:center;
- background:#eeedff;color:var(--purple);font-weight:800;
+ width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+ background:#40366f;color:white;font-weight:800;
 }
-.top-caption{font-size:12px;color:var(--muted)}
-.layout{display:grid;grid-template-columns:245px minmax(0,1fr);max-width:1500px;margin:auto}
+.logout-top{margin:0;padding:10px 13px;font-size:12px}
+
+/* STRUCTURE */
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1600px;margin:auto}
 .sidebar{
- min-height:calc(100vh - 76px);background:var(--surface);
- border-right:1px solid var(--border);padding:27px 17px;
- position:sticky;top:76px;height:calc(100vh - 76px);
+ min-height:calc(100vh - 72px);background:var(--surface);
+ border-right:1px solid var(--border);padding:25px 15px;
+ position:sticky;top:72px;height:calc(100vh - 72px);
 }
 .side-label{
  font-size:10px;letter-spacing:1.5px;font-weight:800;
- color:var(--muted);padding:0 12px;margin:14px 0 9px;
+ color:var(--muted);padding:0 12px;margin:15px 0 10px;
 }
 .sidebar nav{display:grid;gap:6px}
 .sidebar nav button{
- text-align:left;padding:13px 14px;border-radius:12px;
+ text-align:left;padding:13px 12px;border-radius:12px;
  background:transparent;color:var(--muted);font-weight:700;
- box-shadow:none;margin:0;display:flex;align-items:center;gap:11px;
+ margin:0;display:flex;align-items:center;gap:11px;
 }
 .sidebar nav button:hover,.sidebar nav button.active{
- background:#efedff;color:var(--purple);
+ background:#302c55;color:#dcd7ff;
 }
-body.dark .sidebar nav button:hover,body.dark .sidebar nav button.active{background:#29284d}
 .nav-icon{width:22px;text-align:center;font-size:17px}
-.sidebar-bottom{position:absolute;bottom:25px;left:17px;right:17px}
+.sidebar-bottom{position:absolute;bottom:22px;left:15px;right:15px}
 .sidebar-bottom button{width:100%}
-.content{padding:32px clamp(17px,4vw,55px) 60px;min-width:0}
+.content{padding:30px clamp(16px,4vw,55px) 70px;min-width:0}
 .welcome-row{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-.eyebrow{font-size:11px;font-weight:800;letter-spacing:1.7px;color:var(--purple);text-transform:uppercase}
-.welcome-title{font:800 clamp(25px,3vw,34px) 'Manrope',sans-serif;margin:7px 0}
-.welcome-sub{color:var(--muted);font-size:14px;margin:0}
-.page-heading{margin:30px 0 20px}
-.page-heading h2{font:800 25px 'Manrope',sans-serif;margin:0 0 7px}
-.page-heading p{color:var(--muted);font-size:14px;margin:0}
+.eyebrow{font-size:10px;font-weight:800;letter-spacing:1.6px;color:var(--purple);text-transform:uppercase}
+.welcome-title{font:800 clamp(24px,3vw,32px) 'Manrope';margin:7px 0}
+.welcome-sub{color:var(--muted);font-size:13px;margin:0}
+.page-heading{margin:32px 0 20px}
+.page-heading h2{font:800 25px 'Manrope';margin:6px 0}
+.page-heading p{color:var(--muted);font-size:13px;margin:0}
 
-/* HERO */
+/* BANNIÈRE PRINCIPALE */
 .hero{
- margin:27px 0 25px;border-radius:24px;padding:35px;
+ margin:25px 0;border-radius:25px;padding:35px;
  color:white;position:relative;overflow:hidden;
- background:linear-gradient(115deg,#121a3b,#302a70 60%,#6654d9);
- box-shadow:0 18px 40px #25235b22;
-}
-.hero:before{
- content:"";position:absolute;width:320px;height:320px;
- border:1px solid #ffffff20;border-radius:50%;right:-100px;top:-160px;
+ background:radial-gradient(circle at 85% 40%,#7665db 0,transparent 30%),
+ linear-gradient(115deg,#191f43,#302968 65%,#5142a0);
+ box-shadow:0 18px 40px #0003;
 }
 .hero:after{
- content:"";position:absolute;width:230px;height:230px;
- border:1px solid #ffffff20;border-radius:50%;right:-55px;top:-110px;
+ content:"✦";position:absolute;right:9%;top:12%;
+ font-size:100px;color:#ffffff16;
 }
-.hero-inner{position:relative;z-index:1;max-width:650px}
+.hero-inner{position:relative;z-index:1;max-width:680px}
 .hero-tag{
  display:inline-block;padding:7px 11px;border-radius:30px;
- background:#ffffff18;color:#f3d99d;font-size:10px;
- font-weight:800;letter-spacing:1.2px;
+ background:#ffffff18;color:#f3d99d;font-size:10px;font-weight:800;
+ letter-spacing:1.2px;
 }
-.hero h2{font:800 clamp(27px,4vw,39px) 'Manrope',sans-serif;line-height:1.2;margin:17px 0 10px}
+.hero h2{font:800 clamp(27px,4vw,39px) 'Manrope';line-height:1.2;margin:17px 0 10px}
 .hero p{color:#d8daf0;max-width:520px;line-height:1.7;font-size:14px}
-.hero button{margin:13px 0 0}
 
-/* CARTES ET CONTENU */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:20px 0 30px}
+/* STATISTIQUES */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0 30px}
 .stat-card,.panel,.card{
  background:var(--surface);border:1px solid var(--border);
  border-radius:var(--radius);box-shadow:var(--shadow);
 }
-.stat-card{padding:19px;display:flex;gap:13px;align-items:center}
+.stat-card{padding:17px;display:flex;gap:12px;align-items:center}
 .stat-icon{
- width:43px;height:43px;border-radius:13px;display:grid;place-items:center;
- background:#efedff;color:var(--purple);font-size:20px;
+ width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
+ background:#302c55;color:#c6baff;font-size:19px;
 }
-.stat-card strong{display:block;font:800 20px 'Manrope',sans-serif}
-.stat-card small{color:var(--muted);font-size:11px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:18px}
-.card{padding:0;overflow:hidden;transition:transform .22s,box-shadow .22s}
-.card:hover{transform:translateY(-5px);box-shadow:0 17px 38px #17204417}
+.stat-card strong{display:block;font:800 17px 'Manrope'}
+.stat-card small{color:var(--muted);font-size:10px}
+
+/* CATÉGORIES */
+.category-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.category-card{
+ border:1px solid var(--border);border-radius:18px;padding:17px 15px;
+ min-height:145px;display:flex;flex-direction:column;justify-content:space-between;
+ text-align:left;color:white;position:relative;overflow:hidden;
+ transition:.2s;box-shadow:var(--shadow);
+}
+.category-card:hover{transform:translateY(-4px);filter:brightness(1.1)}
+.category-card.active{outline:3px solid var(--gold);outline-offset:2px}
+.category-card .category-emoji{font-size:35px;line-height:1}
+.category-card strong{font:800 14px 'Manrope';display:block}
+.category-card small{font-size:10px;opacity:.8}
+.cat-blue{background:linear-gradient(140deg,#174a83,#2375b7)}
+.cat-orange{background:linear-gradient(140deg,#93451f,#db813c)}
+.cat-purple{background:linear-gradient(140deg,#52348d,#895bd1)}
+.cat-green{background:linear-gradient(140deg,#17624d,#329a70)}
+.cat-pink{background:linear-gradient(140deg,#853c69,#ca679c)}
+.cat-teal{background:linear-gradient(140deg,#145e70,#2697a4)}
+.cat-gold{background:linear-gradient(140deg,#795a24,#bd9441)}
+.cat-gray{background:linear-gradient(140deg,#39445e,#65718d)}
+.category-card:after{
+ content:"";position:absolute;width:100px;height:100px;border:1px solid #ffffff30;
+ border-radius:50%;right:-35px;top:-35px;
+}
+.category-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:22px 0 13px}
+.category-tools h3{font:800 18px 'Manrope';margin:0}
+.view-switch{display:flex;gap:5px}
+.view-switch button{
+ background:var(--surface2);color:var(--muted);padding:9px 12px;
+ border-radius:9px;margin:0;
+}
+.view-switch button.active{background:#40366f;color:white}
+.search-box{
+ display:flex;align-items:center;gap:8px;background:var(--surface);
+ border:1px solid var(--border);border-radius:13px;padding:0 13px;margin:15px 0;
+}
+.search-box input{border:0!important;background:transparent!important;margin:0!important;box-shadow:none!important;color:var(--text);min-width:0}
+.search-box span{color:var(--muted)}
+
+/* FORMATIONS */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.grid.list-view{grid-template-columns:1fr}
+.card{overflow:hidden;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-4px)}
 .course-cover{
- height:125px;padding:17px;display:flex;align-items:flex-end;
- background:linear-gradient(135deg,#171f48,#5547c7);
+ height:120px;padding:17px;display:flex;align-items:flex-end;
+ background:linear-gradient(135deg,#252b56,#6653c7);
  color:white;position:relative;overflow:hidden;
 }
 .course-cover:after{
- content:"";position:absolute;width:145px;height:145px;border-radius:50%;
- border:1px solid #ffffff30;right:-30px;top:-65px;
+ content:"✦";position:absolute;right:20px;top:5px;font-size:65px;color:#ffffff25;
 }
-.course-cover span{font-size:10px;letter-spacing:1.4px;font-weight:800;color:#f0d99d;position:relative;z-index:1}
-.card-body{padding:20px}
-.card h3{font:800 17px 'Manrope',sans-serif;margin:0 0 9px;color:var(--text)}
-.card p{font-size:13px;color:var(--muted);line-height:1.6}
-.card .price{font-size:20px;color:var(--purple);font-weight:800;margin:12px 0}
-.card button{width:100%;margin:9px 0 0}
-.card-meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:11px}
-.panel{padding:23px;margin-bottom:18px}
-.panel h3{font:800 17px 'Manrope',sans-serif;margin:0 0 12px}
+.course-cover span{font-size:10px;letter-spacing:1.2px;font-weight:800;color:#f0d99d;position:relative;z-index:1}
+.card-body{padding:18px}
+.card h3{font:800 16px 'Manrope';margin:0 0 8px;color:var(--text)}
+.card p{font-size:12px;color:var(--muted);line-height:1.6}
+.card .price{font-size:19px;color:var(--gold);font-weight:800;margin:12px 0}
+.card-meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px}
+.card button{width:100%;margin:8px 0 0}
+.grid.list-view .card{display:grid;grid-template-columns:180px minmax(0,1fr)}
+.grid.list-view .course-cover{height:100%;min-height:150px}
+.panel{padding:22px;margin-bottom:17px}
+.panel h3{font:800 17px 'Manrope';margin:0 0 10px}
 .section{margin-top:25px}
-.status{
- display:inline-block;padding:6px 10px;border-radius:30px;
- background:#efedff;color:#5948cb;font-size:11px;font-weight:800;
-}
+.status{display:inline-block;padding:6px 10px;border-radius:30px;background:#302c55;color:#dcd7ff;font-size:11px;font-weight:800}
 
-/* PUBLICITE */
-.ad-section{
- padding:23px 25px;margin:27px 0;border-radius:18px;
- background:linear-gradient(110deg,#172044,#30296b);
- color:white;position:relative;overflow:hidden;
- border:1px solid #d6ae6250;
+/* BLOCS D'ORIENTATION */
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:25px 0}
+.feature-card{
+ border-radius:20px;padding:22px;min-height:180px;
+ display:flex;flex-direction:column;justify-content:space-between;
+ overflow:hidden;position:relative;
 }
-.ad-section:after{
- content:"";position:absolute;width:180px;height:180px;
- border-radius:50%;border:1px solid #ffffff25;right:-60px;top:-100px;
+.feature-card h3{font:800 18px 'Manrope';margin:10px 0}
+.feature-card p{font-size:12px;line-height:1.6;max-width:330px;color:#e1e3f5}
+.feature-card .feature-icon{font-size:35px}
+.feature-card button{align-self:flex-start;margin:8px 0 0}
+.job-feature{background:linear-gradient(125deg,#174b59,#207f80)}
+.profile-feature{background:linear-gradient(125deg,#493477,#7852ad)}
+.ai-feature{
+ background:radial-gradient(circle at 85% 30%,#6556c6,transparent 35%),
+ linear-gradient(120deg,#20254b,#39316e);
+ border:1px solid #8879ff55;
+}
+.ai-feature .feature-icon{font-size:42px}
+
+/* PUBLICITÉ */
+.ad-section{
+ padding:22px 24px;margin:25px 0;border-radius:18px;
+ background:linear-gradient(110deg,#202746,#37306c);
+ color:white;position:relative;overflow:hidden;border:1px solid #d6ae6250;
 }
 .ad-content{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
 .ad-label{font-size:10px;font-weight:800;letter-spacing:1.5px;color:#f1d99d}
-.ad-section h3{font:800 19px 'Manrope',sans-serif;color:white;margin:9px 0}
-.ad-section p{font-size:13px;color:#d6d9ed;margin:0}
+.ad-section h3{font:800 18px 'Manrope';margin:9px 0}
+.ad-section p{font-size:12px;color:#d6d9ed;margin:0}
 .ad-note{text-align:right;font-size:10px!important;color:#aeb4d2!important;margin-top:12px!important}
 
-/* PERSONNALISATION ET ADMIN */
+/* PERSONNALISATION */
 .theme-choice{
  width:42px;height:42px;padding:0;border-radius:50%;
  border:3px solid var(--surface);outline:1px solid var(--border);margin:5px;
@@ -241,37 +293,53 @@ textarea{min-height:100px;resize:vertical}
 table{width:100%;min-width:650px;border-collapse:collapse;background:var(--surface)}
 th,td{padding:13px 11px;text-align:left;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)}
 th{background:var(--surface2);color:var(--purple)}
-footer{text-align:center;padding:25px;color:var(--muted);font-size:12px}
-body.custom-wallpaper .panel,body.custom-wallpaper .card,body.custom-wallpaper .stat-card{backdrop-filter:blur(12px)}
+footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
 
-@media(max-width:850px){
+/* NAVIGATION MOBILE */
+.mobile-nav{display:none}
+@media(max-width:900px){
  .auth-screen{grid-template-columns:1fr}
  .auth-visual{display:none}
  .auth-side{min-height:100vh}
  .layout{grid-template-columns:1fr}
- .sidebar{
-  position:sticky;top:76px;z-index:15;height:auto;min-height:0;
-  padding:8px 10px;border-right:0;border-bottom:1px solid var(--border);
+ .sidebar{display:none}
+ .content{padding:22px 18px 100px}
+ .category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .mobile-nav{
+  display:flex;position:fixed;bottom:0;left:0;right:0;z-index:50;
+  background:var(--surface);border-top:1px solid var(--border);
+  justify-content:space-around;padding:9px 4px calc(9px + env(safe-area-inset-bottom));
+  box-shadow:0 -8px 25px #0002;
  }
- .sidebar .side-label,.sidebar-bottom{display:none}
- .sidebar nav{display:flex;overflow-x:auto;gap:5px}
- .sidebar nav button{white-space:nowrap;padding:10px 12px;font-size:11px}
- .nav-icon{display:none}
- .content{padding:22px 17px 50px}
+ .mobile-nav button{
+  background:transparent;color:var(--muted);margin:0;padding:5px 7px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;
+ }
+ .mobile-nav button span{font-size:19px}
+ .mobile-nav button.active{color:var(--purple)}
 }
 @media(max-width:560px){
- .topbar{height:65px;padding:0 16px}
- .top-brand{font-size:18px}
+ .topbar{height:64px;padding:0 12px}
+ .top-brand{font-size:17px}
  .top-caption{display:none}
- .sidebar{top:65px}
- .sidebar nav button{font-size:10px;padding:10px 9px}
- .content{padding:20px 13px 40px}
- .hero{padding:25px 21px}
+ .logout-top{font-size:10px;padding:9px}
+ .content{padding:18px 13px 100px}
+ .hero{padding:25px 20px}
  .stats-grid{grid-template-columns:1fr 1fr}
- .stat-card{padding:13px;gap:9px}
- .stat-card strong{font-size:17px}
+ .stat-card{padding:12px;gap:8px}
+ .stat-card strong{font-size:14px}
+ .category-grid{gap:10px}
+ .category-card{min-height:130px;padding:13px}
+ .category-card .category-emoji{font-size:29px}
+ .category-card strong{font-size:12px}
  .grid{grid-template-columns:1fr}
- .panel{padding:17px}
+ .grid.list-view .card{grid-template-columns:105px minmax(0,1fr)}
+ .grid.list-view .course-cover{min-height:100%;padding:10px}
+ .grid.list-view .course-cover span{font-size:8px}
+ .grid.list-view .card-body{padding:12px}
+ .feature-grid{grid-template-columns:1fr}
+ .panel{padding:16px}
  .auth-side{padding:22px}
 }
 </style>
@@ -293,18 +361,15 @@ body.custom-wallpaper .panel,body.custom-wallpaper .card,body.custom-wallpaper .
   </div>
   <p>© 2026 MK Academy — Apprendre • Progresser • Réussir</p>
  </div>
-
  <div class="auth-side">
   <div class="auth">
    <div class="logo" style="color:var(--purple);font-size:18px">MK ACADEMY</div>
    <h2 id="authTitle">Bienvenue chez vous.</h2>
    <p class="auth-sub" id="authSubtitle">Connectez-vous pour accéder à votre espace d'apprentissage.</p>
-
    <div class="auth-switch">
     <button class="primary" id="signupChoice" onclick="showForm('signup')">Créer un compte</button>
     <button class="secondary" id="loginChoice" onclick="showForm('login')">Se connecter</button>
    </div>
-
    <form id="authForm">
     <div id="nameArea"><input id="fullname" placeholder="Nom complet" autocomplete="name"></div>
     <input id="email" type="email" placeholder="Adresse e-mail" autocomplete="email" required>
@@ -324,9 +389,10 @@ body.custom-wallpaper .panel,body.custom-wallpaper .card,body.custom-wallpaper .
   <div class="top-right">
    <div>
     <div class="top-caption">ESPACE PERSONNEL</div>
-    <strong id="topUser" style="font-size:13px"></strong>
+    <strong id="topUser" style="font-size:12px"></strong>
    </div>
    <div class="avatar" id="userAvatar">M</div>
+   <button class="danger logout-top" onclick="logout()">↪ Sortir</button>
   </div>
  </header>
 
@@ -334,9 +400,9 @@ body.custom-wallpaper .panel,body.custom-wallpaper .card,body.custom-wallpaper .
   <aside class="sidebar">
    <div class="side-label">MENU PRINCIPAL</div>
    <nav>
-    <button class="active" data-tab="coursesTab" onclick="showTab('coursesTab',this)"><span class="nav-icon">⌂</span>Accueil & formations</button>
-    <button data-tab="myTab" onclick="showTab('myTab',this)"><span class="nav-icon">▣</span>Mes inscriptions</button>
-    <button data-tab="settingsTab" onclick="showTab('settingsTab',this)"><span class="nav-icon">⚙</span>Personnaliser</button>
+    <button class="active" data-tab="coursesTab" onclick="showTab('coursesTab',this)"><span class="nav-icon">⌂</span>Accueil</button>
+    <button data-tab="myTab" onclick="showTab('myTab',this)"><span class="nav-icon">▣</span>Mes cours</button>
+    <button data-tab="settingsTab" onclick="showTab('settingsTab',this)"><span class="nav-icon">⚙</span>Mon profil</button>
     <button id="adminNav" class="hidden" data-tab="adminTab" onclick="showTab('adminTab',this)"><span class="nav-icon">◆</span>Administration</button>
    </nav>
    <div class="sidebar-bottom">
@@ -353,29 +419,96 @@ body.custom-wallpaper .panel,body.custom-wallpaper .card,body.custom-wallpaper .
     </div>
    </div>
 
-   <!-- FORMATIONS -->
+   <!-- ACCUEIL ET FORMATIONS -->
    <section id="coursesTab" class="section">
     <div class="hero">
      <div class="hero-inner">
       <span class="hero-tag">L'APPRENTISSAGE SANS LIMITES</span>
-      <h2>Investissez dans vos compétences et construisez votre avenir.</h2>
-      <p>Explorez nos formations, développez votre potentiel et progressez à votre propre rythme.</p>
-      <button class="gold-button" onclick="document.getElementById('catalogue').scrollIntoView({behavior:'smooth'})">Découvrir les formations →</button>
+      <h2>Bienvenue sur MK Academy, apprenez, progressez et réussissez.</h2>
+      <p>Découvrez des compétences utiles, développez votre potentiel et préparez votre avenir professionnel.</p>
+      <button class="gold-button" onclick="document.getElementById('categorySection').scrollIntoView({behavior:'smooth'})">Explorer les catégories →</button>
      </div>
     </div>
 
     <div class="stats-grid">
      <div class="stat-card"><div class="stat-icon">▤</div><div><strong id="courseCount">—</strong><small>Formations disponibles</small></div></div>
      <div class="stat-card"><div class="stat-icon">◎</div><div><strong>À votre rythme</strong><small>Apprentissage flexible</small></div></div>
-     <div class="stat-card"><div class="stat-icon">✦</div><div><strong>MK Academy</strong><small>Votre réussite, notre ambition</small></div></div>
+     <div class="stat-card"><div class="stat-icon">✦</div><div><strong>Votre avenir</strong><small>Votre réussite compte</small></div></div>
     </div>
 
+    <div id="categorySection">
+     <div class="page-heading">
+      <div class="eyebrow">EXPLOREZ NOS DOMAINES</div>
+      <h2>Choisir par Catégories</h2>
+      <p>Trouvez un domaine qui correspond à vos ambitions.</p>
+     </div>
+     <div class="category-grid" id="categoryGrid">
+      <button class="category-card cat-blue" onclick="filterCategory('Informatique',this)">
+       <span class="category-emoji">💻</span><span><strong>L'informatique</strong><small>Technologie et numérique</small></span>
+      </button>
+      <button class="category-card cat-orange" onclick="filterCategory('Langues',this)">
+       <span class="category-emoji">🌍</span><span><strong>Langues et communication</strong><small>Parler et communiquer</small></span>
+      </button>
+      <button class="category-card cat-purple" onclick="filterCategory('Business',this)">
+       <span class="category-emoji">💼</span><span><strong>Business</strong><small>Entreprendre et gérer</small></span>
+      </button>
+      <button class="category-card cat-green" onclick="filterCategory('Marketing',this)">
+       <span class="category-emoji">📣</span><span><strong>Marketing digital</strong><small>Développer son activité</small></span>
+      </button>
+      <button class="category-card cat-pink" onclick="filterCategory('Design',this)">
+       <span class="category-emoji">🎨</span><span><strong>Design et créativité</strong><small>Créer et innover</small></span>
+      </button>
+      <button class="category-card cat-teal" onclick="filterCategory('Emploi',this)">
+       <span class="category-emoji">🧑‍💼</span><span><strong>Emploi et carrière</strong><small>Préparer son avenir</small></span>
+      </button>
+      <button class="category-card cat-gold" onclick="filterCategory('Finance',this)">
+       <span class="category-emoji">📊</span><span><strong>Finance et gestion</strong><small>Gérer ses ressources</small></span>
+      </button>
+      <button class="category-card cat-gray" onclick="filterCategory('Autres',this)">
+       <span class="category-emoji">✨</span><span><strong>Autres domaines</strong><small>Découvrir davantage</small></span>
+      </button>
+     </div>
+    </div>
+
+    <div class="category-tools">
+     <h3 id="catalogueTitle">Toutes les formations</h3>
+     <div class="view-switch">
+      <button id="gridButton" class="active" onclick="setView('grid')">▦ Grille</button>
+      <button id="listButton" onclick="setView('list')">☷ Liste</button>
+     </div>
+    </div>
+    <div class="search-box">
+     <span>⌕</span>
+     <input id="courseSearch" type="search" placeholder="Rechercher une formation..." oninput="renderCourses()">
+    </div>
+    <div id="catalogue" class="grid"></div>
+    <p id="courseMessage" class="message"></p>
+
+    <!-- OUTILS D'ORIENTATION -->
     <div class="page-heading">
-     <div class="eyebrow">DÉVELOPPEZ VOTRE POTENTIEL</div>
-     <h2>Nos formations</h2>
-     <p>Choisissez le programme qui correspond à vos objectifs.</p>
+     <div class="eyebrow">ALLEZ PLUS LOIN</div>
+     <h2>Construisez votre avenir</h2>
+     <p>Des outils pour vous accompagner dans votre parcours.</p>
+    </div>
+    <div class="feature-grid">
+     <div class="feature-card job-feature">
+      <div class="feature-icon">💼</div>
+      <div><h3>Trouvez un emploi</h3><p>Préparez votre candidature et découvrez des conseils pour votre recherche professionnelle.</p>
+      <button class="gold-button" onclick="openCareer('emploi')">Découvrir →</button></div>
+     </div>
+     <div class="feature-card profile-feature">
+      <div class="feature-icon">🎯</div>
+      <div><h3>Des cours selon votre profil</h3><p>Identifiez vos objectifs et découvrez les domaines de formation qui peuvent vous correspondre.</p>
+      <button class="gold-button" onclick="openCareer('profil')">Trouver ma voie →</button></div>
+     </div>
+    </div>
+    <div class="feature-card ai-feature">
+     <div class="feature-icon">🤖</div>
+     <div><h3>Découvrez MK Mentor</h3><p>Votre futur assistant pédagogique pour vous aider à choisir vos formations et progresser dans votre apprentissage.</p>
+     <button class="gold-button" onclick="showMentor()">Découvrir le mentor IA →</button></div>
     </div>
 
+    <!-- PUBLICITÉ -->
     <div class="ad-section">
      <div class="ad-content">
       <div>
@@ -387,9 +520,6 @@ body.custom-wallpaper .panel,body.custom-wallpaper .card,body.custom-wallpaper .
      </div>
      <p class="ad-note">Emplacement publicitaire partenaire — MK Academy</p>
     </div>
-
-    <div id="catalogue" class="grid"></div>
-    <p id="courseMessage" class="message"></p>
    </section>
 
    <!-- MES INSCRIPTIONS -->
@@ -402,12 +532,17 @@ body.custom-wallpaper .panel,body.custom-wallpaper .card,body.custom-wallpaper .
     <div id="myEnrollments" class="grid"></div>
    </section>
 
-   <!-- PERSONNALISATION -->
+   <!-- PROFIL / PERSONNALISATION -->
    <section id="settingsTab" class="section hidden">
     <div class="page-heading">
      <div class="eyebrow">VOTRE ESPACE, VOTRE STYLE</div>
-     <h2>Personnaliser mon espace</h2>
-     <p>Créez une ambiance qui vous ressemble.</p>
+     <h2>Mon profil et mes préférences</h2>
+     <p>Personnalisez votre environnement d'apprentissage.</p>
+    </div>
+    <div class="panel">
+     <h3>Mon compte</h3>
+     <p id="profileEmail" class="preference-note"></p>
+     <p id="profileName" class="preference-note"></p>
     </div>
     <div class="panel">
      <h3>Choisir mon thème</h3>
@@ -430,8 +565,12 @@ body.custom-wallpaper .panel,body.custom-wallpaper .card,body.custom-wallpaper .
     </div>
     <div class="panel">
      <h3>Restaurer l'apparence originale</h3>
-     <p class="preference-note">Revenir aux paramètres visuels initiaux.</p>
      <button class="secondary" onclick="resetAppearance()">Réinitialiser l'apparence</button>
+    </div>
+    <div class="panel">
+     <h3>Déconnexion</h3>
+     <p class="preference-note">Fermez votre session MK Academy sur cet appareil.</p>
+     <button class="danger" onclick="logout()">↪ Déconnexion</button>
     </div>
    </section>
 
@@ -472,13 +611,22 @@ body.custom-wallpaper .panel,body.custom-wallpaper .card,body.custom-wallpaper .
     </div>
     <div class="panel">
      <h3>Espace publicitaire</h3>
-     <p class="preference-note">La bannière partenaire est actuellement affichée dans le catalogue. La gestion complète des annonces, images, liens et dates de diffusion sera une prochaine fonctionnalité.</p>
+     <p class="preference-note">La bannière partenaire est actuellement un emplacement de présentation. La gestion des annonces, images, liens et dates de diffusion sera développée ultérieurement.</p>
     </div>
    </section>
    <footer>© 2026 MK Academy — Apprendre • Progresser • Réussir</footer>
   </main>
  </div>
 </div>
+
+<!-- NAVIGATION MOBILE -->
+<nav class="mobile-nav hidden" id="mobileNav">
+ <button class="active" onclick="mobileTab('coursesTab',this)"><span>⌂</span>Accueil</button>
+ <button onclick="focusSearch()"><span>⌕</span>Recherche</button>
+ <button onclick="goCategories()"><span>▦</span>Catégories</button>
+ <button onclick="mobileTab('myTab',this)"><span>▣</span>Mes cours</button>
+ <button onclick="mobileTab('settingsTab',this)"><span>◉</span>Profil</button>
+</nav>
 
 <script>
 /* CONFIGURATION SUPABASE */
@@ -487,6 +635,7 @@ const SUPABASE_KEY="sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let currentMode="signup",currentUser=null,isAdmin=false,enrollmentsMap={};
+let allCourses=[],selectedCategory="Toutes",currentView="grid";
 
 function showForm(mode){
  currentMode=mode;
@@ -529,10 +678,13 @@ async function enterApp(user){
  currentUser=user;
  document.getElementById("authSection").classList.add("hidden");
  document.getElementById("appSection").classList.remove("hidden");
+ document.getElementById("mobileNav").classList.remove("hidden");
  const name=user.user_metadata?.full_name||user.email;
  document.getElementById("welcome").textContent="Bienvenue, "+name.split(" ")[0];
  document.getElementById("topUser").textContent=name;
  document.getElementById("userAvatar").textContent=(name[0]||"M").toUpperCase();
+ document.getElementById("profileEmail").textContent="Adresse e-mail : "+user.email;
+ document.getElementById("profileName").textContent="Nom : "+name;
 
  const {data:adminData,error:adminError}=await db.rpc("is_mk_admin");
  isAdmin=!adminError&&adminData===true;
@@ -552,21 +704,81 @@ function showTab(id,button){
  document.getElementById(id).classList.remove("hidden");
  document.querySelectorAll(".sidebar nav button").forEach(b=>b.classList.remove("active"));
  if(button)button.classList.add("active");
+ if(id==="settingsTab"){
+  document.getElementById("profileEmail").textContent="Adresse e-mail : "+(currentUser?.email||"");
+ }
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function mobileTab(id,button){
+ showTab(id,null);
+ document.querySelectorAll(".mobile-nav button").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
+}
+function focusSearch(){
+ mobileTab("coursesTab",document.querySelector(".mobile-nav button"));
+ setTimeout(()=>document.getElementById("courseSearch").focus(),100);
+}
+function goCategories(){
+ mobileTab("coursesTab",document.querySelector(".mobile-nav button"));
+ document.getElementById("categorySection").scrollIntoView({behavior:"smooth"});
 }
 
-/* CATALOGUE */
+/* CATÉGORIES ET CATALOGUE */
+function categoryFor(course){
+ const text=(course.title+" "+(course.description||"")).toLowerCase();
+ if(/anglais|français|langue|communication|orthographe/.test(text))return "Langues";
+ if(/informatique|ordinateur|programm|web|excel|word|bureautique|code|développ/.test(text))return "Informatique";
+ if(/marketing|publicité|tiktok|facebook|réseaux sociaux|community/.test(text))return "Marketing";
+ if(/business|entrepren|commerce|vente|gestion d'entreprise/.test(text))return "Business";
+ if(/design|graphique|photo|vidéo|création|montage/.test(text))return "Design";
+ if(/emploi|carrière|cv|recrutement|profession/.test(text))return "Emploi";
+ if(/finance|comptab|budget|banque|investissement/.test(text))return "Finance";
+ return "Autres";
+}
+function filterCategory(category,button){
+ selectedCategory=category;
+ document.querySelectorAll(".category-card").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
+ document.getElementById("catalogueTitle").textContent=category==="Toutes"?"Toutes les formations":"Formations : "+category;
+ renderCourses();
+ document.getElementById("catalogue").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function setView(view){
+ currentView=view;
+ document.getElementById("gridButton").classList.toggle("active",view==="grid");
+ document.getElementById("listButton").classList.toggle("active",view==="list");
+ renderCourses();
+}
 async function loadCourses(){
  const catalogue=document.getElementById("catalogue"),message=document.getElementById("courseMessage");
  catalogue.innerHTML="Chargement des formations...";
  const {data,error}=await db.from("courses").select("id,title,description,duration_days,price_usd").eq("is_published",true).order("sort_order");
  if(error){message.textContent="Erreur : "+error.message;catalogue.innerHTML="";return}
+ allCourses=data||[];
+ document.getElementById("courseCount").textContent=allCourses.length;
+ renderCourses();
+ if(!allCourses.length)message.textContent="Nos prochaines formations seront bientôt disponibles.";
+ else message.textContent="";
+}
+function renderCourses(){
+ const catalogue=document.getElementById("catalogue"),message=document.getElementById("courseMessage");
+ catalogue.className="grid"+(currentView==="list"?" list-view":"");
  catalogue.innerHTML="";
- document.getElementById("courseCount").textContent=data?.length||0;
- if(!data?.length){message.textContent="Nos prochaines formations seront bientôt disponibles.";return}
- data.forEach((course,index)=>{
+ const query=(document.getElementById("courseSearch")?.value||"").toLowerCase().trim();
+ const filtered=allCourses.filter(course=>{
+  const matchesCategory=selectedCategory==="Toutes"||categoryFor(course)===selectedCategory;
+  const text=(course.title+" "+(course.description||"")).toLowerCase();
+  return matchesCategory&&text.includes(query);
+ });
+ if(!filtered.length){
+  message.textContent="Aucune formation ne correspond à cette recherche.";
+  return;
+ }
+ message.textContent="";
+ filtered.forEach((course,index)=>{
   const card=document.createElement("article");card.className="card";
   const cover=document.createElement("div");cover.className="course-cover";
-  const coverLabel=document.createElement("span");coverLabel.textContent="MK ACADEMY  /  FORMATION "+String(index+1).padStart(2,"0");cover.appendChild(coverLabel);
+  const coverLabel=document.createElement("span");coverLabel.textContent="MK ACADEMY / "+categoryFor(course).toUpperCase();cover.appendChild(coverLabel);
   const body=document.createElement("div");body.className="card-body";
   const title=document.createElement("h3");title.textContent=course.title;
   const description=document.createElement("p");description.textContent=course.description||"Développez vos compétences avec MK Academy.";
@@ -581,9 +793,7 @@ async function loadCourses(){
   else{button.textContent="Découvrir / S'inscrire";button.onclick=()=>enroll(course.id,button)}
   body.append(title,description,meta,price,button);card.append(cover,body);catalogue.appendChild(card);
  });
- message.textContent="";
 }
-
 async function enroll(courseId,button){
  button.disabled=true;button.textContent="Enregistrement...";
  try{
@@ -622,15 +832,27 @@ function statusText(status){
  return ({pending:"En attente",approved:"Validée",rejected:"Refusée",paid:"Payé"})[status]||status;
 }
 
+/* OUTILS D'ORIENTATION : PRÉSENTATION */
+function openCareer(type){
+ if(type==="emploi"){
+  alert("L'espace Trouver un emploi sera développé dans une prochaine étape de MK Academy.");
+ }else{
+  alert("L'outil d'orientation selon votre profil sera développé dans une prochaine étape.");
+ }
+}
+function showMentor(){
+ alert("MK Mentor : l'interface de présentation est prête. La connexion à un véritable assistant IA sera développée séparément.");
+}
+
 /* PERSONNALISATION */
 function preferenceKey(){return "mk_academy_appearance_"+(currentUser?.id||"guest")}
 function loadAppearance(){
  try{
   const saved=JSON.parse(localStorage.getItem(preferenceKey())||"{}");
-  applyTheme(saved.theme||"light");
+  applyTheme(saved.theme||"dark");
   if(saved.wallpaper)applyWallpaper(saved.wallpaper);
   else{document.body.classList.remove("custom-wallpaper");document.body.style.removeProperty("--wallpaper")}
- }catch(error){console.warn(error);applyTheme("light")}
+ }catch(error){console.warn(error);applyTheme("dark")}
 }
 function saveAppearance(settings){
  try{
@@ -641,11 +863,12 @@ function saveAppearance(settings){
  }
 }
 function applyTheme(theme){
- document.body.classList.remove("dark");document.body.style.removeProperty("--bg");
- if(theme==="dark")document.body.classList.add("dark");
- else if(theme==="blue")document.body.style.setProperty("--bg","#e9edfa");
- else if(theme==="gold")document.body.style.setProperty("--bg","#f2ebdf");
- else if(theme==="nature")document.body.style.setProperty("--bg","#eaf3ed");
+ document.body.classList.remove("light");
+ document.body.style.removeProperty("--bg");
+ if(theme==="light")document.body.classList.add("light");
+ else if(theme==="blue")document.body.style.setProperty("--bg","#111b35");
+ else if(theme==="gold")document.body.style.setProperty("--bg","#282318");
+ else if(theme==="nature")document.body.style.setProperty("--bg","#14271f");
 }
 function setTheme(theme){applyTheme(theme);saveAppearance({theme})}
 function applyWallpaper(image){
@@ -681,12 +904,12 @@ function removeWallpaper(){
 }
 function resetAppearance(){
  localStorage.removeItem(preferenceKey());
- document.body.classList.remove("dark","custom-wallpaper");
+ document.body.classList.remove("light","custom-wallpaper");
  document.body.style.removeProperty("--wallpaper");document.body.style.removeProperty("--bg");
  document.getElementById("wallpaperMessage").textContent="L'apparence originale est restaurée.";
 }
 
-/* PUBLICITE */
+/* PUBLICITÉ */
 function contactAdvertising(){
  const subject=encodeURIComponent("Demande de partenariat publicitaire - MK Academy");
  const body=encodeURIComponent("Bonjour MK Academy,\n\nJe souhaite obtenir des informations sur les possibilités de publicité et de partenariat sur votre plateforme.\n\nCordialement.");
@@ -805,15 +1028,16 @@ async function updateEnrollment(id,changes){
  await loadAdminEnrollments();
 }
 
-/* DECONNEXION */
+/* DÉCONNEXION */
 async function logout(){
  const {error}=await db.auth.signOut();
  if(error){alert(error.message);return}
- currentUser=null;isAdmin=false;enrollmentsMap={};
+ currentUser=null;isAdmin=false;enrollmentsMap={};allCourses=[];
  document.getElementById("appSection").classList.add("hidden");
+ document.getElementById("mobileNav").classList.add("hidden");
  document.getElementById("authSection").classList.remove("hidden");
  document.getElementById("authForm").reset();
- document.body.classList.remove("dark","custom-wallpaper");
+ document.body.classList.remove("light","custom-wallpaper");
  document.body.style.removeProperty("--wallpaper");document.body.style.removeProperty("--bg");
  showForm("login");
 }
@@ -826,8 +1050,9 @@ async function initialize(){
 }
 db.auth.onAuthStateChange((event,session)=>{
  if(event==="SIGNED_OUT"){
-  currentUser=null;isAdmin=false;enrollmentsMap={};
+  currentUser=null;isAdmin=false;enrollmentsMap={};allCourses=[];
   document.getElementById("appSection").classList.add("hidden");
+  document.getElementById("mobileNav").classList.add("hidden");
   document.getElementById("authSection").classList.remove("hidden");
  }
 });
