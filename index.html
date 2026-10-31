@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -11,16 +10,10 @@
 
 <style>
 :root{
- --bg:#101426;
- --surface:#191f34;
- --surface2:#222a43;
- --text:#f4f5fb;
- --muted:#a2abc1;
- --border:#303952;
- --purple:#8975ff;
- --gold:#e3c477;
- --shadow:0 12px 35px #0003;
- --radius:20px;
+ --bg:#101426;--surface:#191f34;--surface2:#222a43;
+ --text:#f4f5fb;--muted:#a2abc1;--border:#303952;
+ --purple:#8975ff;--gold:#e3c477;
+ --shadow:0 12px 35px #0003;--radius:20px;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -65,10 +58,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .auth-visual h1 span{color:var(--gold)}
 .auth-visual p{color:#d6d9ed;max-width:460px;line-height:1.8}
 .auth-points{display:flex;flex-wrap:wrap;gap:10px;margin-top:25px}
-.auth-points span{
- border:1px solid #ffffff35;padding:10px 14px;
- border-radius:30px;font-size:12px;
-}
+.auth-points span{border:1px solid #ffffff35;padding:10px 14px;border-radius:30px;font-size:12px}
 .auth-side{display:flex;align-items:center;justify-content:center;padding:35px}
 .auth{width:100%;max-width:430px}
 .auth h2{font:800 29px 'Manrope';margin:0 0 8px}
@@ -82,8 +72,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
  border-color:var(--purple);box-shadow:0 0 0 3px #8975ff25;
 }
 .primary,.secondary,.danger,.success,.gold-button{
- padding:12px 17px;border-radius:12px;font-weight:700;
- transition:.2s;margin:3px;
+ padding:12px 17px;border-radius:12px;font-weight:700;transition:.2s;margin:3px;
 }
 .primary{background:linear-gradient(120deg,#8975ff,#5948d0);color:white}
 .secondary{background:#302c55;color:#dcd7ff}
@@ -120,19 +109,14 @@ button:disabled{opacity:.55;cursor:not-allowed}
  border-right:1px solid var(--border);padding:25px 15px;
  position:sticky;top:72px;height:calc(100vh - 72px);
 }
-.side-label{
- font-size:10px;letter-spacing:1.5px;font-weight:800;
- color:var(--muted);padding:0 12px;margin:15px 0 10px;
-}
+.side-label{font-size:10px;letter-spacing:1.5px;font-weight:800;color:var(--muted);padding:0 12px;margin:15px 0 10px}
 .sidebar nav{display:grid;gap:6px}
 .sidebar nav button{
  text-align:left;padding:13px 12px;border-radius:12px;
  background:transparent;color:var(--muted);font-weight:700;
  margin:0;display:flex;align-items:center;gap:11px;
 }
-.sidebar nav button:hover,.sidebar nav button.active{
- background:#302c55;color:#dcd7ff;
-}
+.sidebar nav button:hover,.sidebar nav button.active{background:#302c55;color:#dcd7ff}
 .nav-icon{width:22px;text-align:center;font-size:17px}
 .sidebar-bottom{position:absolute;bottom:22px;left:15px;right:15px}
 .sidebar-bottom button{width:100%}
@@ -145,38 +129,25 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .page-heading h2{font:800 25px 'Manrope';margin:6px 0}
 .page-heading p{color:var(--muted);font-size:13px;margin:0}
 
-/* BANNIÈRE PRINCIPALE */
+/* BANNIÈRE */
 .hero{
- margin:25px 0;border-radius:25px;padding:35px;
- color:white;position:relative;overflow:hidden;
+ margin:25px 0;border-radius:25px;padding:35px;color:white;
+ position:relative;overflow:hidden;
  background:radial-gradient(circle at 85% 40%,#7665db 0,transparent 30%),
  linear-gradient(115deg,#191f43,#302968 65%,#5142a0);
  box-shadow:0 18px 40px #0003;
 }
-.hero:after{
- content:"✦";position:absolute;right:9%;top:12%;
- font-size:100px;color:#ffffff16;
-}
+.hero:after{content:"✦";position:absolute;right:9%;top:12%;font-size:100px;color:#ffffff16}
 .hero-inner{position:relative;z-index:1;max-width:680px}
-.hero-tag{
- display:inline-block;padding:7px 11px;border-radius:30px;
- background:#ffffff18;color:#f3d99d;font-size:10px;font-weight:800;
- letter-spacing:1.2px;
-}
+.hero-tag{display:inline-block;padding:7px 11px;border-radius:30px;background:#ffffff18;color:#f3d99d;font-size:10px;font-weight:800;letter-spacing:1.2px}
 .hero h2{font:800 clamp(27px,4vw,39px) 'Manrope';line-height:1.2;margin:17px 0 10px}
 .hero p{color:#d8daf0;max-width:520px;line-height:1.7;font-size:14px}
 
 /* STATISTIQUES */
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0 30px}
-.stat-card,.panel,.card{
- background:var(--surface);border:1px solid var(--border);
- border-radius:var(--radius);box-shadow:var(--shadow);
-}
+.stat-card,.panel,.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
 .stat-card{padding:17px;display:flex;gap:12px;align-items:center}
-.stat-icon{
- width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
- background:#302c55;color:#c6baff;font-size:19px;
-}
+.stat-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#302c55;color:#c6baff;font-size:19px}
 .stat-card strong{display:block;font:800 17px 'Manrope'}
 .stat-card small{color:var(--muted);font-size:10px}
 
@@ -185,8 +156,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .category-card{
  border:1px solid var(--border);border-radius:18px;padding:17px 15px;
  min-height:145px;display:flex;flex-direction:column;justify-content:space-between;
- text-align:left;color:white;position:relative;overflow:hidden;
- transition:.2s;box-shadow:var(--shadow);
+ text-align:left;color:white;position:relative;overflow:hidden;transition:.2s;box-shadow:var(--shadow);
 }
 .category-card:hover{transform:translateY(-4px);filter:brightness(1.1)}
 .category-card.active{outline:3px solid var(--gold);outline-offset:2px}
@@ -201,22 +171,13 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .cat-teal{background:linear-gradient(140deg,#145e70,#2697a4)}
 .cat-gold{background:linear-gradient(140deg,#795a24,#bd9441)}
 .cat-gray{background:linear-gradient(140deg,#39445e,#65718d)}
-.category-card:after{
- content:"";position:absolute;width:100px;height:100px;border:1px solid #ffffff30;
- border-radius:50%;right:-35px;top:-35px;
-}
+.category-card:after{content:"";position:absolute;width:100px;height:100px;border:1px solid #ffffff30;border-radius:50%;right:-35px;top:-35px}
 .category-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:22px 0 13px}
 .category-tools h3{font:800 18px 'Manrope';margin:0}
 .view-switch{display:flex;gap:5px}
-.view-switch button{
- background:var(--surface2);color:var(--muted);padding:9px 12px;
- border-radius:9px;margin:0;
-}
+.view-switch button{background:var(--surface2);color:var(--muted);padding:9px 12px;border-radius:9px;margin:0}
 .view-switch button.active{background:#40366f;color:white}
-.search-box{
- display:flex;align-items:center;gap:8px;background:var(--surface);
- border:1px solid var(--border);border-radius:13px;padding:0 13px;margin:15px 0;
-}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:0 13px;margin:15px 0}
 .search-box input{border:0!important;background:transparent!important;margin:0!important;box-shadow:none!important;color:var(--text);min-width:0}
 .search-box span{color:var(--muted)}
 
@@ -225,14 +186,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .grid.list-view{grid-template-columns:1fr}
 .card{overflow:hidden;transition:transform .2s,box-shadow .2s}
 .card:hover{transform:translateY(-4px)}
-.course-cover{
- height:120px;padding:17px;display:flex;align-items:flex-end;
- background:linear-gradient(135deg,#252b56,#6653c7);
- color:white;position:relative;overflow:hidden;
-}
-.course-cover:after{
- content:"✦";position:absolute;right:20px;top:5px;font-size:65px;color:#ffffff25;
-}
+.course-cover{height:120px;padding:17px;display:flex;align-items:flex-end;background:linear-gradient(135deg,#252b56,#6653c7);color:white;position:relative;overflow:hidden}
+.course-cover:after{content:"✦";position:absolute;right:20px;top:5px;font-size:65px;color:#ffffff25}
 .course-cover span{font-size:10px;letter-spacing:1.2px;font-weight:800;color:#f0d99d;position:relative;z-index:1}
 .card-body{padding:18px}
 .card h3{font:800 16px 'Manrope';margin:0 0 8px;color:var(--text)}
@@ -247,32 +202,20 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .section{margin-top:25px}
 .status{display:inline-block;padding:6px 10px;border-radius:30px;background:#302c55;color:#dcd7ff;font-size:11px;font-weight:800}
 
-/* BLOCS D'ORIENTATION */
+/* ORIENTATION */
 .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:25px 0}
-.feature-card{
- border-radius:20px;padding:22px;min-height:180px;
- display:flex;flex-direction:column;justify-content:space-between;
- overflow:hidden;position:relative;
-}
+.feature-card{border-radius:20px;padding:22px;min-height:180px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
 .feature-card h3{font:800 18px 'Manrope';margin:10px 0}
 .feature-card p{font-size:12px;line-height:1.6;max-width:330px;color:#e1e3f5}
 .feature-card .feature-icon{font-size:35px}
 .feature-card button{align-self:flex-start;margin:8px 0 0}
 .job-feature{background:linear-gradient(125deg,#174b59,#207f80)}
 .profile-feature{background:linear-gradient(125deg,#493477,#7852ad)}
-.ai-feature{
- background:radial-gradient(circle at 85% 30%,#6556c6,transparent 35%),
- linear-gradient(120deg,#20254b,#39316e);
- border:1px solid #8879ff55;
-}
+.ai-feature{background:radial-gradient(circle at 85% 30%,#6556c6,transparent 35%),linear-gradient(120deg,#20254b,#39316e);border:1px solid #8879ff55}
 .ai-feature .feature-icon{font-size:42px}
 
 /* PUBLICITÉ */
-.ad-section{
- padding:22px 24px;margin:25px 0;border-radius:18px;
- background:linear-gradient(110deg,#202746,#37306c);
- color:white;position:relative;overflow:hidden;border:1px solid #d6ae6250;
-}
+.ad-section{padding:22px 24px;margin:25px 0;border-radius:18px;background:linear-gradient(110deg,#202746,#37306c);color:white;position:relative;overflow:hidden;border:1px solid #d6ae6250}
 .ad-content{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
 .ad-label{font-size:10px;font-weight:800;letter-spacing:1.5px;color:#f1d99d}
 .ad-section h3{font:800 18px 'Manrope';margin:9px 0}
@@ -280,10 +223,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .ad-note{text-align:right;font-size:10px!important;color:#aeb4d2!important;margin-top:12px!important}
 
 /* PERSONNALISATION */
-.theme-choice{
- width:42px;height:42px;padding:0;border-radius:50%;
- border:3px solid var(--surface);outline:1px solid var(--border);margin:5px;
-}
+.theme-choice{width:42px;height:42px;padding:0;border-radius:50%;border:3px solid var(--surface);outline:1px solid var(--border);margin:5px}
 .wallpaper-actions{display:flex;flex-wrap:wrap;gap:8px}
 #wallpaperFile{display:none}
 .preference-note{font-size:12px;color:var(--muted)}
@@ -308,13 +248,14 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
  .mobile-nav{
   display:flex;position:fixed;bottom:0;left:0;right:0;z-index:50;
   background:var(--surface);border-top:1px solid var(--border);
-  justify-content:space-around;padding:9px 4px calc(9px + env(safe-area-inset-bottom));
-  box-shadow:0 -8px 25px #0002;
+  justify-content:space-around;padding:9px 2px calc(9px + env(safe-area-inset-bottom));
+  box-shadow:0 -8px 25px #0002;gap:0;
  }
  .mobile-nav button{
-  background:transparent;color:var(--muted);margin:0;padding:5px 7px;
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  font-size:10px;font-weight:700;
+  flex:1;min-width:0;background:transparent;color:var(--muted);
+  margin:0;padding:5px 2px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;
+  font-size:9px;font-weight:700;white-space:nowrap;
  }
  .mobile-nav button span{font-size:19px}
  .mobile-nav button.active{color:var(--purple)}
@@ -405,9 +346,7 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
     <button data-tab="settingsTab" onclick="showTab('settingsTab',this)"><span class="nav-icon">⚙</span>Mon profil</button>
     <button id="adminNav" class="hidden" data-tab="adminTab" onclick="showTab('adminTab',this)"><span class="nav-icon">◆</span>Administration</button>
    </nav>
-   <div class="sidebar-bottom">
-    <button class="danger" onclick="logout()">↪ Déconnexion</button>
-   </div>
+   <div class="sidebar-bottom"><button class="danger" onclick="logout()">↪ Déconnexion</button></div>
   </aside>
 
   <main class="content">
@@ -419,7 +358,6 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
     </div>
    </div>
 
-   <!-- ACCUEIL ET FORMATIONS -->
    <section id="coursesTab" class="section">
     <div class="hero">
      <div class="hero-inner">
@@ -429,7 +367,6 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
       <button class="gold-button" onclick="document.getElementById('categorySection').scrollIntoView({behavior:'smooth'})">Explorer les catégories →</button>
      </div>
     </div>
-
     <div class="stats-grid">
      <div class="stat-card"><div class="stat-icon">▤</div><div><strong id="courseCount">—</strong><small>Formations disponibles</small></div></div>
      <div class="stat-card"><div class="stat-icon">◎</div><div><strong>À votre rythme</strong><small>Apprentissage flexible</small></div></div>
@@ -443,30 +380,14 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
       <p>Trouvez un domaine qui correspond à vos ambitions.</p>
      </div>
      <div class="category-grid" id="categoryGrid">
-      <button class="category-card cat-blue" onclick="filterCategory('Informatique',this)">
-       <span class="category-emoji">💻</span><span><strong>L'informatique</strong><small>Technologie et numérique</small></span>
-      </button>
-      <button class="category-card cat-orange" onclick="filterCategory('Langues',this)">
-       <span class="category-emoji">🌍</span><span><strong>Langues et communication</strong><small>Parler et communiquer</small></span>
-      </button>
-      <button class="category-card cat-purple" onclick="filterCategory('Business',this)">
-       <span class="category-emoji">💼</span><span><strong>Business</strong><small>Entreprendre et gérer</small></span>
-      </button>
-      <button class="category-card cat-green" onclick="filterCategory('Marketing',this)">
-       <span class="category-emoji">📣</span><span><strong>Marketing digital</strong><small>Développer son activité</small></span>
-      </button>
-      <button class="category-card cat-pink" onclick="filterCategory('Design',this)">
-       <span class="category-emoji">🎨</span><span><strong>Design et créativité</strong><small>Créer et innover</small></span>
-      </button>
-      <button class="category-card cat-teal" onclick="filterCategory('Emploi',this)">
-       <span class="category-emoji">🧑‍💼</span><span><strong>Emploi et carrière</strong><small>Préparer son avenir</small></span>
-      </button>
-      <button class="category-card cat-gold" onclick="filterCategory('Finance',this)">
-       <span class="category-emoji">📊</span><span><strong>Finance et gestion</strong><small>Gérer ses ressources</small></span>
-      </button>
-      <button class="category-card cat-gray" onclick="filterCategory('Autres',this)">
-       <span class="category-emoji">✨</span><span><strong>Autres domaines</strong><small>Découvrir davantage</small></span>
-      </button>
+      <button class="category-card cat-blue" onclick="filterCategory('Informatique',this)"><span class="category-emoji">💻</span><span><strong>L'informatique</strong><small>Technologie et numérique</small></span></button>
+      <button class="category-card cat-orange" onclick="filterCategory('Langues',this)"><span class="category-emoji">🌍</span><span><strong>Langues et communication</strong><small>Parler et communiquer</small></span></button>
+      <button class="category-card cat-purple" onclick="filterCategory('Business',this)"><span class="category-emoji">💼</span><span><strong>Business</strong><small>Entreprendre et gérer</small></span></button>
+      <button class="category-card cat-green" onclick="filterCategory('Marketing',this)"><span class="category-emoji">📣</span><span><strong>Marketing digital</strong><small>Développer son activité</small></span></button>
+      <button class="category-card cat-pink" onclick="filterCategory('Design',this)"><span class="category-emoji">🎨</span><span><strong>Design et créativité</strong><small>Créer et innover</small></span></button>
+      <button class="category-card cat-teal" onclick="filterCategory('Emploi',this)"><span class="category-emoji">🧑‍💼</span><span><strong>Emploi et carrière</strong><small>Préparer son avenir</small></span></button>
+      <button class="category-card cat-gold" onclick="filterCategory('Finance',this)"><span class="category-emoji">📊</span><span><strong>Finance et gestion</strong><small>Gérer ses ressources</small></span></button>
+      <button class="category-card cat-gray" onclick="filterCategory('Autres',this)"><span class="category-emoji">✨</span><span><strong>Autres domaines</strong><small>Découvrir davantage</small></span></button>
      </div>
     </div>
 
@@ -477,14 +398,10 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
       <button id="listButton" onclick="setView('list')">☷ Liste</button>
      </div>
     </div>
-    <div class="search-box">
-     <span>⌕</span>
-     <input id="courseSearch" type="search" placeholder="Rechercher une formation..." oninput="renderCourses()">
-    </div>
+    <div class="search-box"><span>⌕</span><input id="courseSearch" type="search" placeholder="Rechercher une formation..." oninput="renderCourses()"></div>
     <div id="catalogue" class="grid"></div>
     <p id="courseMessage" class="message"></p>
 
-    <!-- OUTILS D'ORIENTATION -->
     <div class="page-heading">
      <div class="eyebrow">ALLEZ PLUS LOIN</div>
      <h2>Construisez votre avenir</h2>
@@ -493,60 +410,36 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
     <div class="feature-grid">
      <div class="feature-card job-feature">
       <div class="feature-icon">💼</div>
-      <div><h3>Trouvez un emploi</h3><p>Préparez votre candidature et découvrez des conseils pour votre recherche professionnelle.</p>
-      <button class="gold-button" onclick="openCareer('emploi')">Découvrir →</button></div>
+      <div><h3>Trouvez un emploi</h3><p>Préparez votre candidature et découvrez des conseils pour votre recherche professionnelle.</p><button class="gold-button" onclick="openCareer('emploi')">Découvrir →</button></div>
      </div>
      <div class="feature-card profile-feature">
       <div class="feature-icon">🎯</div>
-      <div><h3>Des cours selon votre profil</h3><p>Identifiez vos objectifs et découvrez les domaines de formation qui peuvent vous correspondre.</p>
-      <button class="gold-button" onclick="openCareer('profil')">Trouver ma voie →</button></div>
+      <div><h3>Des cours selon votre profil</h3><p>Identifiez vos objectifs et découvrez les domaines de formation qui peuvent vous correspondre.</p><button class="gold-button" onclick="openCareer('profil')">Trouver ma voie →</button></div>
      </div>
     </div>
     <div class="feature-card ai-feature">
      <div class="feature-icon">🤖</div>
-     <div><h3>Découvrez MK Mentor</h3><p>Votre futur assistant pédagogique pour vous aider à choisir vos formations et progresser dans votre apprentissage.</p>
-     <button class="gold-button" onclick="showMentor()">Découvrir le mentor IA →</button></div>
+     <div><h3>Découvrez MK Mentor</h3><p>Votre futur assistant pédagogique pour vous aider à choisir vos formations et progresser dans votre apprentissage.</p><button class="gold-button" onclick="showMentor()">Découvrir le mentor IA →</button></div>
     </div>
-
-    <!-- PUBLICITÉ -->
     <div class="ad-section">
      <div class="ad-content">
-      <div>
-       <span class="ad-label">ESPACE PARTENAIRE</span>
-       <h3>Votre marque mérite d'être remarquée.</h3>
-       <p>Présentez vos produits, services ou événements à notre communauté.</p>
-      </div>
+      <div><span class="ad-label">ESPACE PARTENAIRE</span><h3>Votre marque mérite d'être remarquée.</h3><p>Présentez vos produits, services ou événements à notre communauté.</p></div>
       <button class="gold-button" onclick="contactAdvertising()">Devenir partenaire ↗</button>
      </div>
      <p class="ad-note">Emplacement publicitaire partenaire — MK Academy</p>
     </div>
    </section>
 
-   <!-- MES INSCRIPTIONS -->
    <section id="myTab" class="section hidden">
-    <div class="page-heading">
-     <div class="eyebrow">SUIVEZ VOTRE PARCOURS</div>
-     <h2>Mes inscriptions</h2>
-     <p>Retrouvez vos demandes et consultez leur état de validation.</p>
-    </div>
+    <div class="page-heading"><div class="eyebrow">SUIVEZ VOTRE PARCOURS</div><h2>Mes inscriptions</h2><p>Retrouvez vos demandes et consultez leur état de validation.</p></div>
     <div id="myEnrollments" class="grid"></div>
    </section>
 
-   <!-- PROFIL / PERSONNALISATION -->
    <section id="settingsTab" class="section hidden">
-    <div class="page-heading">
-     <div class="eyebrow">VOTRE ESPACE, VOTRE STYLE</div>
-     <h2>Mon profil et mes préférences</h2>
-     <p>Personnalisez votre environnement d'apprentissage.</p>
-    </div>
+    <div class="page-heading"><div class="eyebrow">VOTRE ESPACE, VOTRE STYLE</div><h2>Mon profil et mes préférences</h2><p>Personnalisez votre environnement d'apprentissage.</p></div>
+    <div class="panel"><h3>Mon compte</h3><p id="profileEmail" class="preference-note"></p><p id="profileName" class="preference-note"></p></div>
     <div class="panel">
-     <h3>Mon compte</h3>
-     <p id="profileEmail" class="preference-note"></p>
-     <p id="profileName" class="preference-note"></p>
-    </div>
-    <div class="panel">
-     <h3>Choisir mon thème</h3>
-     <p class="preference-note">Sélectionnez une ambiance visuelle.</p>
+     <h3>Choisir mon thème</h3><p class="preference-note">Sélectionnez une ambiance visuelle.</p>
      <button class="theme-choice" style="background:#f3f4fa" title="Clair" onclick="setTheme('light')"></button>
      <button class="theme-choice" style="background:#101426" title="Sombre" onclick="setTheme('dark')"></button>
      <button class="theme-choice" style="background:linear-gradient(135deg,#101735,#5142c7)" title="Bleu nuit" onclick="setTheme('blue')"></button>
@@ -554,33 +447,16 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
      <button class="theme-choice" style="background:linear-gradient(135deg,#dff1eb,#73b99c)" title="Nature" onclick="setTheme('nature')"></button>
     </div>
     <div class="panel">
-     <h3>Mon fond d'écran personnel</h3>
-     <p class="preference-note">Choisissez une photo depuis votre téléphone.</p>
-     <div class="wallpaper-actions">
-      <button class="primary" onclick="document.getElementById('wallpaperFile').click()">Choisir une photo</button>
-      <button class="secondary" onclick="removeWallpaper()">Retirer ma photo</button>
-      <input type="file" id="wallpaperFile" accept="image/*">
-     </div>
+     <h3>Mon fond d'écran personnel</h3><p class="preference-note">Choisissez une photo depuis votre téléphone.</p>
+     <div class="wallpaper-actions"><button class="primary" onclick="document.getElementById('wallpaperFile').click()">Choisir une photo</button><button class="secondary" onclick="removeWallpaper()">Retirer ma photo</button><input type="file" id="wallpaperFile" accept="image/*"></div>
      <p id="wallpaperMessage" class="message"></p>
     </div>
-    <div class="panel">
-     <h3>Restaurer l'apparence originale</h3>
-     <button class="secondary" onclick="resetAppearance()">Réinitialiser l'apparence</button>
-    </div>
-    <div class="panel">
-     <h3>Déconnexion</h3>
-     <p class="preference-note">Fermez votre session MK Academy sur cet appareil.</p>
-     <button class="danger" onclick="logout()">↪ Déconnexion</button>
-    </div>
+    <div class="panel"><h3>Restaurer l'apparence originale</h3><button class="secondary" onclick="resetAppearance()">Réinitialiser l'apparence</button></div>
+    <div class="panel"><h3>Déconnexion</h3><p class="preference-note">Fermez votre session MK Academy sur cet appareil.</p><button class="danger" onclick="logout()">↪ Déconnexion</button></div>
    </section>
 
-   <!-- ADMINISTRATION -->
    <section id="adminTab" class="section hidden">
-    <div class="page-heading">
-     <div class="eyebrow">ESPACE DE GESTION</div>
-     <h2>Administration</h2>
-     <p>Gérez les formations, les inscriptions et les paiements.</p>
-    </div>
+    <div class="page-heading"><div class="eyebrow">ESPACE DE GESTION</div><h2>Administration</h2><p>Gérez les formations, les inscriptions et les paiements.</p></div>
     <div class="panel">
      <h3>Gestion des formations</h3>
      <form id="courseForm">
@@ -602,30 +478,23 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
      <h3>Demandes d'inscription et paiements</h3>
      <button class="secondary" onclick="loadAdminEnrollments()">Actualiser les demandes</button>
      <p id="enrollmentMessage" class="message"></p>
-     <div class="table-wrap">
-      <table>
-       <thead><tr><th>Apprenant</th><th>Formation</th><th>Inscription</th><th>Paiement</th><th>Actions</th></tr></thead>
-       <tbody id="adminEnrollments"></tbody>
-      </table>
-     </div>
+     <div class="table-wrap"><table><thead><tr><th>Apprenant</th><th>Formation</th><th>Inscription</th><th>Paiement</th><th>Actions</th></tr></thead><tbody id="adminEnrollments"></tbody></table></div>
     </div>
-    <div class="panel">
-     <h3>Espace publicitaire</h3>
-     <p class="preference-note">La bannière partenaire est actuellement un emplacement de présentation. La gestion des annonces, images, liens et dates de diffusion sera développée ultérieurement.</p>
-    </div>
+    <div class="panel"><h3>Espace publicitaire</h3><p class="preference-note">La bannière partenaire est actuellement un emplacement de présentation. La gestion des annonces, images, liens et dates de diffusion sera développée ultérieurement.</p></div>
    </section>
    <footer>© 2026 MK Academy — Apprendre • Progresser • Réussir</footer>
   </main>
  </div>
 </div>
 
-<!-- NAVIGATION MOBILE -->
+<!-- NAVIGATION MOBILE CORRIGÉE -->
 <nav class="mobile-nav hidden" id="mobileNav">
- <button class="active" onclick="mobileTab('coursesTab',this)"><span>⌂</span>Accueil</button>
+ <button class="active" data-mobile-tab="coursesTab" onclick="mobileTab('coursesTab',this)"><span>⌂</span>Accueil</button>
  <button onclick="focusSearch()"><span>⌕</span>Recherche</button>
  <button onclick="goCategories()"><span>▦</span>Catégories</button>
- <button onclick="mobileTab('myTab',this)"><span>▣</span>Mes cours</button>
- <button onclick="mobileTab('settingsTab',this)"><span>◉</span>Profil</button>
+ <button data-mobile-tab="myTab" onclick="mobileTab('myTab',this)"><span>▣</span>Mes cours</button>
+ <button data-mobile-tab="settingsTab" onclick="mobileTab('settingsTab',this)"><span>◉</span>Profil</button>
+ <button id="mobileAdminNav" class="hidden" data-mobile-tab="adminTab" onclick="mobileTab('adminTab',this)"><span>◆</span>Admin</button>
 </nav>
 
 <script>
@@ -690,37 +559,57 @@ async function enterApp(user){
  isAdmin=!adminError&&adminData===true;
  document.getElementById("accountType").textContent=isAdmin?"Administrateur MK Academy":"Votre espace d'apprentissage personnel";
  document.getElementById("adminNav").classList.toggle("hidden",!isAdmin);
+ document.getElementById("mobileAdminNav").classList.toggle("hidden",!isAdmin);
 
  loadAppearance();
  await loadMyEnrollments();
  await loadCourses();
  if(isAdmin){await loadAdminCourses();await loadAdminEnrollments()}
- showTab("coursesTab",document.querySelector('[data-tab="coursesTab"]'));
+ showTab("coursesTab");
 }
 
+/* NAVIGATION CORRIGÉE */
 function showTab(id,button){
  if(id==="adminTab"&&!isAdmin)return;
- ["coursesTab","myTab","adminTab","settingsTab"].forEach(tab=>document.getElementById(tab).classList.add("hidden"));
+
+ ["coursesTab","myTab","adminTab","settingsTab"].forEach(tab=>{
+  document.getElementById(tab).classList.add("hidden");
+ });
  document.getElementById(id).classList.remove("hidden");
+
  document.querySelectorAll(".sidebar nav button").forEach(b=>b.classList.remove("active"));
+ document.querySelectorAll(".mobile-nav button").forEach(b=>b.classList.remove("active"));
+
  if(button)button.classList.add("active");
+
+ document.querySelectorAll('[data-tab="'+id+'"]').forEach(b=>b.classList.add("active"));
+ document.querySelectorAll('[data-mobile-tab="'+id+'"]').forEach(b=>b.classList.add("active"));
+
  if(id==="settingsTab"){
   document.getElementById("profileEmail").textContent="Adresse e-mail : "+(currentUser?.email||"");
  }
  window.scrollTo({top:0,behavior:"smooth"});
 }
+
 function mobileTab(id,button){
- showTab(id,null);
- document.querySelectorAll(".mobile-nav button").forEach(b=>b.classList.remove("active"));
- if(button)button.classList.add("active");
+ if(id==="adminTab"&&!isAdmin)return;
+ showTab(id,button);
 }
+
 function focusSearch(){
- mobileTab("coursesTab",document.querySelector(".mobile-nav button"));
- setTimeout(()=>document.getElementById("courseSearch").focus(),100);
+ showTab("coursesTab");
+ setTimeout(()=>{
+  const search=document.getElementById("courseSearch");
+  search.focus();
+  search.scrollIntoView({behavior:"smooth",block:"center"});
+ },150);
 }
+
 function goCategories(){
- mobileTab("coursesTab",document.querySelector(".mobile-nav button"));
- document.getElementById("categorySection").scrollIntoView({behavior:"smooth"});
+ showTab("coursesTab");
+ setTimeout(()=>{
+  document.getElementById("categorySection").scrollIntoView({behavior:"smooth"});
+ },100);
 }
 
 /* CATÉGORIES ET CATALOGUE */
@@ -735,6 +624,7 @@ function categoryFor(course){
  if(/finance|comptab|budget|banque|investissement/.test(text))return "Finance";
  return "Autres";
 }
+
 function filterCategory(category,button){
  selectedCategory=category;
  document.querySelectorAll(".category-card").forEach(b=>b.classList.remove("active"));
@@ -743,12 +633,14 @@ function filterCategory(category,button){
  renderCourses();
  document.getElementById("catalogue").scrollIntoView({behavior:"smooth",block:"start"});
 }
+
 function setView(view){
  currentView=view;
  document.getElementById("gridButton").classList.toggle("active",view==="grid");
  document.getElementById("listButton").classList.toggle("active",view==="list");
  renderCourses();
 }
+
 async function loadCourses(){
  const catalogue=document.getElementById("catalogue"),message=document.getElementById("courseMessage");
  catalogue.innerHTML="Chargement des formations...";
@@ -760,6 +652,7 @@ async function loadCourses(){
  if(!allCourses.length)message.textContent="Nos prochaines formations seront bientôt disponibles.";
  else message.textContent="";
 }
+
 function renderCourses(){
  const catalogue=document.getElementById("catalogue"),message=document.getElementById("courseMessage");
  catalogue.className="grid"+(currentView==="list"?" list-view":"");
@@ -770,12 +663,9 @@ function renderCourses(){
   const text=(course.title+" "+(course.description||"")).toLowerCase();
   return matchesCategory&&text.includes(query);
  });
- if(!filtered.length){
-  message.textContent="Aucune formation ne correspond à cette recherche.";
-  return;
- }
+ if(!filtered.length){message.textContent="Aucune formation ne correspond à cette recherche.";return}
  message.textContent="";
- filtered.forEach((course,index)=>{
+ filtered.forEach(course=>{
   const card=document.createElement("article");card.className="card";
   const cover=document.createElement("div");cover.className="course-cover";
   const coverLabel=document.createElement("span");coverLabel.textContent="MK ACADEMY / "+categoryFor(course).toUpperCase();cover.appendChild(coverLabel);
@@ -794,6 +684,7 @@ function renderCourses(){
   body.append(title,description,meta,price,button);card.append(cover,body);catalogue.appendChild(card);
  });
 }
+
 async function enroll(courseId,button){
  button.disabled=true;button.textContent="Enregistrement...";
  try{
@@ -828,17 +719,15 @@ async function loadMyEnrollments(){
   body.append(title,status,payment);card.append(cover,body);container.appendChild(card);
  });
 }
+
 function statusText(status){
  return ({pending:"En attente",approved:"Validée",rejected:"Refusée",paid:"Payé"})[status]||status;
 }
 
-/* OUTILS D'ORIENTATION : PRÉSENTATION */
+/* OUTILS D'ORIENTATION */
 function openCareer(type){
- if(type==="emploi"){
-  alert("L'espace Trouver un emploi sera développé dans une prochaine étape de MK Academy.");
- }else{
-  alert("L'outil d'orientation selon votre profil sera développé dans une prochaine étape.");
- }
+ if(type==="emploi")alert("L'espace Trouver un emploi sera développé dans une prochaine étape de MK Academy.");
+ else alert("L'outil d'orientation selon votre profil sera développé dans une prochaine étape.");
 }
 function showMentor(){
  alert("MK Mentor : l'interface de présentation est prête. La connexion à un véritable assistant IA sera développée séparément.");
@@ -875,6 +764,7 @@ function applyWallpaper(image){
  document.body.style.setProperty("--wallpaper",'url("'+image+'")');
  document.body.classList.add("custom-wallpaper");
 }
+
 document.getElementById("wallpaperFile").addEventListener("change",function(e){
  const file=e.target.files[0];if(!file)return;
  if(!file.type.startsWith("image/")){document.getElementById("wallpaperMessage").textContent="Choisis un fichier image.";return}
@@ -896,6 +786,7 @@ document.getElementById("wallpaperFile").addEventListener("change",function(e){
  reader.onerror=()=>document.getElementById("wallpaperMessage").textContent="Erreur lors de la lecture de la photo.";
  reader.readAsDataURL(file);e.target.value="";
 });
+
 function removeWallpaper(){
  document.body.classList.remove("custom-wallpaper");document.body.style.removeProperty("--wallpaper");
  const saved=JSON.parse(localStorage.getItem(preferenceKey())||"{}");delete saved.wallpaper;
@@ -938,9 +829,11 @@ async function loadAdminCourses(){
   body.append(title,info,status,edit,publish,remove);card.append(cover,body);container.appendChild(card);
  });
 }
+
 function slugify(value){
  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 }
+
 document.getElementById("courseForm").addEventListener("submit",async e=>{
  e.preventDefault();if(!isAdmin)return;
  const id=document.getElementById("editId").value,title=document.getElementById("courseTitle").value.trim();
@@ -960,6 +853,7 @@ document.getElementById("courseForm").addEventListener("submit",async e=>{
   resetCourseForm();await loadAdminCourses();await loadCourses();
  }catch(error){message.textContent="Erreur : "+error.message}
 });
+
 function editCourse(course){
  document.getElementById("editId").value=course.id;
  document.getElementById("courseTitle").value=course.title;
@@ -1021,6 +915,7 @@ async function loadAdminEnrollments(){
   tr.append(learner,course,status,payment,actions);body.appendChild(tr);
  });
 }
+
 async function updateEnrollment(id,changes){
  if(!isAdmin)return;
  const {error}=await db.from("enrollments").update(changes).eq("id",id);
@@ -1048,6 +943,7 @@ async function initialize(){
  if(error){document.getElementById("authMessage").textContent=error.message;return}
  if(data.session)await enterApp(data.session.user);
 }
+
 db.auth.onAuthStateChange((event,session)=>{
  if(event==="SIGNED_OUT"){
   currentUser=null;isAdmin=false;enrollmentsMap={};allCourses=[];
@@ -1056,7 +952,8 @@ db.auth.onAuthStateChange((event,session)=>{
   document.getElementById("authSection").classList.remove("hidden");
  }
 });
+
 initialize();
 </script>
 </body>
-</html>
+ </html>
