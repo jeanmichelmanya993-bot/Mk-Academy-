@@ -3,35 +3,43 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MK Academy</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f4f7fc;color:#172b4d}
 header{background:#123b78;color:white;padding:22px;text-align:center}
 header h1{margin:0}
-main{max-width:1000px;margin:25px auto;padding:15px}
-.panel{background:white;padding:25px;border-radius:12px;box-shadow:0 2px 12px #0001;max-width:480px;margin:25px auto}
-h2{text-align:center;color:#123b78}
-input{width:100%;padding:13px;margin:9px 0;border:1px solid #ccd5e2;border-radius:7px;font-size:16px}
-button{background:#123b78;color:white;border:0;padding:13px 18px;border-radius:7px;font-weight:bold;cursor:pointer;margin:5px}
-button:disabled{opacity:.6;cursor:not-allowed}
+main{max-width:1100px;margin:25px auto;padding:15px}
+.panel,.card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 12px #0001;margin-bottom:18px}
+.auth{max-width:470px;margin:30px auto}
+h2,h3{color:#123b78}
+h2{text-align:center}
+input,textarea,select{width:100%;padding:12px;margin:7px 0;border:1px solid #ccd5e2;border-radius:7px;font-size:15px}
+textarea{min-height:85px}
+button{background:#123b78;color:white;border:0;padding:12px 16px;border-radius:7px;font-weight:bold;cursor:pointer;margin:4px}
+button:disabled{opacity:.5}
 .secondary{background:#e7efff;color:#123b78}
-.actions{text-align:center}
-#message,#courseMessage{text-align:center;line-height:1.5;margin-top:15px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
-.card{background:white;padding:18px;border-radius:12px;box-shadow:0 2px 10px #0001}
-.card h3{color:#123b78;font-size:17px}
-.price{font-weight:bold;color:#123b78}
+.danger{background:#a52b37}
+.success{background:#167447}
 .hidden{display:none!important}
-.status{padding:8px;border-radius:6px;background:#e7efff;color:#123b78;font-weight:bold}
-.section-title{margin-top:35px;border-bottom:2px solid #dce5f2;padding-bottom:10px}
+.actions{text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:15px}
+.card h3{margin-top:0}
+.price{font-weight:bold;color:#123b78}
+.status{display:inline-block;background:#e7efff;color:#123b78;padding:6px 9px;border-radius:6px;margin:3px}
+nav{display:flex;flex-wrap:wrap;justify-content:center;margin:15px 0}
+nav button{margin:4px}
+.section{margin-top:25px}
+.message{text-align:center;line-height:1.5;margin:12px}
+table{width:100%;border-collapse:collapse;background:white}
+th,td{padding:10px;border-bottom:1px solid #e1e7ef;text-align:left;font-size:14px}
+.table-wrap{overflow-x:auto}
 footer{text-align:center;background:#123b78;color:white;padding:20px;margin-top:35px}
+@media(max-width:600px){th,td{font-size:12px;padding:7px}button{font-size:13px}}
 </style>
 </head>
-
 <body>
 
 <header>
@@ -41,345 +49,661 @@ footer{text-align:center;background:#123b78;color:white;padding:20px;margin-top:
 
 <main>
 
-<section id="authSection" class="panel">
+<section id="authSection" class="panel auth">
 <h2>Bienvenue sur MK Academy</h2>
-<p style="text-align:center">Crée ton compte ou connecte-toi pour découvrir nos formations.</p>
-
+<p style="text-align:center">Crée ton compte ou connecte-toi.</p>
 <div class="actions">
 <button onclick="showForm('signup')">Créer un compte</button>
 <button class="secondary" onclick="showForm('login')">Se connecter</button>
 </div>
-
 <form id="authForm">
 <div id="nameArea">
-<input id="fullname" type="text" placeholder="Ton nom complet">
+<input id="fullname" placeholder="Nom complet">
 </div>
 <input id="email" type="email" placeholder="Adresse e-mail" required>
-<input id="password" type="password" placeholder="Mot de passe" required minlength="6">
-<button id="submitBtn" type="submit" style="width:100%">Créer mon compte</button>
+<input id="password" type="password" placeholder="Mot de passe" minlength="6" required>
+<button id="submitBtn" style="width:100%">Créer mon compte</button>
 </form>
-<p id="message"></p>
+<p id="authMessage" class="message"></p>
 </section>
 
-<section id="courseSection" class="hidden">
+<section id="appSection" class="hidden">
 
-<div style="text-align:center">
-<h2>Espace apprenant</h2>
-<p id="welcome"></p>
-<button onclick="logout()">Se déconnecter</button>
+<div class="panel">
+<h2 id="welcome"></h2>
+<p id="accountType" style="text-align:center"></p>
+<nav>
+<button onclick="showTab('coursesTab')">Formations</button>
+<button onclick="showTab('myTab')" id="myNav">Mes inscriptions</button>
+<button onclick="showTab('adminTab')" id="adminNav" class="hidden">Administration</button>
+<button class="danger" onclick="logout()">Déconnexion</button>
+</nav>
 </div>
 
-<h2 class="section-title">Nos formations</h2>
+<!-- FORMATIONS -->
+<section id="coursesTab" class="section">
+<h2>Nos formations</h2>
 <div id="catalogue" class="grid"></div>
+<p id="courseMessage" class="message"></p>
+</section>
 
-<p id="courseMessage"></p>
-
-<h2 class="section-title">Mes inscriptions</h2>
+<!-- ESPACE APPRENANT -->
+<section id="myTab" class="section hidden">
+<h2>Mon espace apprenant</h2>
 <div id="myEnrollments" class="grid"></div>
+</section>
 
+<!-- ADMINISTRATION -->
+<section id="adminTab" class="section hidden">
+
+<h2>Administration MK Academy</h2>
+
+<div class="panel">
+<h3>Gestion des formations</h3>
+<form id="courseForm">
+<input type="hidden" id="editId">
+<input id="courseTitle" placeholder="Titre de la formation" required>
+<textarea id="courseDescription" placeholder="Description de la formation" required></textarea>
+<input id="courseDuration" type="number" min="1" placeholder="Durée en jours" required>
+<input id="coursePrice" type="number" min="0" step="0.01" placeholder="Prix en USD" required>
+<input id="courseOrder" type="number" min="0" placeholder="Ordre d'affichage" value="0">
+<label>
+<input id="coursePublished" type="checkbox" checked style="width:auto">
+Publier immédiatement
+</label>
+<br>
+<button type="submit" id="saveCourse">Ajouter la formation</button>
+<button type="button" class="secondary" onclick="resetCourseForm()">Annuler</button>
+</form>
+<p id="adminCourseMessage" class="message"></p>
+</div>
+
+<h3>Formations enregistrées</h3>
+<div id="adminCourses" class="grid"></div>
+
+<div class="panel section">
+<h3>Demandes d'inscription et paiements</h3>
+<button onclick="loadAdminEnrollments()">Actualiser les demandes</button>
+<p id="enrollmentMessage" class="message"></p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Apprenant</th>
+<th>Formation</th>
+<th>Inscription</th>
+<th>Paiement</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="adminEnrollments"></tbody>
+</table>
+</div>
+</div>
+
+</section>
 </section>
 </main>
 
 <footer>© 2026 MK Academy — Tous droits réservés.</footer>
 
 <script>
-const SUPABASE_URL = "https://symnweeensaeituthxdb.supabase.co";
-const SUPABASE_KEY = "sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH";
+const SUPABASE_URL="https://symnweeensaeituthxdb.supabase.co";
+const SUPABASE_KEY="sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH";
 
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let currentMode = "signup";
-let currentUser = null;
-let enrollmentsMap = {};
+let currentMode="signup";
+let currentUser=null;
+let isAdmin=false;
+let enrollmentsMap={};
 
 function showForm(mode){
-  currentMode = mode;
-  document.getElementById("message").textContent = "";
-  document.getElementById("nameArea").classList.toggle("hidden",mode==="login");
-  document.getElementById("submitBtn").textContent =
-    mode==="signup" ? "Créer mon compte" : "Se connecter";
+ currentMode=mode;
+ document.getElementById("authMessage").textContent="";
+ document.getElementById("nameArea").classList.toggle("hidden",mode==="login");
+ document.getElementById("submitBtn").textContent=
+ mode==="signup"?"Créer mon compte":"Se connecter";
 }
 
-document.getElementById("authForm").addEventListener("submit",async function(e){
-  e.preventDefault();
+function showTab(id){
+ ["coursesTab","myTab","adminTab"].forEach(tab=>
+ document.getElementById(tab).classList.add("hidden")
+ );
+ document.getElementById(id).classList.remove("hidden");
+}
 
-  const message = document.getElementById("message");
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const name = document.getElementById("fullname").value.trim();
+function safeText(value){
+ return value==null?"":String(value);
+}
 
-  message.textContent = "Veuillez patienter...";
+document.getElementById("authForm").addEventListener("submit",async e=>{
+ e.preventDefault();
 
-  try{
-    if(currentMode==="signup"){
+ const message=document.getElementById("authMessage");
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ const name=document.getElementById("fullname").value.trim();
 
-      if(!name){
-        message.textContent = "Entre ton nom complet.";
-        return;
-      }
+ message.textContent="Connexion en cours...";
 
-      const {data,error} = await db.auth.signUp({
-        email,
-        password,
-        options:{
-          data:{full_name:name},
-          emailRedirectTo:"https://jeanmichelmanya993-bot.github.io/Mk-Academy-/"
-        }
-      });
+ try{
+  if(currentMode==="signup"){
+   if(!name)throw new Error("Entre ton nom complet.");
 
-      if(error) throw error;
-
-      if(data.session){
-        await showCourses(data.session.user);
-      }else{
-        message.textContent =
-          "Compte créé ! Vérifie ta boîte e-mail et confirme ton adresse.";
-      }
-
-    }else{
-
-      const {data,error} = await db.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if(error) throw error;
-
-      await showCourses(data.user);
+   const {data,error}=await db.auth.signUp({
+    email,password,
+    options:{
+     data:{full_name:name},
+     emailRedirectTo:"https://jeanmichelmanya993-bot.github.io/Mk-Academy-/"
     }
+   });
 
-  }catch(error){
-    message.textContent = "Erreur : "+error.message;
+   if(error)throw error;
+
+   if(data.session){
+    await enterApp(data.session.user);
+   }else{
+    message.textContent="Compte créé. Vérifie ton email pour confirmer ton adresse.";
+   }
+
+  }else{
+   const {data,error}=await db.auth.signInWithPassword({email,password});
+   if(error)throw error;
+   await enterApp(data.user);
   }
+ }catch(error){
+  message.textContent="Erreur : "+error.message;
+ }
 });
 
-async function showCourses(user){
+async function enterApp(user){
+ if(!user)return;
 
-  if(!user) return;
+ currentUser=user;
 
-  currentUser = user;
+ document.getElementById("authSection").classList.add("hidden");
+ document.getElementById("appSection").classList.remove("hidden");
 
-  document.getElementById("authSection").classList.add("hidden");
-  document.getElementById("courseSection").classList.remove("hidden");
+ document.getElementById("welcome").textContent=
+ "Bienvenue "+(user.user_metadata?.full_name||user.email);
 
-  document.getElementById("welcome").textContent =
-    "Bienvenue "+(user.user_metadata?.full_name || user.email);
+ const {data:adminData,error:adminError}=await db.rpc("is_mk_admin");
 
-  await loadCourses();
-  await loadMyEnrollments();
+ isAdmin=!adminError&&adminData===true;
+
+ document.getElementById("accountType").textContent=
+ isAdmin?"Administrateur MK Academy":"Espace apprenant";
+
+ document.getElementById("adminNav").classList.toggle("hidden",!isAdmin);
+
+ await loadCourses();
+ await loadMyEnrollments();
+
+ if(isAdmin){
+  await loadAdminCourses();
+  await loadAdminEnrollments();
+ }
+
+ showTab("coursesTab");
 }
 
 async function loadCourses(){
+ const catalogue=document.getElementById("catalogue");
+ const message=document.getElementById("courseMessage");
 
-  const catalogue = document.getElementById("catalogue");
-  const message = document.getElementById("courseMessage");
+ catalogue.innerHTML="";
+ enrollmentsMap={};
 
-  catalogue.innerHTML = "";
-  message.textContent = "Chargement des formations...";
+ const {data,error}=await db.from("courses")
+ .select("id,title,description,duration_days,price_usd")
+ .eq("is_published",true)
+ .order("sort_order");
 
-  const {data,error} = await db
-    .from("courses")
-    .select("id,title,description,duration_days,price_usd")
-    .eq("is_published",true)
-    .order("sort_order");
+ if(error){
+  message.textContent="Erreur : "+error.message;
+  return;
+ }
 
-  if(error){
-    message.textContent = "Erreur : "+error.message;
-    return;
+ if(!data?.length){
+  message.textContent="Aucune formation publiée pour le moment.";
+  return;
+ }
+
+ data.forEach(course=>{
+  const card=document.createElement("div");
+  card.className="card";
+
+  const title=document.createElement("h3");
+  title.textContent=course.title;
+
+  const description=document.createElement("p");
+  description.textContent=course.description||"";
+
+  const duration=document.createElement("p");
+  duration.textContent="Durée : "+course.duration_days+" jours";
+
+  const price=document.createElement("p");
+  price.className="price";
+  price.textContent="Prix : "+course.price_usd+" USD";
+
+  const button=document.createElement("button");
+  button.style.width="100%";
+
+  if(isAdmin){
+   button.textContent="Formation publiée";
+   button.disabled=true;
+  }else if(enrollmentsMap[course.id]){
+   button.textContent="Demande déjà envoyée";
+   button.disabled=true;
+  }else{
+   button.textContent="S'inscrire à cette formation";
+   button.onclick=()=>enroll(course.id,button);
   }
 
-  if(!data || data.length===0){
-    message.textContent = "Aucune formation publiée pour le moment.";
-    return;
-  }
+  card.append(title,description,duration,price,button);
+  catalogue.appendChild(card);
+ });
 
-  data.forEach((formation,index)=>{
-
-    const card = document.createElement("div");
-    card.className = "card";
-
-    const title = document.createElement("h3");
-    title.textContent = (index+1)+". "+formation.title;
-
-    const description = document.createElement("p");
-    description.textContent = formation.description || "";
-
-    const duration = document.createElement("p");
-    duration.textContent = "Durée : "+formation.duration_days+" jours";
-
-    const price = document.createElement("p");
-    price.className = "price";
-    price.textContent = "Prix : "+formation.price_usd+" USD";
-
-    const button = document.createElement("button");
-    button.style.width = "100%";
-
-    if(enrollmentsMap[formation.id]){
-      button.textContent = "Demande déjà envoyée";
-      button.disabled = true;
-    }else{
-      button.textContent = "S'inscrire à cette formation";
-      button.onclick = ()=>enroll(formation.id,button);
-    }
-
-    card.append(title,description,duration,price,button);
-    catalogue.appendChild(card);
-  });
-
-  message.textContent = "";
+ message.textContent="";
 }
 
 async function enroll(courseId,button){
+ button.disabled=true;
+ button.textContent="Enregistrement...";
 
-  button.disabled = true;
-  button.textContent = "Inscription en cours...";
+ try{
+  const {error}=await db.from("enrollments").insert({
+   user_id:currentUser.id,
+   course_id:courseId
+  });
 
-  try{
-
-    const {data:{user},error:userError} = await db.auth.getUser();
-
-    if(userError || !user){
-      throw new Error("Connecte-toi pour t'inscrire.");
-    }
-
-    const {error} = await db
-      .from("enrollments")
-      .insert({
-        user_id:user.id,
-        course_id:courseId
-      });
-
-    if(error){
-      if(error.code==="23505"){
-        throw new Error("Tu es déjà inscrit à cette formation.");
-      }
-      throw error;
-    }
-
-    button.textContent = "Demande envoyée ✓";
-
-    document.getElementById("courseMessage").textContent =
-      "Ta demande a été enregistrée. Elle attend la validation de l'administration.";
-
-    await loadMyEnrollments();
-
-  }catch(error){
-
-    button.disabled = false;
-    button.textContent = "S'inscrire à cette formation";
-
-    document.getElementById("courseMessage").textContent =
-      "Erreur : "+error.message;
+  if(error){
+   if(error.code==="23505")
+    throw new Error("Tu es déjà inscrit à cette formation.");
+   throw error;
   }
+
+  button.textContent="Demande envoyée ✓";
+  document.getElementById("courseMessage").textContent=
+  "Ta demande est enregistrée et attend la validation de l'administration.";
+
+  await loadMyEnrollments();
+
+ }catch(error){
+  button.disabled=false;
+  button.textContent="S'inscrire à cette formation";
+  document.getElementById("courseMessage").textContent=error.message;
+ }
 }
 
 async function loadMyEnrollments(){
+ const container=document.getElementById("myEnrollments");
+ container.innerHTML="";
+ enrollmentsMap={};
 
-  const container = document.getElementById("myEnrollments");
+ const {data,error}=await db.from("enrollments")
+ .select("course_id,enrollment_status,payment_status")
+ .eq("user_id",currentUser.id);
 
-  container.innerHTML = "";
-  enrollmentsMap = {};
+ if(error){
+  container.textContent="Erreur : "+error.message;
+  return;
+ }
 
-  const {data,error} = await db
-    .from("enrollments")
-    .select("course_id,enrollment_status,payment_status")
-    .eq("user_id",currentUser.id);
+ if(!data?.length){
+  container.textContent="Tu n'as encore aucune inscription.";
+  await loadCatalogueEnrollmentState();
+  return;
+ }
 
-  if(error){
-    container.textContent =
-      "Impossible de charger tes inscriptions : "+error.message;
-    return;
-  }
+ data.forEach(item=>enrollmentsMap[item.course_id]=item);
 
-  if(!data || data.length===0){
-    container.textContent = "Tu n'es inscrit à aucune formation pour le moment.";
-    return;
-  }
+ const courseIds=data.map(item=>item.course_id);
 
-  data.forEach(item=>{
-    enrollmentsMap[item.course_id] = item;
+ const {data:courses,error:courseError}=await db.from("courses")
+ .select("id,title")
+ .in("id",courseIds);
 
-    const card = document.createElement("div");
-    card.className = "card";
+ if(courseError){
+  container.textContent="Impossible de récupérer les formations.";
+  return;
+ }
 
-    const title = document.createElement("h3");
-    title.textContent = "Formation demandée";
+ data.forEach(item=>{
+  const course=courses.find(c=>c.id===item.course_id);
 
-    const enrollment = document.createElement("p");
-    enrollment.textContent =
-      "Inscription : "+statusText(item.enrollment_status);
+  const card=document.createElement("div");
+  card.className="card";
 
-    const payment = document.createElement("p");
-    payment.textContent =
-      "Paiement : "+statusText(item.payment_status);
+  const title=document.createElement("h3");
+  title.textContent=course?.title||"Formation";
 
-    card.append(title,enrollment,payment);
-    container.appendChild(card);
-  });
+  const status=document.createElement("p");
+  status.innerHTML="Inscription : ";
+  const badge=document.createElement("span");
+  badge.className="status";
+  badge.textContent=statusText(item.enrollment_status);
+  status.appendChild(badge);
+
+  const payment=document.createElement("p");
+  payment.innerHTML="Paiement : ";
+  const payBadge=document.createElement("span");
+  payBadge.className="status";
+  payBadge.textContent=statusText(item.payment_status);
+  payment.appendChild(payBadge);
+
+  card.append(title,status,payment);
+  container.appendChild(card);
+ });
+
+ await loadCatalogueEnrollmentState();
+}
+
+async function loadCatalogueEnrollmentState(){
+ const {data,error}=await db.from("enrollments")
+ .select("course_id")
+ .eq("user_id",currentUser.id);
+
+ if(!error){
+  enrollmentsMap={};
+  data.forEach(item=>enrollmentsMap[item.course_id]=true);
+  await loadCourses();
+ }
 }
 
 function statusText(status){
+ const values={
+  pending:"En attente",
+  approved:"Validée",
+  rejected:"Refusée",
+  paid:"Payé"
+ };
+ return values[status]||status;
+}
 
-  const statuses = {
-    pending:"En attente",
-    approved:"Validée",
-    rejected:"Refusée",
-    paid:"Payé"
-  };
+/* ADMINISTRATION */
 
-  return statuses[status] || status;
+async function loadAdminCourses(){
+ if(!isAdmin)return;
+
+ const container=document.getElementById("adminCourses");
+ container.innerHTML="Chargement...";
+
+ const {data,error}=await db.from("courses")
+ .select("*").order("sort_order");
+
+ if(error){
+  container.textContent="Erreur : "+error.message;
+  return;
+ }
+
+ container.innerHTML="";
+
+ if(!data?.length){
+  container.textContent="Aucune formation enregistrée.";
+  return;
+ }
+
+ data.forEach(course=>{
+  const card=document.createElement("div");
+  card.className="card";
+
+  const title=document.createElement("h3");
+  title.textContent=course.title;
+
+  const info=document.createElement("p");
+  info.textContent=course.price_usd+" USD • "+course.duration_days+" jours";
+
+  const status=document.createElement("p");
+  status.textContent=course.is_published?"Publiée":"Non publiée";
+
+  const edit=document.createElement("button");
+  edit.textContent="Modifier";
+  edit.onclick=()=>editCourse(course);
+
+  const publish=document.createElement("button");
+  publish.className="secondary";
+  publish.textContent=course.is_published?"Masquer":"Publier";
+  publish.onclick=()=>togglePublish(course);
+
+  const remove=document.createElement("button");
+  remove.className="danger";
+  remove.textContent="Supprimer";
+  remove.onclick=()=>deleteCourse(course.id);
+
+  card.append(title,info,status,edit,publish,remove);
+  container.appendChild(card);
+ });
+}
+
+function slugify(value){
+ return value.toLowerCase()
+ .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+ .replace(/[^a-z0-9]+/g,"-")
+ .replace(/^-|-$/g,"");
+}
+
+document.getElementById("courseForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+
+ if(!isAdmin)return;
+
+ const id=document.getElementById("editId").value;
+ const title=document.getElementById("courseTitle").value.trim();
+
+ const course={
+  slug:slugify(title),
+  title,
+  description:document.getElementById("courseDescription").value.trim(),
+  duration_days:Number(document.getElementById("courseDuration").value),
+  price_usd:Number(document.getElementById("coursePrice").value),
+  sort_order:Number(document.getElementById("courseOrder").value),
+  is_published:document.getElementById("coursePublished").checked
+ };
+
+ const message=document.getElementById("adminCourseMessage");
+ message.textContent="Enregistrement...";
+
+ try{
+  let result;
+
+  if(id){
+   result=await db.from("courses").update(course).eq("id",id);
+  }else{
+   result=await db.from("courses").insert(course);
+  }
+
+  if(result.error)throw result.error;
+
+  message.textContent="Formation enregistrée avec succès.";
+  resetCourseForm();
+  await loadAdminCourses();
+  await loadCourses();
+
+ }catch(error){
+  message.textContent="Erreur : "+error.message;
+ }
+});
+
+function editCourse(course){
+ document.getElementById("editId").value=course.id;
+ document.getElementById("courseTitle").value=course.title;
+ document.getElementById("courseDescription").value=course.description;
+ document.getElementById("courseDuration").value=course.duration_days;
+ document.getElementById("coursePrice").value=course.price_usd;
+ document.getElementById("courseOrder").value=course.sort_order;
+ document.getElementById("coursePublished").checked=course.is_published;
+ document.getElementById("saveCourse").textContent="Enregistrer les modifications";
+ document.getElementById("courseForm").scrollIntoView({behavior:"smooth"});
+}
+
+function resetCourseForm(){
+ document.getElementById("courseForm").reset();
+ document.getElementById("editId").value="";
+ document.getElementById("courseOrder").value=0;
+ document.getElementById("coursePublished").checked=true;
+ document.getElementById("saveCourse").textContent="Ajouter la formation";
+}
+
+async function togglePublish(course){
+ const {error}=await db.from("courses")
+ .update({is_published:!course.is_published})
+ .eq("id",course.id);
+
+ if(error){
+  alert("Erreur : "+error.message);
+  return;
+ }
+
+ await loadAdminCourses();
+ await loadCourses();
+}
+
+async function deleteCourse(id){
+ if(!confirm("Supprimer cette formation et ses inscriptions associées ?"))return;
+
+ const {error}=await db.from("courses").delete().eq("id",id);
+
+ if(error){
+  alert("Erreur : "+error.message);
+  return;
+ }
+
+ await loadAdminCourses();
+ await loadAdminEnrollments();
+ await loadCourses();
+}
+
+/* GESTION DES INSCRIPTIONS */
+
+async function loadAdminEnrollments(){
+ if(!isAdmin)return;
+
+ const body=document.getElementById("adminEnrollments");
+ const message=document.getElementById("enrollmentMessage");
+
+ body.innerHTML="";
+ message.textContent="Chargement des demandes...";
+
+ const {data,error}=await db.rpc("mk_admin_enrollments");
+
+ if(error){
+  message.textContent="Erreur : "+error.message;
+  return;
+ }
+
+ if(!data?.length){
+  message.textContent="Aucune demande d'inscription.";
+  return;
+ }
+
+ message.textContent=data.length+" demande(s) trouvée(s).";
+
+ data.forEach(item=>{
+  const tr=document.createElement("tr");
+
+  const learner=document.createElement("td");
+  learner.textContent=(item.learner_name||"Apprenant")+" • "+item.learner_email;
+
+  const course=document.createElement("td");
+  course.textContent=item.course_title;
+
+  const status=document.createElement("td");
+  status.textContent=statusText(item.enrollment_status);
+
+  const payment=document.createElement("td");
+  payment.textContent=statusText(item.payment_status);
+
+  const actions=document.createElement("td");
+
+  if(item.enrollment_status==="pending"){
+   const approve=document.createElement("button");
+   approve.className="success";
+   approve.textContent="Valider";
+   approve.onclick=()=>updateEnrollment(item.enrollment_id,{
+    enrollment_status:"approved"
+   });
+
+   const reject=document.createElement("button");
+   reject.className="danger";
+   reject.textContent="Refuser";
+   reject.onclick=()=>updateEnrollment(item.enrollment_id,{
+    enrollment_status:"rejected"
+   });
+
+   actions.append(approve,reject);
+  }
+
+  if(item.enrollment_status==="approved"&&item.payment_status!=="paid"){
+   const paid=document.createElement("button");
+   paid.className="success";
+   paid.textContent="Confirmer paiement";
+   paid.onclick=()=>updateEnrollment(item.enrollment_id,{
+    payment_status:"paid"
+   });
+   actions.append(paid);
+  }
+
+  tr.append(learner,course,status,payment,actions);
+  body.appendChild(tr);
+ });
+}
+
+async function updateEnrollment(id,changes){
+ if(!isAdmin)return;
+
+ const {error}=await db.from("enrollments")
+ .update(changes).eq("id",id);
+
+ if(error){
+  alert("Erreur : "+error.message);
+  return;
+ }
+
+ await loadAdminEnrollments();
 }
 
 async function logout(){
+ const {error}=await db.auth.signOut();
 
-  const {error} = await db.auth.signOut();
+ if(error){
+  alert(error.message);
+  return;
+ }
 
-  if(error){
-    alert("Erreur : "+error.message);
-    return;
-  }
+ currentUser=null;
+ isAdmin=false;
 
-  currentUser = null;
-  enrollmentsMap = {};
+ document.getElementById("appSection").classList.add("hidden");
+ document.getElementById("authSection").classList.remove("hidden");
+ document.getElementById("authForm").reset();
+ showForm("login");
+}
 
-  document.getElementById("courseSection").classList.add("hidden");
-  document.getElementById("authSection").classList.remove("hidden");
-  document.getElementById("authForm").reset();
+async function initialize(){
+ const {data,error}=await db.auth.getSession();
 
-  showForm("login");
+ if(error){
+  document.getElementById("authMessage").textContent=error.message;
+  return;
+ }
+
+ if(data.session){
+  await enterApp(data.session.user);
+ }
 }
 
 db.auth.onAuthStateChange((event,session)=>{
-
-  if(event==="SIGNED_IN" && session){
-    showCourses(session.user);
-  }
-
-  if(event==="SIGNED_OUT"){
-    currentUser = null;
-    document.getElementById("courseSection").classList.add("hidden");
-    document.getElementById("authSection").classList.remove("hidden");
-  }
+ if(event==="SIGNED_OUT"){
+  currentUser=null;
+  isAdmin=false;
+  document.getElementById("appSection").classList.add("hidden");
+  document.getElementById("authSection").classList.remove("hidden");
+ }
 });
 
-async function checkSession(){
-
-  const {data,error} = await db.auth.getSession();
-
-  if(error){
-    document.getElementById("message").textContent = error.message;
-    return;
-  }
-
-  if(data.session){
-    await showCourses(data.session.user);
-  }
-}
-
-checkSession();
+initialize();
 
 </script>
 </body>
