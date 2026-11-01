@@ -651,7 +651,7 @@ async function mkOpenChapter(chapter) {
 
   const { data: lessons, error } = await db
     .from("lessons")
-    .select("id,title,content,video_url,pdf_url,image_path,sort_order")
+    .select("id,title,content,video_url,pdf_url,image_path,image_url,sort_order")
     .eq("chapter_id", chapter.id)
     .order("sort_order");
 
