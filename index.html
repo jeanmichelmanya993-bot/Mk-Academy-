@@ -961,7 +961,7 @@ function mkCreateAdminPanel() {
 
   const panel = document.createElement("div");
   panel.id = "mkAdminChapters";
-  panel.className = "panel section";
+  panel.className = "panel";
 
   panel.innerHTML = `
     <h3>Gestion des chapitres et de leurs prix</h3>
@@ -991,7 +991,10 @@ function mkCreateAdminPanel() {
     </div>
   `;
 
-  document.getElementById("adminTab").appendChild(panel);
+  const adminTab = document.getElementById("adminTab");
+  const firstAdminPanel = adminTab.querySelector(":scope > .panel");
+  if (firstAdminPanel) adminTab.insertBefore(panel, firstAdminPanel);
+  else adminTab.appendChild(panel);
 
   document.getElementById("mkAdminCourse").onchange = () =>
     mkLoadAdminChapters();
