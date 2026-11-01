@@ -541,6 +541,49 @@ function mkCloseReader() {
   document.getElementById("mkReader")?.classList.add("hidden");
 }
 
+function mkCreateInAppLessonPlayer(lesson, container) {
+  const raw = (lesson.content || "").replace(/\s+/g, " ").trim();
+  const sentences = (raw.match(/[^.!?]+[.!?]?/g) || [raw]).map(s => s.trim()).filter(Boolean);
+  const slides = [];
+  for (let i = 0; i < sentences.length; i += 2) slides.push(sentences.slice(i, i + 2).join(" "));
+  if (!slides.length) slides.push(lesson.title || "Leçon");
+  const player = document.createElement("section");
+  player.className = "mk-inapp-player";
+  player.style.cssText = "margin:14px 0;padding:16px;border-radius:16px;background:linear-gradient(145deg,#102b52,#174d83);color:#fff;box-shadow:0 8px 24px rgba(10,35,70,.16)";
+  const top = document.createElement("div");
+  top.textContent = "MK ACADEMY · COURS AUDIOVISUEL INTÉGRÉ";
+  top.style.cssText = "font-size:10px;font-weight:800;letter-spacing:1.1px;color:#b9dcff;margin-bottom:12px";
+  const screen = document.createElement("div");
+  screen.style.cssText = "min-height:112px;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px 8px;font-size:18px;line-height:1.55;font-weight:650";
+  const counter = document.createElement("div");
+  counter.style.cssText = "font-size:11px;color:#c7ddf5;text-align:right;margin:8px 0";
+  const track = document.createElement("div");
+  track.style.cssText = "height:5px;border-radius:8px;background:rgba(255,255,255,.22);overflow:hidden";
+  const fill = document.createElement("div");
+  fill.style.cssText = "height:100%;width:0%;background:#61c5ff;transition:width .25s";
+  track.appendChild(fill);
+  const controls = document.createElement("div");
+  controls.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px";
+  const makeButton = (label, action, primary=false) => {
+    const b=document.createElement("button"); b.type="button"; b.textContent=label;
+    b.style.cssText="border:1px solid rgba(255,255,255,.3);border-radius:22px;padding:9px 14px;background:"+(primary?"#fff":"rgba(255,255,255,.12)")+";color:"+(primary?"#12365d":"#fff")+";font-weight:700;font-size:12px;cursor:pointer";
+    b.addEventListener("click",action); return b;
+  };
+  let index=0, playing=false;
+  const stopVoice=()=>{ if ("speechSynthesis" in window) window.speechSynthesis.cancel(); };
+  const show=()=>{screen.textContent=slides[index];counter.textContent="Séquence "+(index+1)+" / "+slides.length;fill.style.width=((index+1)/slides.length*100)+"%";};
+  const speak=()=>{stopVoice();if(!("speechSynthesis" in window)){counter.textContent="Lecture vocale non prise en charge sur cet appareil.";return;}const utter=new SpeechSynthesisUtterance(slides[index]);utter.lang="fr-FR";utter.rate=0.92;utter.onend=()=>{if(playing&&index<slides.length-1){index++;show();speak();}else{playing=false;}};window.speechSynthesis.speak(utter);};
+  controls.append(
+    makeButton("◀ Précédent",()=>{stopVoice();playing=false;index=Math.max(0,index-1);show();}),
+    makeButton("▶ Écouter le cours",()=>{playing=true;speak();},true),
+    makeButton("Ⅱ Pause",()=>{playing=false;if("speechSynthesis" in window)window.speechSynthesis.pause();}),
+    makeButton("Suivant ▶",()=>{stopVoice();playing=false;index=Math.min(slides.length-1,index+1);show();})
+  );
+  player.append(top,screen,counter,track,controls);
+  container.appendChild(player);
+  show();
+}
+ 
 async function mkOpenCourse(courseId) {
   mkCreateReader();
 
@@ -677,7 +720,7 @@ async function mkOpenChapter(chapter) {
     text.style.whiteSpace = "pre-wrap";
     text.textContent = lesson.content || "Contenu bientôt disponible.";
 
-    block.append(title, text);
+    block.append(title, text);\n    mkCreateInAppLessonPlayer(lesson, block);
 
     let lessonImageUrl = lesson.image_url || null;
     if (lesson.image_path) {
