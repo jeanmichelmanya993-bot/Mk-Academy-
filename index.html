@@ -1041,17 +1041,22 @@ async function mkLoadAdminChapters() {
     save.onclick = async () => {
       save.disabled = true;
 
-      const { error } = await db
+      const { data: updated, error } = await db
         .from("chapters")
         .update({ price_usd: Number(price.value) })
-        .eq("id", chapter.id);
+        .eq("id", chapter.id)
+        .select("id,price_usd")
+        .maybeSingle();
 
       save.disabled = false;
 
       if (error) {
         alert("Erreur : " + error.message);
+      } else if (!updated) {
+        alert("Aucune modification enregistrée. Vérifie que ton compte possède les droits administrateur.");
       } else {
-        alert("Prix enregistré.");
+        alert("Prix enregistré : " + Number(updated.price_usd).toFixed(2) + " USD.");
+        await mkLoadAdminChapters();
       }
     };
 
