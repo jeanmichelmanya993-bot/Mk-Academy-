@@ -5,10 +5,7 @@ let mkCurrentCourse = null;
 let mkChapterAccess = [];
 
 function mkMessage(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
-
+  
 function mkCreateReader() {
   if (document.getElementById("mkReader")) return;
 
