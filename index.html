@@ -765,14 +765,14 @@ async function mkOpenChapter(chapter) {
       } else {
         const unavailable=document.createElement("div");
         unavailable.className="mk-video-unavailable";
-        unavailable.textContent="Cette ressource n’est pas disponible en lecture intégrée. La vidéo sera ajoutée directement dans MK Academy.";
+        unavailable.textContent="Cette ressource ne peut pas être lue directement. Le lecteur pédagogique intégré de MK Academy reste disponible pour cette leçon.";
         unavailable.style.cssText="padding:14px 16px;margin:12px 0;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-size:13px;line-height:1.5";
         block.appendChild(unavailable);
       }
     } else {
       const unavailable=document.createElement("div");
       unavailable.className="mk-video-unavailable";
-      unavailable.textContent="Vidéo de cette leçon en préparation.";
+      unavailable.textContent="Cette leçon est accompagnée par le lecteur pédagogique intégré de MK Academy.";
       unavailable.style.cssText="padding:14px 16px;margin:12px 0;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-size:13px;line-height:1.5";
       block.appendChild(unavailable);
     }
