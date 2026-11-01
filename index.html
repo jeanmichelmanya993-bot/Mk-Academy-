@@ -1234,6 +1234,7 @@ async function mkSaveMediaLesson() {
     if(uploadError){alert("Erreur image : "+uploadError.message);button.disabled=false;button.textContent="Enregistrer la leçon";return;}
   }
   const payload={content:document.getElementById("mkMediaContent").value,video_url:video||null,image_url:imageUrl||null};
+  if(imageUrl)payload.image_path=null;
   if(imagePath){payload.image_path=imagePath;payload.image_url=null;}
   const {error}=await db.from("lessons").update(payload).eq("id",lessonId);
   button.disabled=false;button.textContent="Enregistrer la leçon";
