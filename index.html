@@ -666,7 +666,7 @@ async function mkOpenChapter(chapter) {
     content.appendChild(empty);
   }
 
-  (lessons || []).forEach((lesson, index) => {
+  for (const [index, lesson] of (lessons || []).entries()) {
     const block = document.createElement("div");
     block.className = "panel";
 
@@ -741,7 +741,7 @@ async function mkOpenChapter(chapter) {
     }
 
     content.appendChild(block);
-  });
+  }
 
   await mkLoadChapterAssessment(chapter.id, content);
 }
