@@ -703,6 +703,8 @@ async function mkOpenChapter(chapter) {
         } else if (parsed.hostname.endsWith("vimeo.com")) {
           const id = parsed.pathname.match(/\/(\d+)/)?.[1];
           if (id) embedUrl = "https://player.vimeo.com/video/" + id;
+        } else if (parsed.hostname.endsWith("podeduc.apps.education.fr") || parsed.hostname.endsWith("pod.phm.education.gouv.fr")) {
+          embedUrl = parsed.origin + parsed.pathname.replace(/\/$/, "") + "/?is_iframe=true";
         }
       } catch (_) {}
       if(embedUrl){
