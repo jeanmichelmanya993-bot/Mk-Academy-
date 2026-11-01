@@ -592,6 +592,7 @@ async function mkOpenCourse(courseId) {
 
   chapters.forEach(chapter => {
     const unlocked =
+      isAdmin ||
       chapter.is_free_intro ||
       mkChapterAccess.includes(chapter.id);
 
@@ -608,7 +609,7 @@ async function mkOpenCourse(courseId) {
     list.appendChild(button);
   });
 
-  const allChaptersUnlocked = chapters.every(chapter =>
+  const allChaptersUnlocked = isAdmin || chapters.every(chapter =>
     chapter.is_free_intro || mkChapterAccess.includes(chapter.id)
   );
   if (allChaptersUnlocked) {
@@ -635,6 +636,7 @@ async function mkOpenChapter(chapter) {
   content.innerHTML = "";
 
   const unlocked =
+    isAdmin ||
     chapter.is_free_intro ||
     mkChapterAccess.includes(chapter.id);
 
