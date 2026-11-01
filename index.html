@@ -861,7 +861,6 @@ function mkSafeUrl(value) {
 
 function mkShowPaymentForm(chapter, container) {
   const price = Number(chapter.price_usd || 0);
-
   if (price <= 0) {
     container.append("Le prix de ce chapitre n'est pas encore défini. Contacte l'administration.");
     return;
@@ -899,39 +898,77 @@ function mkShowPaymentForm(chapter, container) {
     const beneficiary = document.createElement("p");
     beneficiary.textContent = details ? "Nom du bénéficiaire : " + details.name : "Les coordonnées vous seront communiquées par l'administration.";
     const instruction = document.createElement("p");
-    instruction.textContent = details ? "Effectuez le paiement à ce numéro, puis saisissez ci-dessous la référence de la transaction." : "Ne faites aucun paiement avant d'avoir reçu les coordonnées.";
+    instruction.textContent = details ? "Effectue le paiement à ce numéro, puis joins la capture d'écran du paiement ci-dessous." : "Ne fais aucun paiement avant d'avoir reçu les coordonnées.";
     paymentDetails.append(heading, number, beneficiary, instruction);
   }
   method.addEventListener("change", updatePaymentDetails);
   updatePaymentDetails();
 
-  const reference = document.createElement("input");
-  reference.className = "field";
-  reference.placeholder = "Référence de transaction Mobile Money";
+  const uploadLabel = document.createElement("label");
+  uploadLabel.textContent = "Capture d'écran du paiement (obligatoire)";
+  uploadLabel.style.cssText = "display:block;font-weight:700;margin:14px 0 6px";
+  const receipt = document.createElement("input");
+  receipt.type = "file";
+  receipt.accept = "image/jpeg,image/png,image/webp";
+  receipt.className = "field";
+  receipt.style.cssText = "display:block;width:100%;margin-bottom:8px";
+  const hint = document.createElement("small");
+  hint.textContent = "Formats JPG, PNG ou WEBP — 5 Mo maximum.";
+  const preview = document.createElement("img");
+  preview.alt = "Aperçu de la capture du paiement";
+  preview.style.cssText = "display:none;max-width:100%;max-height:260px;object-fit:contain;border-radius:10px;margin:8px 0";
+  receipt.addEventListener("change", () => {
+    const file = receipt.files?.[0];
+    preview.style.display = "none";
+    preview.removeAttribute("src");
+    if (!file) return;
+    if (!["image/jpeg","image/png","image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      alert("Choisis une image JPG, PNG ou WEBP de 5 Mo maximum.");
+      receipt.value = "";
+      return;
+    }
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+  });
 
   const note = document.createElement("p");
   note.className = "message";
-  note.textContent =
-    "Après ton paiement, indique la référence de transaction. L'accès sera accordé après vérification.";
+  note.textContent = "Après ton paiement, joins la capture d'écran. L'administration vérifiera la preuve avant de débloquer le chapitre.";
 
   const button = document.createElement("button");
   button.className = "primary full";
-  button.textContent = "Envoyer ma demande de paiement";
+  button.textContent = "Envoyer la preuve de paiement";
 
   button.onclick = async () => {
-    const transaction = reference.value.trim();
-
-    if (!transaction) {
-      alert("Entre la référence de ta transaction.");
+    const file = receipt.files?.[0];
+    if (!file) {
+      alert("Ajoute la capture d'écran de ton paiement.");
       return;
     }
     if (method.value === "Autre") {
       alert("Contacte l'administration pour obtenir les coordonnées de paiement.");
       return;
     }
+    if (!["image/jpeg","image/png","image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      alert("La capture doit être en JPG, PNG ou WEBP et faire 5 Mo maximum.");
+      return;
+    }
 
     button.disabled = true;
-    button.textContent = "Envoi...";
+    button.textContent = "Envoi de la capture...";
+    const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+    const receiptPath = currentUser.id + "/" + crypto.randomUUID() + "." + extension;
+
+    const { error: uploadError } = await db.storage
+      .from("payment-receipts")
+      .upload(receiptPath, file, { contentType: file.type, upsert: false });
+
+    if (uploadError) {
+      alert("Impossible d'envoyer la capture : " + uploadError.message);
+      button.disabled = false;
+      button.textContent = "Envoyer la preuve de paiement";
+      return;
+    }
 
     const { error } = await db.from("chapter_orders").insert({
       user_id: currentUser.id,
@@ -940,26 +977,28 @@ function mkShowPaymentForm(chapter, container) {
       amount_usd: price,
       amount_fc: null,
       payment_method: method.value,
-      transaction_reference: transaction,
+      transaction_reference: null,
+      receipt_path: receiptPath,
       status: "pending"
     });
 
     if (error) {
-      alert("Erreur : " + error.message);
+      await db.storage.from("payment-receipts").remove([receiptPath]);
+      alert("Erreur lors de l'enregistrement : " + error.message);
       button.disabled = false;
-      button.textContent = "Envoyer ma demande de paiement";
+      button.textContent = "Réessayer";
       return;
     }
 
     container.innerHTML = "";
     const success = document.createElement("p");
-    success.textContent =
-      "Demande envoyée. Ton chapitre sera débloqué après validation de l'administration.";
+    success.textContent = "Capture envoyée avec succès. Ta demande attend maintenant la vérification de l'administration.";
     container.appendChild(success);
   };
 
-  container.append(info, method, paymentDetails, reference, note, button);
+  container.append(info, method, paymentDetails, uploadLabel, receipt, hint, preview, note, button);
 }
+
 
 /* AJOUT DU BOUTON CHAPITRES AU CATALOGUE */
 let mkOriginalRenderCourses = null;
@@ -1013,7 +1052,7 @@ function mkCreateAdminPanel() {
             <th>Chapitre</th>
             <th>Prix USD</th>
             <th>Moyen</th>
-            <th>Référence</th>
+            <th>Preuve de paiement</th>
             <th>Statut</th>
             <th>Action</th>
           </tr>
@@ -1149,6 +1188,24 @@ async function mkLoadOrders() {
 
     const reference = document.createElement("td");
     reference.textContent = order.transaction_reference || "";
+    if (order.receipt_path) {
+      const { data: receiptLink, error: receiptError } = await db.storage
+        .from("payment-receipts")
+        .createSignedUrl(order.receipt_path, 300);
+      if (!receiptError && receiptLink?.signedUrl) {
+        const viewReceipt = document.createElement("a");
+        viewReceipt.href = receiptLink.signedUrl;
+        viewReceipt.target = "_blank";
+        viewReceipt.rel = "noopener noreferrer";
+        viewReceipt.textContent = "Voir la capture";
+        viewReceipt.style.fontWeight = "700";
+        reference.appendChild(viewReceipt);
+      } else {
+        reference.textContent = "Capture indisponible";
+      }
+    } else if (!order.transaction_reference) {
+      reference.textContent = "Aucune preuve jointe";
+    }
 
     const status = document.createElement("td");
     status.textContent = statusText(order.status);
