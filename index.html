@@ -747,9 +747,12 @@ async function mkOpenChapter(chapter) {
     if (lesson.video_url) {
       const videoUrl = lesson.video_url.trim();
       let embedUrl = null;
+      let directVideoUrl = null;
       try {
         const parsed = new URL(videoUrl);
-        if (parsed.hostname === "youtu.be") embedUrl = "https://www.youtube-nocookie.com/embed/" + parsed.pathname.slice(1).split("/")[0];
+        if (/\.(mp4|webm|ogg)(?:$|\?)/i.test(parsed.pathname + parsed.search)) {
+          directVideoUrl = parsed.href;
+        } else if (parsed.hostname === "youtu.be") embedUrl = "https://www.youtube-nocookie.com/embed/" + parsed.pathname.slice(1).split("/")[0];
         else if (parsed.hostname.endsWith("youtube.com")) {
           const id = parsed.searchParams.get("v") || parsed.pathname.match(/(?:embed|shorts)\/([^/?]+)/)?.[1];
           if (id) embedUrl = "https://www.youtube-nocookie.com/embed/" + id;
@@ -760,7 +763,16 @@ async function mkOpenChapter(chapter) {
           embedUrl = parsed.origin + parsed.pathname.replace(/\/$/, "") + "/?is_iframe=true";
         }
       } catch (_) {}
-      if(embedUrl){
+      if(directVideoUrl){
+        const player=document.createElement("video");
+        player.controls=true;
+        player.playsInline=true;
+        player.preload="metadata";
+        player.src=directVideoUrl;
+        player.setAttribute("aria-label","Vidéo pédagogique : "+lesson.title);
+        player.style.cssText="display:block;width:100%;max-height:420px;aspect-ratio:16/9;background:#000;border-radius:12px;margin:12px 0";
+        block.appendChild(player);
+      } else if(embedUrl){
         const frame=document.createElement("iframe");
         frame.src=embedUrl;
         frame.title="Vidéo pédagogique : "+lesson.title;
@@ -1141,8 +1153,8 @@ function mkCreateAdminPanel() {
     <select id="mkMediaLesson" class="field" disabled><option value="">Choisir une leçon</option></select>
     <label for="mkMediaContent">Contenu de la leçon</label>
     <textarea id="mkMediaContent" class="field" rows="8" placeholder="Rédige ici le cours et les explications..."></textarea>
-    <label for="mkMediaVideo">Lien vidéo YouTube (facultatif)</label>
-    <input id="mkMediaVideo" class="field" type="url" placeholder="https://www.youtube.com/watch?v=...">
+    <label for="mkMediaVideo">Lien vidéo direct MP4/WEBM ou YouTube (facultatif)</label>
+    <input id="mkMediaVideo" class="field" type="url" placeholder="https://exemple.com/ma-video.mp4">
     <label for="mkMediaImageUrl">Lien d'une illustration (facultatif)</label>
     <input id="mkMediaImageUrl" class="field" type="url" placeholder="https://...">
     <label for="mkMediaImage">Ou importer une illustration (JPG, PNG, WEBP — 8 Mo max.)</label>
