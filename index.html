@@ -308,14 +308,14 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
    <h2 id="authTitle">Bienvenue chez vous.</h2>
    <p class="auth-sub" id="authSubtitle">Connectez-vous pour accéder à votre espace d'apprentissage.</p>
    <div class="auth-switch">
-    <button class="primary" id="signupChoice" onclick="showForm('signup')">Créer un compte</button>
-    <button class="secondary" id="loginChoice" onclick="showForm('login')">Se connecter</button>
+    <button type="button" class="primary" id="signupChoice" onclick="window.showForm('signup')">Créer un compte</button>
+    <button type="button" class="secondary" id="loginChoice" onclick="window.showForm('login')">Se connecter</button>
    </div>
    <form id="authForm">
     <div id="nameArea"><input id="fullname" placeholder="Nom complet" autocomplete="name"></div>
     <input id="email" type="email" placeholder="Adresse e-mail" autocomplete="email" required>
     <input id="password" type="password" placeholder="Mot de passe" minlength="6" autocomplete="current-password" required>
-    <button id="submitBtn" class="primary full">Créer mon compte</button>
+    <button type="submit" id="submitBtn" class="primary full">Créer mon compte</button>
    </form>
    <p id="authMessage" class="message"></p>
    <p class="message">En créant votre compte, vous rejoignez la communauté MK Academy.</p>
@@ -1451,7 +1451,7 @@ async function mkReviewOrder(order, approve) {
 
 
 /* LOGIQUE AUTHENTIFICATION ET NAVIGATION STANDARD */
-function showForm(mode){
+window.showForm = function(mode){
  currentMode=mode;
  document.getElementById("authMessage").textContent="";
  document.getElementById("nameArea").classList.toggle("hidden",mode==="login");
@@ -1460,7 +1460,7 @@ function showForm(mode){
  document.getElementById("authSubtitle").textContent=mode==="signup"?"Rejoignez MK Academy et commencez votre parcours.":"Connectez-vous pour retrouver votre espace d'apprentissage.";
  document.getElementById("signupChoice").className=mode==="signup"?"primary":"secondary";
  document.getElementById("loginChoice").className=mode==="login"?"primary":"secondary";
-}
+};
 
 document.getElementById("authForm").addEventListener("submit",async e=>{
  e.preventDefault();
