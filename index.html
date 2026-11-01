@@ -607,6 +607,24 @@ async function mkOpenCourse(courseId) {
     button.onclick = () => mkOpenChapter(chapter);
     list.appendChild(button);
   });
+
+  const allChaptersUnlocked = chapters.every(chapter =>
+    chapter.is_free_intro || mkChapterAccess.includes(chapter.id)
+  );
+  if (allChaptersUnlocked) {
+    const finalAssessment = await mkLoadFinalAssessment(courseId);
+    if (finalAssessment) {
+      const finalButton = document.createElement("button");
+      finalButton.className = "gold-button full";
+      finalButton.textContent = "🏆 Passer l'évaluation finale";
+      finalButton.onclick = async () => {
+        content.classList.remove("hidden");
+        content.innerHTML = "";
+        await mkRenderAssessment(finalAssessment, content);
+      };
+      list.appendChild(finalButton);
+    }
+  }
 }
 
 async function mkOpenChapter(chapter) {
@@ -641,11 +659,12 @@ async function mkOpenChapter(chapter) {
   }
 
   if (!lessons?.length) {
-    content.append("Les leçons de ce chapitre seront bientôt disponibles.");
-    return;
+    const empty = document.createElement("p");
+    empty.textContent = "Les leçons de ce chapitre seront bientôt disponibles.";
+    content.appendChild(empty);
   }
 
-  lessons.forEach((lesson, index) => {
+  (lessons || []).forEach((lesson, index) => {
     const block = document.createElement("div");
     block.className = "panel";
 
@@ -684,6 +703,149 @@ async function mkOpenChapter(chapter) {
 
     content.appendChild(block);
   });
+
+  await mkLoadChapterAssessment(chapter.id, content);
+}
+
+async function mkLoadChapterAssessment(chapterId, container) {
+  const { data: assessment, error } = await db
+    .from("mk_assessments")
+    .select("id,title,pass_score,total_questions")
+    .eq("chapter_id", chapterId)
+    .eq("assessment_type", "chapter")
+    .eq("is_published", true)
+    .maybeSingle();
+
+  if (error) {
+    const message = document.createElement("p");
+    message.className = "message";
+    message.textContent = "Évaluation indisponible pour le moment.";
+    container.appendChild(message);
+    return;
+  }
+  if (assessment) await mkRenderAssessment(assessment, container);
+}
+
+async function mkLoadFinalAssessment(courseId) {
+  const { data: assessment, error } = await db
+    .from("mk_assessments")
+    .select("id,title,pass_score,total_questions")
+    .eq("course_id", courseId)
+    .eq("assessment_type", "final")
+    .eq("is_published", true)
+    .maybeSingle();
+
+  if (error || !assessment) return null;
+  return assessment;
+}
+
+async function mkRenderAssessment(assessment, container) {
+  const section = document.createElement("section");
+  section.className = "panel";
+  section.style.marginTop = "22px";
+
+  const heading = document.createElement("h3");
+  heading.textContent = "📝 " + assessment.title;
+  const intro = document.createElement("p");
+  intro.className = "message";
+  intro.textContent = assessment.total_questions + " questions • Réussite à partir de " + assessment.pass_score + " bonnes réponses.";
+
+  const status = document.createElement("p");
+  status.className = "message";
+  status.textContent = "Chargement des questions...";
+
+  section.append(heading, intro, status);
+  container.appendChild(section);
+
+  const { data: questions, error } = await db
+    .from("mk_quiz_questions")
+    .select("id,question_text,options,sort_order")
+    .eq("assessment_id", assessment.id)
+    .order("sort_order");
+
+  if (error || !questions?.length) {
+    status.textContent = "Les questions ne sont pas disponibles. Réessaie plus tard.";
+    return;
+  }
+
+  status.remove();
+  const form = document.createElement("form");
+  form.className = "mk-quiz-form";
+
+  questions.forEach((question, index) => {
+    const block = document.createElement("fieldset");
+    block.className = "panel";
+    block.style.margin = "12px 0";
+    const legend = document.createElement("legend");
+    legend.textContent = (index + 1) + ". " + question.question_text;
+    block.appendChild(legend);
+
+    Object.entries(question.options || {}).forEach(([key, value]) => {
+      const label = document.createElement("label");
+      label.style.cssText = "display:flex;gap:9px;align-items:flex-start;padding:8px 4px;cursor:pointer";
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "mkq_" + question.id;
+      radio.value = key;
+      radio.required = true;
+      radio.style.width = "auto";
+      radio.style.margin = "3px 0 0";
+      const answer = document.createElement("span");
+      answer.textContent = key + ". " + value;
+      label.append(radio, answer);
+      block.appendChild(label);
+    });
+    form.appendChild(block);
+  });
+
+  const submit = document.createElement("button");
+  submit.type = "submit";
+  submit.className = "primary full";
+  submit.textContent = "Envoyer mes réponses";
+  const result = document.createElement("div");
+  result.className = "message";
+  form.append(submit, result);
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const answers = [];
+    for (const question of questions) {
+      const selected = form.querySelector('input[name="mkq_' + question.id + '"]:checked');
+      if (!selected) {
+        result.textContent = "Réponds à toutes les questions avant de valider.";
+        return;
+      }
+      answers.push({ question_id: question.id, selected_option: selected.value });
+    }
+
+    submit.disabled = true;
+    submit.textContent = "Correction en cours...";
+    result.textContent = "";
+    const { data, error: submitError } = await db.rpc("submit_mk_quiz", {
+      p_assessment_id: assessment.id,
+      p_answers: answers
+    });
+
+    if (submitError) {
+      result.textContent = "Impossible d'envoyer l'évaluation : " + submitError.message;
+      submit.disabled = false;
+      submit.textContent = "Réessayer";
+      return;
+    }
+
+    result.textContent = data.message + " Score : " + data.score + "/" + data.total + ".";
+    result.style.fontWeight = "700";
+    if (data.passed) {
+      result.style.color = "#27b17e";
+      submit.textContent = "Évaluation réussie ✓";
+    } else {
+      result.style.color = "var(--muted)";
+      submit.disabled = false;
+      submit.textContent = "Recommencer l'évaluation";
+      form.reset();
+    }
+  });
+
+  section.appendChild(form);
 }
 
 function mkSafeUrl(value) {
