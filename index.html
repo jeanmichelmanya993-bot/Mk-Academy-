@@ -2003,6 +2003,72 @@ initialize();
     mode = "signup";
     window.mkAuthMode = "signup";
   });
+
+  window.mkStandaloneEnterApp = async function(user, client) {
+    var byId = function(id) { return document.getElementById(id); };
+    byId("authSection").classList.add("hidden");
+    byId("appSection").classList.remove("hidden");
+    byId("mobileNav").classList.remove("hidden");
+    var name = user.user_metadata && user.user_metadata.full_name ? user.user_metadata.full_name : (user.email || "Apprenant");
+    byId("welcome").textContent = "Bienvenue, " + name.split(" ")[0];
+    byId("topUser").textContent = name;
+    byId("userAvatar").textContent = (name[0] || "M").toUpperCase();
+    byId("profileEmail").textContent = "Adresse e-mail : " + (user.email || "");
+    byId("profileName").textContent = "Nom : " + name;
+    byId("accountType").textContent = "Votre espace d'apprentissage personnel";
+    ["coursesTab","myTab","settingsTab","adminTab"].forEach(function(id) {
+      var el = byId(id); if (el) el.classList.toggle("hidden", id !== "coursesTab");
+    });
+    byId("catalogue").textContent = "Chargement des formations...";
+    byId("courseMessage").textContent = "";
+    try {
+      var result = await client.from("courses").select("id,title,description,duration_days,price_usd").eq("is_published", true).order("sort_order");
+      if (result.error) throw result.error;
+      var courses = result.data || [], catalogue = byId("catalogue");
+      byId("courseCount").textContent = String(courses.length); catalogue.innerHTML = "";
+      if (!courses.length) byId("courseMessage").textContent = "Aucune formation publiée pour le moment.";
+      courses.forEach(function(course) {
+        var card=document.createElement("article");card.className="card";
+        var cover=document.createElement("div");cover.className="course-cover";
+        var tag=document.createElement("span");tag.textContent="MK ACADEMY";cover.appendChild(tag);
+        var body=document.createElement("div");body.className="card-body";
+        var title=document.createElement("h3");title.textContent=course.title;
+        var desc=document.createElement("p");desc.textContent=course.description||"Développez vos compétences avec MK Academy.";
+        var meta=document.createElement("div");meta.className="card-meta";
+        var duration=document.createElement("span");duration.textContent="◷ "+(course.duration_days||"—")+" jours";
+        var price=document.createElement("div");price.className="price";price.textContent=Number(course.price_usd||0).toLocaleString("fr-FR")+" USD";
+        var button=document.createElement("button");button.className="primary";button.type="button";button.textContent="📚 Voir les chapitres";
+        button.onclick=async function(){
+          var old=byId("mkStandaloneReader");if(old)old.remove();
+          var reader=document.createElement("section");reader.id="mkStandaloneReader";reader.className="panel";
+          var back=document.createElement("button");back.className="secondary";back.textContent="← Retour aux formations";back.onclick=function(){reader.remove();};
+          var heading=document.createElement("h2");heading.textContent=course.title;
+          var list=document.createElement("div");list.textContent="Chargement des chapitres...";
+          reader.append(back,heading,list);catalogue.parentNode.insertBefore(reader,catalogue);
+          var ch=await client.from("chapters").select("id,title,is_free_intro,sort_order,price_usd").eq("course_id",course.id).order("sort_order");
+          if(ch.error){list.textContent="Erreur : "+ch.error.message;return;}list.innerHTML="";
+          (ch.data||[]).forEach(function(chapter){
+            var b=document.createElement("button");b.className="secondary full";b.style.margin="6px 0";
+            b.textContent=(chapter.is_free_intro?"🔓 ":"🔒 ")+chapter.title+(chapter.is_free_intro?" — GRATUIT":" — "+Number(chapter.price_usd||0)+" USD");
+            b.onclick=async function(){
+              var prior=reader.querySelector(".mkStandaloneChapter");if(prior)prior.remove();
+              var section=document.createElement("div");section.className="panel mkStandaloneChapter";section.textContent="Chargement des leçons...";reader.appendChild(section);
+              var access=await client.from("chapter_access").select("chapter_id").eq("user_id",user.id).eq("chapter_id",chapter.id).maybeSingle();
+              if(access.error){section.textContent="Erreur d'accès : "+access.error.message;return;}
+              if(!chapter.is_free_intro&&!access.data){section.textContent="Ce chapitre est payant. Contacte l'administration pour demander son déblocage après paiement.";return;}
+              var lessons=await client.from("lessons").select("id,title,content,sort_order").eq("chapter_id",chapter.id).order("sort_order");
+              if(lessons.error){section.textContent="Erreur : "+lessons.error.message;return;}section.innerHTML="";
+              (lessons.data||[]).forEach(function(lesson){var item=document.createElement("article");item.className="panel";var h=document.createElement("h3");h.textContent=lesson.title;var p=document.createElement("p");p.textContent=lesson.content||"";item.append(h,p);section.appendChild(item);});
+              if(!lessons.data||!lessons.data.length)section.textContent="Aucune leçon dans ce chapitre.";
+            };list.appendChild(b);
+          });
+          if(!ch.data||!ch.data.length)list.textContent="Aucun chapitre disponible.";
+        };
+        meta.append(duration);body.append(title,desc,meta,price,button);card.append(cover,body);catalogue.appendChild(card);
+      });
+    } catch(err) { byId("catalogue").innerHTML="";byId("courseMessage").textContent="Catalogue : "+(err.message||"Erreur inconnue"); }
+  };
+
   if (form) form.addEventListener("submit", async function (event) {
     if (mode !== "login" && window.mkAuthMode !== "login") return;
     event.preventDefault();
@@ -2021,11 +2087,7 @@ initialize();
       );
       var result = await client.auth.signInWithPassword({ email: email, password: password });
       if (result.error) throw result.error;
-      if (typeof window.enterApp === "function") {
-        await window.enterApp(result.data.user);
-      } else {
-        message.textContent = "Connexion validée, mais le chargement de votre espace a rencontré une erreur. Rechargez la page.";
-      }
+      await window.mkStandaloneEnterApp(result.data.user, client);
     } catch (error) {
       message.textContent = "Connexion impossible : " + (error.message || "Erreur inconnue");
     } finally {
