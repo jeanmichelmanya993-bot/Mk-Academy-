@@ -506,6 +506,7 @@ window.addEventListener("error", function(event) {
 const SUPABASE_URL = "https://symnweeensaeituthxdb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+window.mkDb = db;
 
 let currentMode = "login", currentUser = null, isAdmin = false, enrollmentsMap = {};
 window.mkAuthMode = "login";
@@ -1978,5 +1979,58 @@ db.auth.onAuthStateChange((event,session)=>{
 
 initialize();
 </script>
+
+<script>
+/* SECOURS CONNEXION : indépendant du script principal */
+(function () {
+  var mode = "login";
+  var loginChoice = document.getElementById("loginChoice");
+  var signupChoice = document.getElementById("signupChoice");
+  var form = document.getElementById("authForm");
+  if (loginChoice) loginChoice.addEventListener("click", function () {
+    mode = "login";
+    window.mkAuthMode = "login";
+    document.getElementById("nameArea").classList.add("hidden");
+    document.getElementById("submitBtn").textContent = "Se connecter";
+    document.getElementById("authTitle").textContent = "Heureux de vous revoir.";
+    document.getElementById("authSubtitle").textContent = "Connectez-vous pour retrouver votre espace d'apprentissage.";
+    document.getElementById("authMessage").textContent = "";
+  });
+  if (signupChoice) signupChoice.addEventListener("click", function () {
+    mode = "signup";
+    window.mkAuthMode = "signup";
+  });
+  if (form) form.addEventListener("submit", async function (event) {
+    if (mode !== "login" && window.mkAuthMode !== "login") return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    var message = document.getElementById("authMessage");
+    var button = document.getElementById("submitBtn");
+    var email = document.getElementById("email").value.trim();
+    var password = document.getElementById("password").value;
+    message.textContent = "Vérification de vos identifiants...";
+    button.disabled = true;
+    try {
+      if (!window.supabase) throw new Error("Le service de connexion ne s'est pas chargé. Recharge la page.");
+      var client = window.mkDb || window.supabase.createClient(
+        "https://symnweeensaeituthxdb.supabase.co",
+        "sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH"
+      );
+      var result = await client.auth.signInWithPassword({ email: email, password: password });
+      if (result.error) throw result.error;
+      if (typeof window.enterApp === "function") {
+        await window.enterApp(result.data.user);
+      } else {
+        message.textContent = "Connexion validée, mais le chargement de votre espace a rencontré une erreur. Rechargez la page.";
+      }
+    } catch (error) {
+      message.textContent = "Connexion impossible : " + (error.message || "Erreur inconnue");
+    } finally {
+      button.disabled = false;
+    }
+  }, true);
+})();
+</script>
+
 </body>
 </html>
