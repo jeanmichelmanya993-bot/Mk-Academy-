@@ -679,16 +679,19 @@ async function mkOpenChapter(chapter) {
 
     block.append(title, text);
 
+    let lessonImageUrl = lesson.image_url || null;
     if (lesson.image_path) {
       const {data:imageLink,error:imageError}=await db.storage.from("lesson-media").createSignedUrl(lesson.image_path,300);
-      if(!imageError&&imageLink?.signedUrl){
-        const image=document.createElement("img");
-        image.src=imageLink.signedUrl;
-        image.alt="Illustration : "+lesson.title;
-        image.loading="lazy";
-        image.style.cssText="display:block;width:100%;max-height:420px;object-fit:contain;border-radius:12px;margin:12px 0";
-        block.appendChild(image);
-      }
+      if(!imageError&&imageLink?.signedUrl) lessonImageUrl=imageLink.signedUrl;
+    }
+    if(lessonImageUrl){
+      const image=document.createElement("img");
+      image.src=lessonImageUrl;
+      image.alt="Illustration : "+lesson.title;
+      image.loading="lazy";
+      image.referrerPolicy="no-referrer";
+      image.style.cssText="display:block;width:100%;max-height:420px;object-fit:contain;border-radius:12px;margin:12px 0";
+      block.appendChild(image);
     }
 
     if (lesson.video_url) {
@@ -1084,7 +1087,9 @@ function mkCreateAdminPanel() {
     <textarea id="mkMediaContent" class="field" rows="8" placeholder="Rédige ici le cours et les explications..."></textarea>
     <label for="mkMediaVideo">Lien vidéo YouTube (facultatif)</label>
     <input id="mkMediaVideo" class="field" type="url" placeholder="https://www.youtube.com/watch?v=...">
-    <label for="mkMediaImage">Illustration de la leçon (JPG, PNG, WEBP — 8 Mo max.)</label>
+    <label for="mkMediaImageUrl">Lien d'une illustration (facultatif)</label>
+    <input id="mkMediaImageUrl" class="field" type="url" placeholder="https://...">
+    <label for="mkMediaImage">Ou importer une illustration (JPG, PNG, WEBP — 8 Mo max.)</label>
     <input id="mkMediaImage" class="field" type="file" accept="image/jpeg,image/png,image/webp">
     <img id="mkMediaPreview" alt="Aperçu de l’illustration" style="display:none;max-width:100%;max-height:220px;border-radius:12px;margin:10px 0">
     <button id="mkMediaSave" class="primary full" type="button">Enregistrer la leçon</button>
@@ -1142,6 +1147,7 @@ async async function mkLoadMediaChapters() {
   lessonSelect.disabled = true;
   document.getElementById("mkMediaContent").value = "";
   document.getElementById("mkMediaVideo").value = "";
+  document.getElementById("mkMediaImageUrl").value = "";
   document.getElementById("mkMediaPreview").style.display = "none";
   const courseId = document.getElementById("mkMediaCourse").value;
   if (!courseId) { select.innerHTML = '<option value="">Choisir un chapitre</option>'; select.disabled = true; return; }
@@ -1168,6 +1174,7 @@ async function mkLoadMediaLessons() {
   select.disabled=false;
   document.getElementById("mkMediaContent").value="";
   document.getElementById("mkMediaVideo").value="";
+  document.getElementById("mkMediaImageUrl").value="";
   document.getElementById("mkMediaImage").value="";
   document.getElementById("mkMediaPreview").style.display="none";
 }
@@ -1176,16 +1183,19 @@ async function mkLoadMediaLesson() {
   const id=document.getElementById("mkMediaLesson").value;
   if(!id)return;
   mkMessage("mkMediaMessage","Chargement de la leçon...");
-  const {data,error}=await db.from("lessons").select("id,content,video_url,image_path").eq("id",id).maybeSingle();
+  const {data,error}=await db.from("lessons").select("id,content,video_url,image_path,image_url").eq("id",id).maybeSingle();
   if(error||!data){mkMessage("mkMediaMessage","Impossible de charger cette leçon.");return;}
   document.getElementById("mkMediaContent").value=data.content||"";
   document.getElementById("mkMediaVideo").value=data.video_url||"";
+  document.getElementById("mkMediaImageUrl").value=data.image_url||"";
   document.getElementById("mkMediaImage").value="";
   const preview=document.getElementById("mkMediaPreview");
   preview.style.display="none";
   if(data.image_path){
     const {data:link}=await db.storage.from("lesson-media").createSignedUrl(data.image_path,300);
     if(link?.signedUrl){preview.src=link.signedUrl;preview.style.display="block";}
+  } else if(data.image_url) {
+    preview.src=data.image_url;preview.style.display="block";
   }
   mkMessage("mkMediaMessage","Leçon chargée. Tu peux modifier son contenu et ajouter des médias.");
 }
@@ -1209,7 +1219,9 @@ async function mkSaveMediaLesson() {
   const button=document.getElementById("mkMediaSave");
   const file=document.getElementById("mkMediaImage").files?.[0];
   const video=document.getElementById("mkMediaVideo").value.trim();
+  const imageUrl=document.getElementById("mkMediaImageUrl").value.trim();
   if(video&&!/^https:\/\//i.test(video)){alert("Le lien vidéo doit commencer par https://");return;}
+  if(imageUrl&&!/^https:\/\//i.test(imageUrl)){alert("Le lien de l'image doit commencer par https://");return;}
   button.disabled=true;button.textContent="Enregistrement...";
   let imagePath=undefined;
   if(file){
@@ -1221,8 +1233,8 @@ async function mkSaveMediaLesson() {
     const {error:uploadError}=await db.storage.from("lesson-media").upload(imagePath,file,{contentType:file.type,upsert:false});
     if(uploadError){alert("Erreur image : "+uploadError.message);button.disabled=false;button.textContent="Enregistrer la leçon";return;}
   }
-  const payload={content:document.getElementById("mkMediaContent").value,video_url:video||null};
-  if(imagePath)payload.image_path=imagePath;
+  const payload={content:document.getElementById("mkMediaContent").value,video_url:video||null,image_url:imageUrl||null};
+  if(imagePath){payload.image_path=imagePath;payload.image_url=null;}
   const {error}=await db.from("lessons").update(payload).eq("id",lessonId);
   button.disabled=false;button.textContent="Enregistrer la leçon";
   if(error){
