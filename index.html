@@ -720,12 +720,18 @@ async function mkOpenChapter(chapter) {
         frame.style.cssText="display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:12px;margin:12px 0";
         block.appendChild(frame);
       } else {
-        const url=mkSafeUrl(videoUrl);
-        if(url){
-          const link=document.createElement("a");link.href=url;link.target="_blank";link.rel="noopener noreferrer";
-          link.textContent=(url.includes("youtube.com/results?search_query=")?"▶ Voir des vidéos sur ce sujet (YouTube)":"▶ Ouvrir la vidéo");block.appendChild(link);
-        }
+        const unavailable=document.createElement("div");
+        unavailable.className="mk-video-unavailable";
+        unavailable.textContent="Cette ressource n’est pas disponible en lecture intégrée. La vidéo sera ajoutée directement dans MK Academy.";
+        unavailable.style.cssText="padding:14px 16px;margin:12px 0;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-size:13px;line-height:1.5";
+        block.appendChild(unavailable);
       }
+    } else {
+      const unavailable=document.createElement("div");
+      unavailable.className="mk-video-unavailable";
+      unavailable.textContent="Vidéo de cette leçon en préparation.";
+      unavailable.style.cssText="padding:14px 16px;margin:12px 0;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-size:13px;line-height:1.5";
+      block.appendChild(unavailable);
     }
 
     if (lesson.pdf_url) {
