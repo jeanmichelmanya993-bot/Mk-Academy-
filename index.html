@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101426">
 <title>MK Academy | Apprendre autrement</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2'"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
@@ -308,8 +308,8 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
    <h2 id="authTitle">Bienvenue chez vous.</h2>
    <p class="auth-sub" id="authSubtitle">Connectez-vous pour accéder à votre espace d'apprentissage.</p>
    <div class="auth-switch">
-    <button type="button" class="primary" id="signupChoice" onclick="window.showForm('signup')">Créer un compte</button>
-    <button type="button" class="secondary" id="loginChoice" onclick="window.showForm('login')">Se connecter</button>
+    <button type="button" class="primary" id="signupChoice" onclick="if(window.showForm){window.showForm('signup')}else{document.getElementById('nameArea').classList.remove('hidden');document.getElementById('submitBtn').textContent='Créer mon compte';document.getElementById('authTitle').textContent='Créez votre compte.';document.getElementById('authMessage').textContent='';}">Créer un compte</button>
+    <button type="button" class="secondary" id="loginChoice" onclick="if(window.showForm){window.showForm('login')}else{document.getElementById('nameArea').classList.add('hidden');document.getElementById('submitBtn').textContent='Se connecter';document.getElementById('authTitle').textContent='Heureux de vous revoir.';document.getElementById('authMessage').textContent='';}">Se connecter</button>
    </div>
    <form id="authForm">
     <div id="nameArea"><input id="fullname" placeholder="Nom complet" autocomplete="name"></div>
@@ -498,6 +498,10 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
 </nav>
 
 <script>
+window.addEventListener("error", function(event) {
+  const message = document.getElementById("authMessage");
+  if (message) message.textContent = "Erreur technique : " + (event.message || "chargement de MK Academy impossible");
+});
 /* CONFIGURATION SUPABASE */
 const SUPABASE_URL = "https://symnweeensaeituthxdb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH";
