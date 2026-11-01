@@ -879,6 +879,32 @@ function mkShowPaymentForm(chapter, container) {
     <option value="Autre">Autre</option>
   `;
 
+  const paymentDetails = document.createElement("div");
+  paymentDetails.className = "panel";
+  paymentDetails.style.cssText = "margin:12px 0;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--surface, #f7f9fc)";
+  const paymentNumbers = {
+    "M-Pesa": { number: "+243 830 514 531", name: "Jeans Michel Muambayi" },
+    "Airtel Money": { number: "+243 993 933 155", name: "Mbenga Mbemga Jacques" },
+    "Orange Money": { number: "+243 808 829 002", name: "Falonne Wa Banza" }
+  };
+
+  function updatePaymentDetails() {
+    const details = paymentNumbers[method.value];
+    paymentDetails.innerHTML = "";
+    const heading = document.createElement("strong");
+    heading.textContent = details ? "Envoyer le paiement par " + method.value : "Autre moyen de paiement";
+    const number = document.createElement("p");
+    number.style.cssText = "font-size:20px;font-weight:800;margin:10px 0 4px";
+    number.textContent = details ? details.number : "Veuillez contacter l'administration.";
+    const beneficiary = document.createElement("p");
+    beneficiary.textContent = details ? "Nom du bénéficiaire : " + details.name : "Les coordonnées vous seront communiquées par l'administration.";
+    const instruction = document.createElement("p");
+    instruction.textContent = details ? "Effectuez le paiement à ce numéro, puis saisissez ci-dessous la référence de la transaction." : "Ne faites aucun paiement avant d'avoir reçu les coordonnées.";
+    paymentDetails.append(heading, number, beneficiary, instruction);
+  }
+  method.addEventListener("change", updatePaymentDetails);
+  updatePaymentDetails();
+
   const reference = document.createElement("input");
   reference.className = "field";
   reference.placeholder = "Référence de transaction Mobile Money";
@@ -897,6 +923,10 @@ function mkShowPaymentForm(chapter, container) {
 
     if (!transaction) {
       alert("Entre la référence de ta transaction.");
+      return;
+    }
+    if (method.value === "Autre") {
+      alert("Contacte l'administration pour obtenir les coordonnées de paiement.");
       return;
     }
 
@@ -928,7 +958,7 @@ function mkShowPaymentForm(chapter, container) {
     container.appendChild(success);
   };
 
-  container.append(info, method, reference, note, button);
+  container.append(info, method, paymentDetails, reference, note, button);
 }
 
 /* AJOUT DU BOUTON CHAPITRES AU CATALOGUE */
