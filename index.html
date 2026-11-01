@@ -726,7 +726,8 @@ async function mkOpenChapter(chapter) {
     text.style.whiteSpace = "pre-wrap";
     text.textContent = lesson.content || "Contenu bientôt disponible.";
 
-    block.append(title, text);\n    mkCreateInAppLessonPlayer(lesson, block);
+    block.append(title, text);
+    mkCreateInAppLessonPlayer(lesson, block);
 
     let lessonImageUrl = lesson.image_url || null;
     if (lesson.image_path) {
@@ -2087,7 +2088,8 @@ initialize();
       );
       var result = await client.auth.signInWithPassword({ email: email, password: password });
       if (result.error) throw result.error;
-      await window.mkStandaloneEnterApp(result.data.user, client);
+      if (typeof window.enterApp !== "function") throw new Error("Le chargement complet de MK Academy n’est pas disponible. Recharge la page.");
+      await window.enterApp(result.data.user);
     } catch (error) {
       message.textContent = "Connexion impossible : " + (error.message || "Erreur inconnue");
     } finally {
