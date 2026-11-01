@@ -308,8 +308,8 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
    <h2 id="authTitle">Bienvenue chez vous.</h2>
    <p class="auth-sub" id="authSubtitle">Connectez-vous pour accéder à votre espace d'apprentissage.</p>
    <div class="auth-switch">
-    <button type="button" class="primary" id="signupChoice" onclick="if(window.showForm){window.showForm('signup')}else{document.getElementById('nameArea').classList.remove('hidden');document.getElementById('submitBtn').textContent='Créer mon compte';document.getElementById('authTitle').textContent='Créez votre compte.';document.getElementById('authMessage').textContent='';}">Créer un compte</button>
-    <button type="button" class="secondary" id="loginChoice" onclick="if(window.showForm){window.showForm('login')}else{document.getElementById('nameArea').classList.add('hidden');document.getElementById('submitBtn').textContent='Se connecter';document.getElementById('authTitle').textContent='Heureux de vous revoir.';document.getElementById('authMessage').textContent='';}">Se connecter</button>
+    <button type="button" class="primary" id="signupChoice" onclick="if(window.showForm){window.showForm('signup')}else{window.mkAuthMode='signup';document.getElementById('nameArea').classList.remove('hidden');document.getElementById('submitBtn').textContent='Créer mon compte';document.getElementById('authTitle').textContent='Créez votre compte.';document.getElementById('authMessage').textContent='';}">Créer un compte</button>
+    <button type="button" class="secondary" id="loginChoice" onclick="if(window.showForm){window.showForm('login')}else{window.mkAuthMode='login';document.getElementById('nameArea').classList.add('hidden');document.getElementById('submitBtn').textContent='Se connecter';document.getElementById('authTitle').textContent='Heureux de vous revoir.';document.getElementById('authMessage').textContent='';}">Se connecter</button>
    </div>
    <form id="authForm">
     <div id="nameArea"><input id="fullname" placeholder="Nom complet" autocomplete="name"></div>
@@ -507,7 +507,8 @@ const SUPABASE_URL = "https://symnweeensaeituthxdb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentMode = "signup", currentUser = null, isAdmin = false, enrollmentsMap = {};
+let currentMode = "login", currentUser = null, isAdmin = false, enrollmentsMap = {};
+window.mkAuthMode = "login";
 let allCourses = [], selectedCategory = "Toutes", currentView = "grid";
 
 /* MK ACADEMY — CHAPITRES GRATUITS ET PAYANTS */
@@ -1506,6 +1507,7 @@ async function mkReviewOrder(order, approve) {
 /* LOGIQUE AUTHENTIFICATION ET NAVIGATION STANDARD */
 window.showForm = function(mode){
  currentMode=mode;
+ window.mkAuthMode=mode;
  document.getElementById("authMessage").textContent="";
  document.getElementById("nameArea").classList.toggle("hidden",mode==="login");
  document.getElementById("submitBtn").textContent=mode==="signup"?"Créer mon compte":"Se connecter";
@@ -1523,7 +1525,7 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
  const name=document.getElementById("fullname").value.trim();
  message.textContent="Connexion en cours...";
  try{
-  if(currentMode==="signup"){
+  if((window.mkAuthMode || currentMode || "login")==="signup"){
    if(!name)throw new Error("Entre ton nom complet.");
    const {data,error}=await db.auth.signUp({
     email,password,
