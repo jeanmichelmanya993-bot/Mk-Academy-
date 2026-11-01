@@ -723,7 +723,7 @@ async function mkOpenChapter(chapter) {
         const url=mkSafeUrl(videoUrl);
         if(url){
           const link=document.createElement("a");link.href=url;link.target="_blank";link.rel="noopener noreferrer";
-          link.textContent="▶ Ouvrir la vidéo";block.appendChild(link);
+          link.textContent=(url.includes("youtube.com/results?search_query=")?"▶ Voir des vidéos sur ce sujet (YouTube)":"▶ Ouvrir la vidéo");block.appendChild(link);
         }
       }
     }
