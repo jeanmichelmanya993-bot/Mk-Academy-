@@ -1584,6 +1584,9 @@ async function enterApp(user){
  showTab("coursesTab");
 }
 
+// Expose explicitement le chargeur d'espace à la connexion de secours.
+window.enterApp = enterApp;
+
 function showTab(id,button){
  if(id==="adminTab"&&!isAdmin)return;
 
