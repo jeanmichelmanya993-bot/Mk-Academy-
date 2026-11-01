@@ -1,19 +1,8 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#101426">
-<title>MK Academy | Apprendre autrement</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
- 
 <script>
-/* MK ACADEMY — CHAPITRES GRATUITS ET PAYANTS */
+/* MK ACADEMY — MODULE CHAPITRES */
 
 let mkCurrentCourse = null;
-let mkCurrentChapter = null;
 let mkChapterAccess = [];
-let mkChapterOrders = [];
 
 function mkMessage(id, text) {
   const el = document.getElementById(id);
@@ -25,15 +14,14 @@ function mkCreateReader() {
 
   const reader = document.createElement("div");
   reader.id = "mkReader";
-  reader.className = "panel hidden";
+  reader.className = "panel";
   reader.style.cssText =
     "position:fixed;inset:10px;z-index:100;background:var(--bg);overflow:auto;padding:22px;border:2px solid var(--purple);";
 
   reader.innerHTML = `
     <button class="secondary" onclick="mkCloseReader()">← Retour</button>
     <h2 id="mkCourseTitle">Formation</h2>
-    <p class="message">Choisis un chapitre pour commencer.</p>
-    <div id="mkChapterList"></div>
+    <div id="mkChapterList">Chargement...</div>
     <div id="mkChapterContent" class="panel hidden"></div>
   `;
 
@@ -41,26 +29,25 @@ function mkCreateReader() {
 }
 
 function mkCloseReader() {
-  document.getElementById("mkReader")?.classList.add("hidden");
+  document.getElementById("mkReader")?.remove();
 }
 
 async function mkOpenCourse(courseId) {
+  if (!currentUser) return alert("Connecte-toi pour accéder aux formations.");
+
   mkCreateReader();
 
   const course = allCourses.find(c => c.id === courseId);
   if (!course) return alert("Formation introuvable.");
 
   mkCurrentCourse = course;
-  mkChapterAccess = [];
 
-  document.getElementById("mkReader").classList.remove("hidden");
   document.getElementById("mkCourseTitle").textContent = course.title;
 
   const list = document.getElementById("mkChapterList");
   const content = document.getElementById("mkChapterContent");
 
   list.textContent = "Chargement des chapitres...";
-  content.classList.add("hidden");
 
   const { data: chapters, error } = await db
     .from("chapters")
@@ -74,12 +61,12 @@ async function mkOpenCourse(courseId) {
   }
 
   if (!chapters?.length) {
-    list.textContent = "Aucun chapitre disponible pour cette formation.";
+    list.textContent = "Aucun chapitre disponible.";
     return;
   }
 
   const { data: access, error: accessError } = await db
-    .from("chapter_access")
+    .from("course_access")
     .select("chapter_id")
     .eq("user_id", currentUser.id)
     .eq("course_id", courseId);
@@ -104,8 +91,9 @@ async function mkOpenCourse(courseId) {
     button.textContent =
       (unlocked ? "🔓 " : "🔒 ") +
       chapter.title +
-      (chapter.is_free_intro ? " — GRATUIT" :
-        " — " + Number(chapter.price_usd || 0) + " USD");
+      (chapter.is_free_intro
+        ? " — GRATUIT"
+        : " — " + Number(chapter.price_usd || 0) + " USD");
 
     button.onclick = () => mkOpenChapter(chapter);
     list.appendChild(button);
@@ -113,19 +101,17 @@ async function mkOpenCourse(courseId) {
 }
 
 async function mkOpenChapter(chapter) {
-  mkCurrentChapter = chapter;
-
   const content = document.getElementById("mkChapterContent");
   content.classList.remove("hidden");
   content.innerHTML = "";
 
-  const unlocked =
-    chapter.is_free_intro ||
-    mkChapterAccess.includes(chapter.id);
-
   const heading = document.createElement("h3");
   heading.textContent = chapter.title;
   content.appendChild(heading);
+
+  const unlocked =
+    chapter.is_free_intro ||
+    mkChapterAccess.includes(chapter.id);
 
   if (!unlocked) {
     mkShowPaymentForm(chapter, content);
@@ -144,7 +130,7 @@ async function mkOpenChapter(chapter) {
   }
 
   if (!lessons?.length) {
-    content.append("Les leçons de ce chapitre seront bientôt disponibles.");
+    content.append("Les leçons seront bientôt disponibles.");
     return;
   }
 
@@ -162,120 +148,94 @@ async function mkOpenChapter(chapter) {
     block.append(title, text);
 
     if (lesson.video_url) {
-      const url = mkSafeUrl(lesson.video_url);
-      if (url) {
-        const link = document.createElement("a");
-        link.href = url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "▶ Voir la vidéo";
-        block.appendChild(link);
-      }
+      const link = document.createElement("a");
+      link.href = lesson.video_url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "▶ Voir la vidéo";
+      block.appendChild(link);
     }
 
     if (lesson.pdf_url) {
-      const url = mkSafeUrl(lesson.pdf_url);
-      if (url) {
-        const link = document.createElement("a");
-        link.href = url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "📄 Télécharger le document";
-        block.appendChild(link);
-      }
+      const link = document.createElement("a");
+      link.href = lesson.pdf_url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "📄 Télécharger le document";
+      block.appendChild(link);
     }
 
     content.appendChild(block);
   });
 }
 
-function mkSafeUrl(value) {
-  try {
-    const url = new URL(value);
-    return ["https:", "http:"].includes(url.protocol) ? url.href : null;
-  } catch {
-    return null;
-  }
-}
-
 function mkShowPaymentForm(chapter, container) {
   const price = Number(chapter.price_usd || 0);
 
   if (price <= 0) {
-    container.append("Le prix de ce chapitre n'est pas encore défini. Contacte l'administration.");
+    container.append("Prix non défini. Contacte l'administration.");
     return;
   }
 
   const info = document.createElement("p");
-  info.textContent = "Prix du chapitre : " + price + " USD";
+  info.textContent = "Prix : " + price + " USD";
 
   const method = document.createElement("select");
   method.className = "field";
   method.innerHTML = `
-    <option value="M-Pesa">M-Pesa</option>
-    <option value="Airtel Money">Airtel Money</option>
-    <option value="Orange Money">Orange Money</option>
-    <option value="Autre">Autre</option>
+    <option>M-Pesa</option>
+    <option>Airtel Money</option>
+    <option>Orange Money</option>
+    <option>Autre</option>
   `;
 
   const reference = document.createElement("input");
   reference.className = "field";
-  reference.placeholder = "Référence de transaction Mobile Money";
-
-  const note = document.createElement("p");
-  note.className = "message";
-  note.textContent =
-    "Après ton paiement, indique la référence de transaction. L'accès sera accordé après vérification.";
+  reference.placeholder = "Référence de transaction";
 
   const button = document.createElement("button");
   button.className = "primary full";
-  button.textContent = "Envoyer ma demande de paiement";
+  button.textContent = "Envoyer ma demande";
 
   button.onclick = async () => {
-    const transaction = reference.value.trim();
-
-    if (!transaction) {
-      alert("Entre la référence de ta transaction.");
+    if (!reference.value.trim()) {
+      alert("Entre la référence de transaction.");
       return;
     }
 
     button.disabled = true;
     button.textContent = "Envoi...";
 
-    const { error } = await db.from("chapter_orders").insert({
+    const { error } = await db.from("orders").insert({
       user_id: currentUser.id,
       course_id: mkCurrentCourse.id,
       chapter_id: chapter.id,
       amount_usd: price,
-      amount_fc: null,
       payment_method: method.value,
-      transaction_reference: transaction,
+      transaction_reference: reference.value.trim(),
       status: "pending"
     });
 
     if (error) {
       alert("Erreur : " + error.message);
       button.disabled = false;
-      button.textContent = "Envoyer ma demande de paiement";
+      button.textContent = "Envoyer ma demande";
       return;
     }
 
-    container.innerHTML = "";
-    const success = document.createElement("p");
-    success.textContent =
-      "Demande envoyée. Ton chapitre sera débloqué après validation de l'administration.";
-    container.appendChild(success);
+    container.innerHTML =
+      "<p>Demande envoyée. Attends la validation de l'administration.</p>";
   };
 
-  container.append(info, method, reference, note, button);
+  container.append(info, method, reference, button);
 }
 
-/* AJOUT DU BOUTON CHAPITRES AU CATALOGUE */
+/* BOUTON CHAPITRES DANS LE CATALOGUE */
 
-const mkOriginalRenderCourses = renderCourses;
+const mkRenderOriginal = renderCourses;
 
 renderCourses = function() {
-  mkOriginalRenderCourses();
+  mkRenderOriginal();
 
   document.querySelectorAll("#catalogue .card").forEach(card => {
     const title = card.querySelector("h3")?.textContent;
@@ -288,7 +248,7 @@ renderCourses = function() {
     button.textContent = "📚 Voir les chapitres";
     button.onclick = () => mkOpenCourse(course.id);
 
-    card.querySelector(".card-body").appendChild(button);
+    card.querySelector(".card-body")?.appendChild(button);
   });
 };
 
@@ -302,12 +262,12 @@ function mkCreateAdminPanel() {
   panel.className = "panel section";
 
   panel.innerHTML = `
-    <h3>Gestion des chapitres et de leurs prix</h3>
+    <h3>Gestion des chapitres et des prix</h3>
     <select id="mkAdminCourse" class="field">
       <option value="">Choisir une formation</option>
     </select>
     <div id="mkAdminChapterList"></div>
-    <hr style="border-color:var(--border);margin:25px 0">
+    <hr>
     <h3>Demandes de paiement des chapitres</h3>
     <button class="secondary" onclick="mkLoadOrders()">Actualiser</button>
     <p id="mkOrderMessage" class="message"></p>
@@ -317,7 +277,7 @@ function mkCreateAdminPanel() {
           <tr>
             <th>Apprenant</th>
             <th>Chapitre</th>
-            <th>Prix USD</th>
+            <th>Prix</th>
             <th>Moyen</th>
             <th>Référence</th>
             <th>Statut</th>
@@ -331,8 +291,8 @@ function mkCreateAdminPanel() {
 
   document.getElementById("adminTab").appendChild(panel);
 
-  document.getElementById("mkAdminCourse").onchange = () =>
-    mkLoadAdminChapters();
+  document.getElementById("mkAdminCourse").onchange =
+    mkLoadAdminChapters;
 }
 
 async function mkLoadAdminChapters() {
@@ -359,7 +319,7 @@ async function mkLoadAdminChapters() {
 
     const title = document.createElement("strong");
     title.textContent = chapter.title +
-      (chapter.is_free_intro ? " — INTRODUCTION GRATUITE" : "");
+      (chapter.is_free_intro ? " — GRATUIT" : "");
 
     const price = document.createElement("input");
     price.className = "field";
@@ -374,20 +334,13 @@ async function mkLoadAdminChapters() {
     save.textContent = "Enregistrer le prix";
 
     save.onclick = async () => {
-      save.disabled = true;
-
       const { error } = await db
         .from("chapters")
         .update({ price_usd: Number(price.value) })
         .eq("id", chapter.id);
 
-      save.disabled = false;
-
-      if (error) {
-        alert("Erreur : " + error.message);
-      } else {
-        alert("Prix enregistré.");
-      }
+      if (error) alert("Erreur : " + error.message);
+      else alert("Prix enregistré.");
     };
 
     row.append(title, price, save);
@@ -403,8 +356,9 @@ async function mkLoadOrders() {
   mkMessage("mkOrderMessage", "Chargement...");
 
   const { data, error } = await db
-    .from("chapter_orders")
+    .from("orders")
     .select("*")
+    .not("chapter_id", "is", null)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -412,586 +366,34 @@ async function mkLoadOrders() {
     return;
   }
 
-  mkChapterOrders = data || [];
-
-  if (!mkChapterOrders.length) {
+  if (!data?.length) {
     mkMessage("mkOrderMessage", "Aucune demande de paiement.");
     return;
   }
 
-  mkMessage("mkOrderMessage", mkChapterOrders.length + " demande(s).");
-
-  for (const order of mkChapterOrders) {
-    const [userResult, courseResult, chapterResult] = await Promise.all([
-      db.from("profiles").select("*").eq("id", order.user_id).maybeSingle(),
+  for (const order of data) {
+    const [profile, course, chapter] = await Promise.all([
+      db.from("profiles").select("full_name").eq("id", order.user_id).maybeSingle(),
       db.from("courses").select("title").eq("id", order.course_id).maybeSingle(),
       db.from("chapters").select("title").eq("id", order.chapter_id).maybeSingle()
     ]);
 
     const tr = document.createElement("tr");
-
-    const learner = document.createElement("td");
-    learner.textContent =
-      userResult.data?.full_name || order.user_id;
-
-    const chapter = document.createElement("td");
-    chapter.textContent =
-      (courseResult.data?.title || "Formation") + " / " +
-      (chapterResult.data?.title || "Chapitre");
-
-    const amount = document.createElement("td");
-    amount.textContent = order.amount_usd + " USD";
-
-    const method = document.createElement("td");
-    method.textContent = order.payment_method || "";
-
-    const reference = document.createElement("td");
-    reference.textContent = order.transaction_reference || "";
-
-    const status = document.createElement("td");
-    status.textContent = statusText(order.status);
-
-    const actions = document.createElement("td");
-
-    if (order.status === "pending") {
-      const approve = document.createElement("button");
-      approve.className = "success";
-      approve.textContent = "Valider";
-      approve.onclick = () => mkReviewOrder(order, true);
-
-      const reject = document.createElement("button");
-      reject.className = "danger";
-      reject.textContent = "Refuser";
-      reject.onclick = () => mkReviewOrder(order, false);
-
-      actions.append(approve, reject);
-    }
-
-    tr.append(learner, chapter, amount, method, reference, status, actions);
-    rows.appendChild(tr);
-  }
-}
-
-async function mkReviewOrder(order, approve) {
-  if (!isAdmin) return;
-
-  if (!confirm(approve
-    ? "Confirmer le paiement et débloquer ce chapitre ?"
-    : "Refuser cette demande ?")) return;
-
-  if (approve) {
-    const { error: accessError } = await db
-      .from("chapter_access")
-      .upsert({
-        user_id: order.user_id,
-        course_id: order.course_id,
-        chapter_id: order.chapter_id,
-        order_id: order.id,
-        granted_by: currentUser.id
-      }, { onConflict: "user_id,chapter_id" });
-
-    if (accessError) {
-      alert("Impossible de débloquer le chapitre : " + accessError.message);
-      return;
-    }
-  }
-
-  const { error } = await db
-    .from("chapter_orders")
-    .update({
-      status: approve ? "approved" : "rejected",
-      reviewed_by: currentUser.id,
-      reviewed_at: new Date().toISOString()
-    })
-    .eq("id", order.id);
-
-  if (error) {
-    alert("Erreur : " + error.message);
-    return;
-  }
-
-  alert(approve ? "Chapitre débloqué." : "Demande refusée.");
-  await mkLoadOrders();
-}
-
-/* INTÉGRATION À L'ESPACE ADMIN */
-
-const mkOriginalEnterApp = enterApp;
-
-enterApp = async function(user) {
-  await mkOriginalEnterApp(user);
-
-  if (isAdmin) {
-    mkCreateAdminPanel();
-
-    const select = document.getElementById("mkAdminCourse");
-    select.innerHTML = '<option value="">Choisir une formation</option>';
-
-    const { data, error } = await db
-      .from("courses")
-      .select("id,title")
-      .order("sort_order");
-
-    if (!error) {
-      (data || []).forEach(course => {
-        const option = document.createElement("option");
-        option.value = course.id;
-        option.textContent = course.title;
-        select.appendChild(option);
-      });
-    }
-
-    await mkLoadOrders();
-  }
-};
-</script>
-</body>
-</html>
-
-<script>
-/* MK ACADEMY — CHAPITRES GRATUITS ET PAYANTS */
-
-let mkCurrentCourse = null;
-let mkCurrentChapter = null;
-let mkChapterAccess = [];
-let mkChapterOrders = [];
-
-function mkMessage(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
-
-function mkCreateReader() {
-  if (document.getElementById("mkReader")) return;
-
-  const reader = document.createElement("div");
-  reader.id = "mkReader";
-  reader.className = "panel hidden";
-  reader.style.cssText =
-    "position:fixed;inset:10px;z-index:100;background:var(--bg);overflow:auto;padding:22px;border:2px solid var(--purple);";
-
-  reader.innerHTML = `
-    <button class="secondary" onclick="mkCloseReader()">← Retour</button>
-    <h2 id="mkCourseTitle">Formation</h2>
-    <p class="message">Choisis un chapitre pour commencer.</p>
-    <div id="mkChapterList"></div>
-    <div id="mkChapterContent" class="panel hidden"></div>
-  `;
-
-  document.body.appendChild(reader);
-}
-
-function mkCloseReader() {
-  document.getElementById("mkReader")?.classList.add("hidden");
-}
-
-async function mkOpenCourse(courseId) {
-  mkCreateReader();
-
-  const course = allCourses.find(c => c.id === courseId);
-  if (!course) return alert("Formation introuvable.");
-
-  mkCurrentCourse = course;
-  mkChapterAccess = [];
-
-  document.getElementById("mkReader").classList.remove("hidden");
-  document.getElementById("mkCourseTitle").textContent = course.title;
-
-  const list = document.getElementById("mkChapterList");
-  const content = document.getElementById("mkChapterContent");
-
-  list.textContent = "Chargement des chapitres...";
-  content.classList.add("hidden");
-
-  const { data: chapters, error } = await db
-    .from("chapters")
-    .select("id,title,is_free_intro,sort_order,price_usd")
-    .eq("course_id", courseId)
-    .order("sort_order");
-
-  if (error) {
-    list.textContent = "Erreur : " + error.message;
-    return;
-  }
-
-  if (!chapters?.length) {
-    list.textContent = "Aucun chapitre disponible pour cette formation.";
-    return;
-  }
-
-  const { data: access, error: accessError } = await db
-    .from("chapter_access")
-    .select("chapter_id")
-    .eq("user_id", currentUser.id)
-    .eq("course_id", courseId);
-
-  if (accessError) {
-    list.textContent = "Erreur d'accès : " + accessError.message;
-    return;
-  }
-
-  mkChapterAccess = (access || []).map(a => a.chapter_id);
-
-  list.innerHTML = "";
-
-  chapters.forEach(chapter => {
-    const unlocked =
-      chapter.is_free_intro ||
-      mkChapterAccess.includes(chapter.id);
-
-    const button = document.createElement("button");
-    button.className = unlocked ? "success full" : "secondary full";
-
-    button.textContent =
-      (unlocked ? "🔓 " : "🔒 ") +
-      chapter.title +
-      (chapter.is_free_intro ? " — GRATUIT" :
-        " — " + Number(chapter.price_usd || 0) + " USD");
-
-    button.onclick = () => mkOpenChapter(chapter);
-    list.appendChild(button);
-  });
-}
-
-async function mkOpenChapter(chapter) {
-  mkCurrentChapter = chapter;
-
-  const content = document.getElementById("mkChapterContent");
-  content.classList.remove("hidden");
-  content.innerHTML = "";
-
-  const unlocked =
-    chapter.is_free_intro ||
-    mkChapterAccess.includes(chapter.id);
-
-  const heading = document.createElement("h3");
-  heading.textContent = chapter.title;
-  content.appendChild(heading);
-
-  if (!unlocked) {
-    mkShowPaymentForm(chapter, content);
-    return;
-  }
-
-  const { data: lessons, error } = await db
-    .from("lessons")
-    .select("id,title,content,video_url,pdf_url,sort_order")
-    .eq("chapter_id", chapter.id)
-    .order("sort_order");
-
-  if (error) {
-    content.append("Erreur : " + error.message);
-    return;
-  }
-
-  if (!lessons?.length) {
-    content.append("Les leçons de ce chapitre seront bientôt disponibles.");
-    return;
-  }
-
-  lessons.forEach((lesson, index) => {
-    const block = document.createElement("div");
-    block.className = "panel";
-
-    const title = document.createElement("h3");
-    title.textContent = "Leçon " + (index + 1) + " : " + lesson.title;
-
-    const text = document.createElement("p");
-    text.style.whiteSpace = "pre-wrap";
-    text.textContent = lesson.content || "Contenu bientôt disponible.";
-
-    block.append(title, text);
-
-    if (lesson.video_url) {
-      const url = mkSafeUrl(lesson.video_url);
-      if (url) {
-        const link = document.createElement("a");
-        link.href = url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "▶ Voir la vidéo";
-        block.appendChild(link);
-      }
-    }
-
-    if (lesson.pdf_url) {
-      const url = mkSafeUrl(lesson.pdf_url);
-      if (url) {
-        const link = document.createElement("a");
-        link.href = url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "📄 Télécharger le document";
-        block.appendChild(link);
-      }
-    }
-
-    content.appendChild(block);
-  });
-}
-
-function mkSafeUrl(value) {
-  try {
-    const url = new URL(value);
-    return ["https:", "http:"].includes(url.protocol) ? url.href : null;
-  } catch {
-    return null;
-  }
-}
-
-function mkShowPaymentForm(chapter, container) {
-  const price = Number(chapter.price_usd || 0);
-
-  if (price <= 0) {
-    container.append("Le prix de ce chapitre n'est pas encore défini. Contacte l'administration.");
-    return;
-  }
-
-  const info = document.createElement("p");
-  info.textContent = "Prix du chapitre : " + price + " USD";
-
-  const method = document.createElement("select");
-  method.className = "field";
-  method.innerHTML = `
-    <option value="M-Pesa">M-Pesa</option>
-    <option value="Airtel Money">Airtel Money</option>
-    <option value="Orange Money">Orange Money</option>
-    <option value="Autre">Autre</option>
-  `;
-
-  const reference = document.createElement("input");
-  reference.className = "field";
-  reference.placeholder = "Référence de transaction Mobile Money";
-
-  const note = document.createElement("p");
-  note.className = "message";
-  note.textContent =
-    "Après ton paiement, indique la référence de transaction. L'accès sera accordé après vérification.";
-
-  const button = document.createElement("button");
-  button.className = "primary full";
-  button.textContent = "Envoyer ma demande de paiement";
-
-  button.onclick = async () => {
-    const transaction = reference.value.trim();
-
-    if (!transaction) {
-      alert("Entre la référence de ta transaction.");
-      return;
-    }
-
-    button.disabled = true;
-    button.textContent = "Envoi...";
-
-    const { error } = await db.from("chapter_orders").insert({
-      user_id: currentUser.id,
-      course_id: mkCurrentCourse.id,
-      chapter_id: chapter.id,
-      amount_usd: price,
-      amount_fc: null,
-      payment_method: method.value,
-      transaction_reference: transaction,
-      status: "pending"
+    const values = [
+      profile.data?.full_name || order.user_id,
+      (course.data?.title || "") + " / " + (chapter.data?.title || ""),
+      order.amount_usd + " USD",
+      order.payment_method || "",
+      order.transaction_reference || "",
+      statusText(order.status)
+    ];
+
+    values.forEach(value => {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.appendChild(td);
     });
 
-    if (error) {
-      alert("Erreur : " + error.message);
-      button.disabled = false;
-      button.textContent = "Envoyer ma demande de paiement";
-      return;
-    }
-
-    container.innerHTML = "";
-    const success = document.createElement("p");
-    success.textContent =
-      "Demande envoyée. Ton chapitre sera débloqué après validation de l'administration.";
-    container.appendChild(success);
-  };
-
-  container.append(info, method, reference, note, button);
-}
-
-/* AJOUT DU BOUTON CHAPITRES AU CATALOGUE */
-
-const mkOriginalRenderCourses = renderCourses;
-
-renderCourses = function() {
-  mkOriginalRenderCourses();
-
-  document.querySelectorAll("#catalogue .card").forEach(card => {
-    const title = card.querySelector("h3")?.textContent;
-    const course = allCourses.find(c => c.title === title);
-
-    if (!course || card.querySelector(".mk-chapters-button")) return;
-
-    const button = document.createElement("button");
-    button.className = "gold-button full mk-chapters-button";
-    button.textContent = "📚 Voir les chapitres";
-    button.onclick = () => mkOpenCourse(course.id);
-
-    card.querySelector(".card-body").appendChild(button);
-  });
-};
-
-/* ADMINISTRATION DES CHAPITRES */
-
-function mkCreateAdminPanel() {
-  if (document.getElementById("mkAdminChapters")) return;
-
-  const panel = document.createElement("div");
-  panel.id = "mkAdminChapters";
-  panel.className = "panel section";
-
-  panel.innerHTML = `
-    <h3>Gestion des chapitres et de leurs prix</h3>
-    <select id="mkAdminCourse" class="field">
-      <option value="">Choisir une formation</option>
-    </select>
-    <div id="mkAdminChapterList"></div>
-    <hr style="border-color:var(--border);margin:25px 0">
-    <h3>Demandes de paiement des chapitres</h3>
-    <button class="secondary" onclick="mkLoadOrders()">Actualiser</button>
-    <p id="mkOrderMessage" class="message"></p>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Apprenant</th>
-            <th>Chapitre</th>
-            <th>Prix USD</th>
-            <th>Moyen</th>
-            <th>Référence</th>
-            <th>Statut</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="mkOrderRows"></tbody>
-      </table>
-    </div>
-  `;
-
-  document.getElementById("adminTab").appendChild(panel);
-
-  document.getElementById("mkAdminCourse").onchange = () =>
-    mkLoadAdminChapters();
-}
-
-async function mkLoadAdminChapters() {
-  const courseId = document.getElementById("mkAdminCourse").value;
-  const container = document.getElementById("mkAdminChapterList");
-
-  container.innerHTML = "";
-  if (!courseId) return;
-
-  const { data, error } = await db
-    .from("chapters")
-    .select("id,title,is_free_intro,price_usd")
-    .eq("course_id", courseId)
-    .order("sort_order");
-
-  if (error) {
-    container.textContent = error.message;
-    return;
-  }
-
-  (data || []).forEach(chapter => {
-    const row = document.createElement("div");
-    row.className = "panel";
-
-    const title = document.createElement("strong");
-    title.textContent = chapter.title +
-      (chapter.is_free_intro ? " — INTRODUCTION GRATUITE" : "");
-
-    const price = document.createElement("input");
-    price.className = "field";
-    price.type = "number";
-    price.min = "0";
-    price.step = "0.01";
-    price.value = chapter.price_usd ?? 0;
-    price.disabled = !!chapter.is_free_intro;
-
-    const save = document.createElement("button");
-    save.className = "primary";
-    save.textContent = "Enregistrer le prix";
-
-    save.onclick = async () => {
-      save.disabled = true;
-
-      const { error } = await db
-        .from("chapters")
-        .update({ price_usd: Number(price.value) })
-        .eq("id", chapter.id);
-
-      save.disabled = false;
-
-      if (error) {
-        alert("Erreur : " + error.message);
-      } else {
-        alert("Prix enregistré.");
-      }
-    };
-
-    row.append(title, price, save);
-    container.appendChild(row);
-  });
-}
-
-async function mkLoadOrders() {
-  if (!isAdmin) return;
-
-  const rows = document.getElementById("mkOrderRows");
-  rows.innerHTML = "";
-  mkMessage("mkOrderMessage", "Chargement...");
-
-  const { data, error } = await db
-    .from("chapter_orders")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    mkMessage("mkOrderMessage", "Erreur : " + error.message);
-    return;
-  }
-
-  mkChapterOrders = data || [];
-
-  if (!mkChapterOrders.length) {
-    mkMessage("mkOrderMessage", "Aucune demande de paiement.");
-    return;
-  }
-
-  mkMessage("mkOrderMessage", mkChapterOrders.length + " demande(s).");
-
-  for (const order of mkChapterOrders) {
-    const [userResult, courseResult, chapterResult] = await Promise.all([
-      db.from("profiles").select("*").eq("id", order.user_id).maybeSingle(),
-      db.from("courses").select("title").eq("id", order.course_id).maybeSingle(),
-      db.from("chapters").select("title").eq("id", order.chapter_id).maybeSingle()
-    ]);
-
-    const tr = document.createElement("tr");
-
-    const learner = document.createElement("td");
-    learner.textContent =
-      userResult.data?.full_name || order.user_id;
-
-    const chapter = document.createElement("td");
-    chapter.textContent =
-      (courseResult.data?.title || "Formation") + " / " +
-      (chapterResult.data?.title || "Chapitre");
-
-    const amount = document.createElement("td");
-    amount.textContent = order.amount_usd + " USD";
-
-    const method = document.createElement("td");
-    method.textContent = order.payment_method || "";
-
-    const reference = document.createElement("td");
-    reference.textContent = order.transaction_reference || "";
-
-    const status = document.createElement("td");
-    status.textContent = statusText(order.status);
-
     const actions = document.createElement("td");
 
     if (order.status === "pending") {
@@ -1008,42 +410,36 @@ async function mkLoadOrders() {
       actions.append(approve, reject);
     }
 
-    tr.append(learner, chapter, amount, method, reference, status, actions);
+    tr.appendChild(actions);
     rows.appendChild(tr);
   }
+
+  mkMessage("mkOrderMessage", data.length + " demande(s).");
 }
 
 async function mkReviewOrder(order, approve) {
   if (!isAdmin) return;
 
   if (!confirm(approve
-    ? "Confirmer le paiement et débloquer ce chapitre ?"
+    ? "Valider le paiement et débloquer ce chapitre ?"
     : "Refuser cette demande ?")) return;
 
   if (approve) {
-    const { error: accessError } = await db
-      .from("chapter_access")
-      .upsert({
-        user_id: order.user_id,
-        course_id: order.course_id,
-        chapter_id: order.chapter_id,
-        order_id: order.id,
-        granted_by: currentUser.id
-      }, { onConflict: "user_id,chapter_id" });
+    const { error } = await db.from("course_access").upsert({
+      user_id: order.user_id,
+      course_id: order.course_id,
+      chapter_id: order.chapter_id
+    }, { onConflict: "user_id,chapter_id" });
 
-    if (accessError) {
-      alert("Impossible de débloquer le chapitre : " + accessError.message);
+    if (error) {
+      alert("Erreur d'accès : " + error.message);
       return;
     }
   }
 
   const { error } = await db
-    .from("chapter_orders")
-    .update({
-      status: approve ? "approved" : "rejected",
-      reviewed_by: currentUser.id,
-      reviewed_at: new Date().toISOString()
-    })
+    .from("orders")
+    .update({ status: approve ? "approved" : "rejected" })
     .eq("id", order.id);
 
   if (error) {
@@ -1052,991 +448,45 @@ async function mkReviewOrder(order, approve) {
   }
 
   alert(approve ? "Chapitre débloqué." : "Demande refusée.");
+  mkLoadOrders();
+}
+
+async function mkInitializeAdmin() {
+  if (!isAdmin) return;
+
+  mkCreateAdminPanel();
+
+  const select = document.getElementById("mkAdminCourse");
+  const { data, error } = await db
+    .from("courses")
+    .select("id,title")
+    .order("sort_order");
+
+  if (error) {
+    mkMessage("mkOrderMessage", error.message);
+    return;
+  }
+
+  (data || []).forEach(course => {
+    const option = document.createElement("option");
+    option.value = course.id;
+    option.textContent = course.title;
+    select.appendChild(option);
+  });
+
   await mkLoadOrders();
 }
 
-/* INTÉGRATION À L'ESPACE ADMIN */
+/* INTÉGRATION À L'APPLICATION */
 
-const mkOriginalEnterApp = enterApp;
+const mkEnterOriginal = enterApp;
 
 enterApp = async function(user) {
-  await mkOriginalEnterApp(user);
-
-  if (isAdmin) {
-    mkCreateAdminPanel();
-
-    const select = document.getElementById("mkAdminCourse");
-    select.innerHTML = '<option value="">Choisir une formation</option>';
-
-    const { data, error } = await db
-      .from("courses")
-      .select("id,title")
-      .order("sort_order");
-
-    if (!error) {
-      (data || []).forEach(course => {
-        const option = document.createElement("option");
-        option.value = course.id;
-        option.textContent = course.title;
-        select.appendChild(option);
-      });
-    }
-
-    await mkLoadOrders();
-  }
+  await mkEnterOriginal(user);
+  if (isAdmin) await mkInitializeAdmin();
 };
-</script>
-</body>
-</html>
 
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
-
-<style>
-:root{
- --bg:#101426;--surface:#191f34;--surface2:#222a43;
- --text:#f4f5fb;--muted:#a2abc1;--border:#303952;
- --purple:#8975ff;--gold:#e3c477;
- --shadow:0 12px 35px #0003;--radius:20px;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
- margin:0;background:var(--bg);color:var(--text);
- font-family:'DM Sans',sans-serif;min-height:100vh;
- background-image:var(--wallpaper,none);
- background-size:cover;background-position:center;background-attachment:fixed;
-}
-body.light{
- --bg:#f3f4fa;--surface:#fff;--surface2:#f5f6fc;
- --text:#18213d;--muted:#7e879f;--border:#e5e8f1;
- --shadow:0 12px 35px #17204412;
-}
-button,input,textarea,select{font:inherit}
-button{cursor:pointer;border:0}
-.hidden{display:none!important}
-a{color:inherit;text-decoration:none}
-button:disabled{opacity:.55;cursor:not-allowed}
-
-/* AUTHENTIFICATION */
-.auth-screen{
- min-height:100vh;display:grid;grid-template-columns:1.1fr .9fr;
- background:var(--surface);
-}
-.auth-visual{
- background:radial-gradient(circle at 80% 20%,#6554cb 0,transparent 35%),
- linear-gradient(145deg,#101426,#24234d 60%,#5141a5);
- color:white;padding:65px 8%;display:flex;flex-direction:column;
- justify-content:space-between;position:relative;overflow:hidden;
-}
-.auth-visual:after{
- content:"";position:absolute;width:450px;height:450px;
- border:1px solid #ffffff22;border-radius:50%;right:-180px;top:15%;
- box-shadow:0 0 0 45px #ffffff08,0 0 0 90px #ffffff05;
-}
-.logo{font:800 25px 'Manrope';letter-spacing:3px;color:var(--gold)}
-.auth-visual h1{
- font:800 clamp(38px,5vw,65px) 'Manrope';
- line-height:1.12;max-width:620px;position:relative;z-index:1;
-}
-.auth-visual h1 span{color:var(--gold)}
-.auth-visual p{color:#d6d9ed;max-width:460px;line-height:1.8}
-.auth-points{display:flex;flex-wrap:wrap;gap:10px;margin-top:25px}
-.auth-points span{border:1px solid #ffffff35;padding:10px 14px;border-radius:30px;font-size:12px}
-.auth-side{display:flex;align-items:center;justify-content:center;padding:35px}
-.auth{width:100%;max-width:430px}
-.auth h2{font:800 29px 'Manrope';margin:0 0 8px}
-.auth-sub{color:var(--muted);font-size:14px;margin-bottom:25px}
-.auth input,.field,textarea,select{
- width:100%;padding:14px 15px;border:1px solid var(--border);
- border-radius:12px;background:var(--surface2);color:var(--text);
- outline:none;margin:8px 0;transition:.2s;
-}
-.auth input:focus,.field:focus,textarea:focus,select:focus{
- border-color:var(--purple);box-shadow:0 0 0 3px #8975ff25;
-}
-.primary,.secondary,.danger,.success,.gold-button{
- padding:12px 17px;border-radius:12px;font-weight:700;transition:.2s;margin:3px;
-}
-.primary{background:linear-gradient(120deg,#8975ff,#5948d0);color:white}
-.secondary{background:#302c55;color:#dcd7ff}
-.danger{background:#6a2d42;color:#ffd9e1}
-.success{background:#174d3e;color:#b8f5dc}
-.gold-button{background:linear-gradient(110deg,#d6ae62,#f0d99d);color:#302744}
-.primary:hover,.gold-button:hover{transform:translateY(-2px)}
-.full{width:100%;margin:12px 0}
-.auth-switch{display:flex;gap:8px;margin:20px 0}
-.auth-switch button{flex:1}
-.message{color:var(--muted);font-size:13px;line-height:1.6}
-
-/* EN-TÊTE */
-.app-shell{min-height:100vh}
-.topbar{
- height:72px;background:var(--surface);border-bottom:1px solid var(--border);
- display:flex;align-items:center;justify-content:space-between;
- padding:0 5%;position:sticky;top:0;z-index:30;
-}
-.top-brand{font:800 22px 'Manrope';letter-spacing:2px}
-.top-brand span{color:var(--gold)}
-.top-right{display:flex;align-items:center;gap:12px}
-.top-caption{font-size:10px;color:var(--muted);letter-spacing:1px}
-.avatar{
- width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
- background:#40366f;color:white;font-weight:800;
-}
-.logout-top{margin:0;padding:10px 13px;font-size:12px}
-
-/* STRUCTURE */
-.layout{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1600px;margin:auto}
-.sidebar{
- min-height:calc(100vh - 72px);background:var(--surface);
- border-right:1px solid var(--border);padding:25px 15px;
- position:sticky;top:72px;height:calc(100vh - 72px);
-}
-.side-label{font-size:10px;letter-spacing:1.5px;font-weight:800;color:var(--muted);padding:0 12px;margin:15px 0 10px}
-.sidebar nav{display:grid;gap:6px}
-.sidebar nav button{
- text-align:left;padding:13px 12px;border-radius:12px;
- background:transparent;color:var(--muted);font-weight:700;
- margin:0;display:flex;align-items:center;gap:11px;
-}
-.sidebar nav button:hover,.sidebar nav button.active{background:#302c55;color:#dcd7ff}
-.nav-icon{width:22px;text-align:center;font-size:17px}
-.sidebar-bottom{position:absolute;bottom:22px;left:15px;right:15px}
-.sidebar-bottom button{width:100%}
-.content{padding:30px clamp(16px,4vw,55px) 70px;min-width:0}
-.welcome-row{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-.eyebrow{font-size:10px;font-weight:800;letter-spacing:1.6px;color:var(--purple);text-transform:uppercase}
-.welcome-title{font:800 clamp(24px,3vw,32px) 'Manrope';margin:7px 0}
-.welcome-sub{color:var(--muted);font-size:13px;margin:0}
-.page-heading{margin:32px 0 20px}
-.page-heading h2{font:800 25px 'Manrope';margin:6px 0}
-.page-heading p{color:var(--muted);font-size:13px;margin:0}
-
-/* BANNIÈRE */
-.hero{
- margin:25px 0;border-radius:25px;padding:35px;color:white;
- position:relative;overflow:hidden;
- background:radial-gradient(circle at 85% 40%,#7665db 0,transparent 30%),
- linear-gradient(115deg,#191f43,#302968 65%,#5142a0);
- box-shadow:0 18px 40px #0003;
-}
-.hero:after{content:"✦";position:absolute;right:9%;top:12%;font-size:100px;color:#ffffff16}
-.hero-inner{position:relative;z-index:1;max-width:680px}
-.hero-tag{display:inline-block;padding:7px 11px;border-radius:30px;background:#ffffff18;color:#f3d99d;font-size:10px;font-weight:800;letter-spacing:1.2px}
-.hero h2{font:800 clamp(27px,4vw,39px) 'Manrope';line-height:1.2;margin:17px 0 10px}
-.hero p{color:#d8daf0;max-width:520px;line-height:1.7;font-size:14px}
-
-/* STATISTIQUES */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0 30px}
-.stat-card,.panel,.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
-.stat-card{padding:17px;display:flex;gap:12px;align-items:center}
-.stat-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#302c55;color:#c6baff;font-size:19px}
-.stat-card strong{display:block;font:800 17px 'Manrope'}
-.stat-card small{color:var(--muted);font-size:10px}
-
-/* CATÉGORIES */
-.category-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
-.category-card{
- border:1px solid var(--border);border-radius:18px;padding:17px 15px;
- min-height:145px;display:flex;flex-direction:column;justify-content:space-between;
- text-align:left;color:white;position:relative;overflow:hidden;transition:.2s;box-shadow:var(--shadow);
-}
-.category-card:hover{transform:translateY(-4px);filter:brightness(1.1)}
-.category-card.active{outline:3px solid var(--gold);outline-offset:2px}
-.category-card .category-emoji{font-size:35px;line-height:1}
-.category-card strong{font:800 14px 'Manrope';display:block}
-.category-card small{font-size:10px;opacity:.8}
-.cat-blue{background:linear-gradient(140deg,#174a83,#2375b7)}
-.cat-orange{background:linear-gradient(140deg,#93451f,#db813c)}
-.cat-purple{background:linear-gradient(140deg,#52348d,#895bd1)}
-.cat-green{background:linear-gradient(140deg,#17624d,#329a70)}
-.cat-pink{background:linear-gradient(140deg,#853c69,#ca679c)}
-.cat-teal{background:linear-gradient(140deg,#145e70,#2697a4)}
-.cat-gold{background:linear-gradient(140deg,#795a24,#bd9441)}
-.cat-gray{background:linear-gradient(140deg,#39445e,#65718d)}
-.category-card:after{content:"";position:absolute;width:100px;height:100px;border:1px solid #ffffff30;border-radius:50%;right:-35px;top:-35px}
-.category-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:22px 0 13px}
-.category-tools h3{font:800 18px 'Manrope';margin:0}
-.view-switch{display:flex;gap:5px}
-.view-switch button{background:var(--surface2);color:var(--muted);padding:9px 12px;border-radius:9px;margin:0}
-.view-switch button.active{background:#40366f;color:white}
-.search-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:0 13px;margin:15px 0}
-.search-box input{border:0!important;background:transparent!important;margin:0!important;box-shadow:none!important;color:var(--text);min-width:0}
-.search-box span{color:var(--muted)}
-
-/* FORMATIONS */
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.grid.list-view{grid-template-columns:1fr}
-.card{overflow:hidden;transition:transform .2s,box-shadow .2s}
-.card:hover{transform:translateY(-4px)}
-.course-cover{height:120px;padding:17px;display:flex;align-items:flex-end;background:linear-gradient(135deg,#252b56,#6653c7);color:white;position:relative;overflow:hidden}
-.course-cover:after{content:"✦";position:absolute;right:20px;top:5px;font-size:65px;color:#ffffff25}
-.course-cover span{font-size:10px;letter-spacing:1.2px;font-weight:800;color:#f0d99d;position:relative;z-index:1}
-.card-body{padding:18px}
-.card h3{font:800 16px 'Manrope';margin:0 0 8px;color:var(--text)}
-.card p{font-size:12px;color:var(--muted);line-height:1.6}
-.card .price{font-size:19px;color:var(--gold);font-weight:800;margin:12px 0}
-.card-meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px}
-.card button{width:100%;margin:8px 0 0}
-.grid.list-view .card{display:grid;grid-template-columns:180px minmax(0,1fr)}
-.grid.list-view .course-cover{height:100%;min-height:150px}
-.panel{padding:22px;margin-bottom:17px}
-.panel h3{font:800 17px 'Manrope';margin:0 0 10px}
-.section{margin-top:25px}
-.status{display:inline-block;padding:6px 10px;border-radius:30px;background:#302c55;color:#dcd7ff;font-size:11px;font-weight:800}
-
-/* ORIENTATION */
-.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:25px 0}
-.feature-card{border-radius:20px;padding:22px;min-height:180px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
-.feature-card h3{font:800 18px 'Manrope';margin:10px 0}
-.feature-card p{font-size:12px;line-height:1.6;max-width:330px;color:#e1e3f5}
-.feature-card .feature-icon{font-size:35px}
-.feature-card button{align-self:flex-start;margin:8px 0 0}
-.job-feature{background:linear-gradient(125deg,#174b59,#207f80)}
-.profile-feature{background:linear-gradient(125deg,#493477,#7852ad)}
-.ai-feature{background:radial-gradient(circle at 85% 30%,#6556c6,transparent 35%),linear-gradient(120deg,#20254b,#39316e);border:1px solid #8879ff55}
-.ai-feature .feature-icon{font-size:42px}
-
-/* PUBLICITÉ */
-.ad-section{padding:22px 24px;margin:25px 0;border-radius:18px;background:linear-gradient(110deg,#202746,#37306c);color:white;position:relative;overflow:hidden;border:1px solid #d6ae6250}
-.ad-content{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
-.ad-label{font-size:10px;font-weight:800;letter-spacing:1.5px;color:#f1d99d}
-.ad-section h3{font:800 18px 'Manrope';margin:9px 0}
-.ad-section p{font-size:12px;color:#d6d9ed;margin:0}
-.ad-note{text-align:right;font-size:10px!important;color:#aeb4d2!important;margin-top:12px!important}
-
-/* PERSONNALISATION */
-.theme-choice{width:42px;height:42px;padding:0;border-radius:50%;border:3px solid var(--surface);outline:1px solid var(--border);margin:5px}
-.wallpaper-actions{display:flex;flex-wrap:wrap;gap:8px}
-#wallpaperFile{display:none}
-.preference-note{font-size:12px;color:var(--muted)}
-input[type=checkbox]{width:auto;display:inline-block;accent-color:var(--purple)}
-textarea{min-height:100px;resize:vertical}
-.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
-table{width:100%;min-width:650px;border-collapse:collapse;background:var(--surface)}
-th,td{padding:13px 11px;text-align:left;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)}
-th{background:var(--surface2);color:var(--purple)}
-footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
-
-/* NAVIGATION MOBILE */
-.mobile-nav{display:none}
-@media(max-width:900px){
- .auth-screen{grid-template-columns:1fr}
- .auth-visual{display:none}
- .auth-side{min-height:100vh}
- .layout{grid-template-columns:1fr}
- .sidebar{display:none}
- .content{padding:22px 18px 100px}
- .category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
- .mobile-nav{
-  display:flex;position:fixed;bottom:0;left:0;right:0;z-index:50;
-  background:var(--surface);border-top:1px solid var(--border);
-  justify-content:space-around;padding:9px 2px calc(9px + env(safe-area-inset-bottom));
-  box-shadow:0 -8px 25px #0002;gap:0;
- }
- .mobile-nav button{
-  flex:1;min-width:0;background:transparent;color:var(--muted);
-  margin:0;padding:5px 2px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:4px;
-  font-size:9px;font-weight:700;white-space:nowrap;
- }
- .mobile-nav button span{font-size:19px}
- .mobile-nav button.active{color:var(--purple)}
-}
-@media(max-width:560px){
- .topbar{height:64px;padding:0 12px}
- .top-brand{font-size:17px}
- .top-caption{display:none}
- .logout-top{font-size:10px;padding:9px}
- .content{padding:18px 13px 100px}
- .hero{padding:25px 20px}
- .stats-grid{grid-template-columns:1fr 1fr}
- .stat-card{padding:12px;gap:8px}
- .stat-card strong{font-size:14px}
- .category-grid{gap:10px}
- .category-card{min-height:130px;padding:13px}
- .category-card .category-emoji{font-size:29px}
- .category-card strong{font-size:12px}
- .grid{grid-template-columns:1fr}
- .grid.list-view .card{grid-template-columns:105px minmax(0,1fr)}
- .grid.list-view .course-cover{min-height:100%;padding:10px}
- .grid.list-view .course-cover span{font-size:8px}
- .grid.list-view .card-body{padding:12px}
- .feature-grid{grid-template-columns:1fr}
- .panel{padding:16px}
- .auth-side{padding:22px}
-}
-</style>
-</head>
-
-<body>
-
-<!-- CONNEXION -->
-<section id="authSection" class="auth-screen">
- <div class="auth-visual">
-  <div class="logo">MK ACADEMY</div>
-  <div>
-   <div class="eyebrow" style="color:#f0d99d">VOTRE AVENIR COMMENCE ICI</div>
-   <h1>Apprenez aujourd'hui.<br><span>Réussissez demain.</span></h1>
-   <p>Développez vos compétences, découvrez de nouvelles opportunités et avancez à votre rythme avec MK Academy.</p>
-   <div class="auth-points">
-    <span>Formations en ligne</span><span>Apprentissage flexible</span><span>Progression personnelle</span>
-   </div>
-  </div>
-  <p>© 2026 MK Academy — Apprendre • Progresser • Réussir</p>
- </div>
- <div class="auth-side">
-  <div class="auth">
-   <div class="logo" style="color:var(--purple);font-size:18px">MK ACADEMY</div>
-   <h2 id="authTitle">Bienvenue chez vous.</h2>
-   <p class="auth-sub" id="authSubtitle">Connectez-vous pour accéder à votre espace d'apprentissage.</p>
-   <div class="auth-switch">
-    <button class="primary" id="signupChoice" onclick="showForm('signup')">Créer un compte</button>
-    <button class="secondary" id="loginChoice" onclick="showForm('login')">Se connecter</button>
-   </div>
-   <form id="authForm">
-    <div id="nameArea"><input id="fullname" placeholder="Nom complet" autocomplete="name"></div>
-    <input id="email" type="email" placeholder="Adresse e-mail" autocomplete="email" required>
-    <input id="password" type="password" placeholder="Mot de passe" minlength="6" autocomplete="current-password" required>
-    <button id="submitBtn" class="primary full">Créer mon compte</button>
-   </form>
-   <p id="authMessage" class="message"></p>
-   <p class="message">En créant votre compte, vous rejoignez la communauté MK Academy.</p>
-  </div>
- </div>
-</section>
-
-<!-- APPLICATION -->
-<div id="appSection" class="app-shell hidden">
- <header class="topbar">
-  <div class="top-brand">MK <span>ACADEMY</span></div>
-  <div class="top-right">
-   <div>
-    <div class="top-caption">ESPACE PERSONNEL</div>
-    <strong id="topUser" style="font-size:12px"></strong>
-   </div>
-   <div class="avatar" id="userAvatar">M</div>
-   <button class="danger logout-top" onclick="logout()">↪ Sortir</button>
-  </div>
- </header>
-
- <div class="layout">
-  <aside class="sidebar">
-   <div class="side-label">MENU PRINCIPAL</div>
-   <nav>
-    <button class="active" data-tab="coursesTab" onclick="showTab('coursesTab',this)"><span class="nav-icon">⌂</span>Accueil</button>
-    <button data-tab="myTab" onclick="showTab('myTab',this)"><span class="nav-icon">▣</span>Mes cours</button>
-    <button data-tab="settingsTab" onclick="showTab('settingsTab',this)"><span class="nav-icon">⚙</span>Mon profil</button>
-    <button id="adminNav" class="hidden" data-tab="adminTab" onclick="showTab('adminTab',this)"><span class="nav-icon">◆</span>Administration</button>
-   </nav>
-   <div class="sidebar-bottom"><button class="danger" onclick="logout()">↪ Déconnexion</button></div>
-  </aside>
-
-  <main class="content">
-   <div class="welcome-row">
-    <div>
-     <div class="eyebrow">VOTRE ESPACE MK ACADEMY</div>
-     <h1 class="welcome-title" id="welcome">Bienvenue</h1>
-     <p class="welcome-sub" id="accountType">Votre parcours d'apprentissage commence ici.</p>
-    </div>
-   </div>
-
-   <section id="coursesTab" class="section">
-    <div class="hero">
-     <div class="hero-inner">
-      <span class="hero-tag">L'APPRENTISSAGE SANS LIMITES</span>
-      <h2>Bienvenue sur MK Academy, apprenez, progressez et réussissez.</h2>
-      <p>Découvrez des compétences utiles, développez votre potentiel et préparez votre avenir professionnel.</p>
-      <button class="gold-button" onclick="document.getElementById('categorySection').scrollIntoView({behavior:'smooth'})">Explorer les catégories →</button>
-     </div>
-    </div>
-    <div class="stats-grid">
-     <div class="stat-card"><div class="stat-icon">▤</div><div><strong id="courseCount">—</strong><small>Formations disponibles</small></div></div>
-     <div class="stat-card"><div class="stat-icon">◎</div><div><strong>À votre rythme</strong><small>Apprentissage flexible</small></div></div>
-     <div class="stat-card"><div class="stat-icon">✦</div><div><strong>Votre avenir</strong><small>Votre réussite compte</small></div></div>
-    </div>
-
-    <div id="categorySection">
-     <div class="page-heading">
-      <div class="eyebrow">EXPLOREZ NOS DOMAINES</div>
-      <h2>Choisir par Catégories</h2>
-      <p>Trouvez un domaine qui correspond à vos ambitions.</p>
-     </div>
-     <div class="category-grid" id="categoryGrid">
-      <button class="category-card cat-blue" onclick="filterCategory('Informatique',this)"><span class="category-emoji">💻</span><span><strong>L'informatique</strong><small>Technologie et numérique</small></span></button>
-      <button class="category-card cat-orange" onclick="filterCategory('Langues',this)"><span class="category-emoji">🌍</span><span><strong>Langues et communication</strong><small>Parler et communiquer</small></span></button>
-      <button class="category-card cat-purple" onclick="filterCategory('Business',this)"><span class="category-emoji">💼</span><span><strong>Business</strong><small>Entreprendre et gérer</small></span></button>
-      <button class="category-card cat-green" onclick="filterCategory('Marketing',this)"><span class="category-emoji">📣</span><span><strong>Marketing digital</strong><small>Développer son activité</small></span></button>
-      <button class="category-card cat-pink" onclick="filterCategory('Design',this)"><span class="category-emoji">🎨</span><span><strong>Design et créativité</strong><small>Créer et innover</small></span></button>
-      <button class="category-card cat-teal" onclick="filterCategory('Emploi',this)"><span class="category-emoji">🧑‍💼</span><span><strong>Emploi et carrière</strong><small>Préparer son avenir</small></span></button>
-      <button class="category-card cat-gold" onclick="filterCategory('Finance',this)"><span class="category-emoji">📊</span><span><strong>Finance et gestion</strong><small>Gérer ses ressources</small></span></button>
-      <button class="category-card cat-gray" onclick="filterCategory('Autres',this)"><span class="category-emoji">✨</span><span><strong>Autres domaines</strong><small>Découvrir davantage</small></span></button>
-     </div>
-    </div>
-
-    <div class="category-tools">
-     <h3 id="catalogueTitle">Toutes les formations</h3>
-     <div class="view-switch">
-      <button id="gridButton" class="active" onclick="setView('grid')">▦ Grille</button>
-      <button id="listButton" onclick="setView('list')">☷ Liste</button>
-     </div>
-    </div>
-    <div class="search-box"><span>⌕</span><input id="courseSearch" type="search" placeholder="Rechercher une formation..." oninput="renderCourses()"></div>
-    <div id="catalogue" class="grid"></div>
-    <p id="courseMessage" class="message"></p>
-
-    <div class="page-heading">
-     <div class="eyebrow">ALLEZ PLUS LOIN</div>
-     <h2>Construisez votre avenir</h2>
-     <p>Des outils pour vous accompagner dans votre parcours.</p>
-    </div>
-    <div class="feature-grid">
-     <div class="feature-card job-feature">
-      <div class="feature-icon">💼</div>
-      <div><h3>Trouvez un emploi</h3><p>Préparez votre candidature et découvrez des conseils pour votre recherche professionnelle.</p><button class="gold-button" onclick="openCareer('emploi')">Découvrir →</button></div>
-     </div>
-     <div class="feature-card profile-feature">
-      <div class="feature-icon">🎯</div>
-      <div><h3>Des cours selon votre profil</h3><p>Identifiez vos objectifs et découvrez les domaines de formation qui peuvent vous correspondre.</p><button class="gold-button" onclick="openCareer('profil')">Trouver ma voie →</button></div>
-     </div>
-    </div>
-    <div class="feature-card ai-feature">
-     <div class="feature-icon">🤖</div>
-     <div><h3>Découvrez MK Mentor</h3><p>Votre futur assistant pédagogique pour vous aider à choisir vos formations et progresser dans votre apprentissage.</p><button class="gold-button" onclick="showMentor()">Découvrir le mentor IA →</button></div>
-    </div>
-    <div class="ad-section">
-     <div class="ad-content">
-      <div><span class="ad-label">ESPACE PARTENAIRE</span><h3>Votre marque mérite d'être remarquée.</h3><p>Présentez vos produits, services ou événements à notre communauté.</p></div>
-      <button class="gold-button" onclick="contactAdvertising()">Devenir partenaire ↗</button>
-     </div>
-     <p class="ad-note">Emplacement publicitaire partenaire — MK Academy</p>
-    </div>
-   </section>
-
-   <section id="myTab" class="section hidden">
-    <div class="page-heading"><div class="eyebrow">SUIVEZ VOTRE PARCOURS</div><h2>Mes inscriptions</h2><p>Retrouvez vos demandes et consultez leur état de validation.</p></div>
-    <div id="myEnrollments" class="grid"></div>
-   </section>
-
-   <section id="settingsTab" class="section hidden">
-    <div class="page-heading"><div class="eyebrow">VOTRE ESPACE, VOTRE STYLE</div><h2>Mon profil et mes préférences</h2><p>Personnalisez votre environnement d'apprentissage.</p></div>
-    <div class="panel"><h3>Mon compte</h3><p id="profileEmail" class="preference-note"></p><p id="profileName" class="preference-note"></p></div>
-    <div class="panel">
-     <h3>Choisir mon thème</h3><p class="preference-note">Sélectionnez une ambiance visuelle.</p>
-     <button class="theme-choice" style="background:#f3f4fa" title="Clair" onclick="setTheme('light')"></button>
-     <button class="theme-choice" style="background:#101426" title="Sombre" onclick="setTheme('dark')"></button>
-     <button class="theme-choice" style="background:linear-gradient(135deg,#101735,#5142c7)" title="Bleu nuit" onclick="setTheme('blue')"></button>
-     <button class="theme-choice" style="background:linear-gradient(135deg,#e9e3d5,#d6ae62)" title="Doré" onclick="setTheme('gold')"></button>
-     <button class="theme-choice" style="background:linear-gradient(135deg,#dff1eb,#73b99c)" title="Nature" onclick="setTheme('nature')"></button>
-    </div>
-    <div class="panel">
-     <h3>Mon fond d'écran personnel</h3><p class="preference-note">Choisissez une photo depuis votre téléphone.</p>
-     <div class="wallpaper-actions"><button class="primary" onclick="document.getElementById('wallpaperFile').click()">Choisir une photo</button><button class="secondary" onclick="removeWallpaper()">Retirer ma photo</button><input type="file" id="wallpaperFile" accept="image/*"></div>
-     <p id="wallpaperMessage" class="message"></p>
-    </div>
-    <div class="panel"><h3>Restaurer l'apparence originale</h3><button class="secondary" onclick="resetAppearance()">Réinitialiser l'apparence</button></div>
-    <div class="panel"><h3>Déconnexion</h3><p class="preference-note">Fermez votre session MK Academy sur cet appareil.</p><button class="danger" onclick="logout()">↪ Déconnexion</button></div>
-   </section>
-
-   <section id="adminTab" class="section hidden">
-    <div class="page-heading"><div class="eyebrow">ESPACE DE GESTION</div><h2>Administration</h2><p>Gérez les formations, les inscriptions et les paiements.</p></div>
-    <div class="panel">
-     <h3>Gestion des formations</h3>
-     <form id="courseForm">
-      <input type="hidden" id="editId">
-      <input class="field" id="courseTitle" placeholder="Titre de la formation" required>
-      <textarea id="courseDescription" placeholder="Description de la formation" required></textarea>
-      <input class="field" id="courseDuration" type="number" min="1" placeholder="Durée en jours" required>
-      <input class="field" id="coursePrice" type="number" min="0" step="0.01" placeholder="Prix en USD" required>
-      <input class="field" id="courseOrder" type="number" min="0" placeholder="Ordre d'affichage" value="0">
-      <label><input id="coursePublished" type="checkbox" checked> Publier immédiatement</label><br>
-      <button class="primary" type="submit" id="saveCourse">Ajouter la formation</button>
-      <button class="secondary" type="button" onclick="resetCourseForm()">Annuler</button>
-     </form>
-     <p id="adminCourseMessage" class="message"></p>
-    </div>
-    <div class="page-heading"><h2>Formations enregistrées</h2></div>
-    <div id="adminCourses" class="grid"></div>
-    <div class="panel section">
-     <h3>Demandes d'inscription et paiements</h3>
-     <button class="secondary" onclick="loadAdminEnrollments()">Actualiser les demandes</button>
-     <p id="enrollmentMessage" class="message"></p>
-     <div class="table-wrap"><table><thead><tr><th>Apprenant</th><th>Formation</th><th>Inscription</th><th>Paiement</th><th>Actions</th></tr></thead><tbody id="adminEnrollments"></tbody></table></div>
-    </div>
-    <div class="panel"><h3>Espace publicitaire</h3><p class="preference-note">La bannière partenaire est actuellement un emplacement de présentation. La gestion des annonces, images, liens et dates de diffusion sera développée ultérieurement.</p></div>
-   </section>
-   <footer>© 2026 MK Academy — Apprendre • Progresser • Réussir</footer>
-  </main>
- </div>
-</div>
-
-<!-- NAVIGATION MOBILE CORRIGÉE -->
-<nav class="mobile-nav hidden" id="mobileNav">
- <button class="active" data-mobile-tab="coursesTab" onclick="mobileTab('coursesTab',this)"><span>⌂</span>Accueil</button>
- <button onclick="focusSearch()"><span>⌕</span>Recherche</button>
- <button onclick="goCategories()"><span>▦</span>Catégories</button>
- <button data-mobile-tab="myTab" onclick="mobileTab('myTab',this)"><span>▣</span>Mes cours</button>
- <button data-mobile-tab="settingsTab" onclick="mobileTab('settingsTab',this)"><span>◉</span>Profil</button>
- <button id="mobileAdminNav" class="hidden" data-mobile-tab="adminTab" onclick="mobileTab('adminTab',this)"><span>◆</span>Admin</button>
-</nav>
-
-<script>
-/* CONFIGURATION SUPABASE */
-const SUPABASE_URL="https://symnweeensaeituthxdb.supabase.co";
-const SUPABASE_KEY="sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
-let currentMode="signup",currentUser=null,isAdmin=false,enrollmentsMap={};
-let allCourses=[],selectedCategory="Toutes",currentView="grid";
-
-function showForm(mode){
- currentMode=mode;
- document.getElementById("authMessage").textContent="";
- document.getElementById("nameArea").classList.toggle("hidden",mode==="login");
- document.getElementById("submitBtn").textContent=mode==="signup"?"Créer mon compte":"Se connecter";
- document.getElementById("authTitle").textContent=mode==="signup"?"Créez votre compte.":"Heureux de vous revoir.";
- document.getElementById("authSubtitle").textContent=mode==="signup"?"Rejoignez MK Academy et commencez votre parcours.":"Connectez-vous pour retrouver votre espace d'apprentissage.";
- document.getElementById("signupChoice").className=mode==="signup"?"primary":"secondary";
- document.getElementById("loginChoice").className=mode==="login"?"primary":"secondary";
-}
-
-document.getElementById("authForm").addEventListener("submit",async e=>{
- e.preventDefault();
- const message=document.getElementById("authMessage");
- const email=document.getElementById("email").value.trim();
- const password=document.getElementById("password").value;
- const name=document.getElementById("fullname").value.trim();
- message.textContent="Connexion en cours...";
- try{
-  if(currentMode==="signup"){
-   if(!name)throw new Error("Entre ton nom complet.");
-   const {data,error}=await db.auth.signUp({
-    email,password,
-    options:{data:{full_name:name},emailRedirectTo:"https://jeanmichelmanya993-bot.github.io/Mk-Academy-/"}
-   });
-   if(error)throw error;
-   if(data.session)await enterApp(data.session.user);
-   else message.textContent="Compte créé. Vérifie ton email pour confirmer ton adresse.";
-  }else{
-   const {data,error}=await db.auth.signInWithPassword({email,password});
-   if(error)throw error;
-   await enterApp(data.user);
-  }
- }catch(error){message.textContent="Erreur : "+error.message}
-});
-
-async function enterApp(user){
- if(!user)return;
- currentUser=user;
- document.getElementById("authSection").classList.add("hidden");
- document.getElementById("appSection").classList.remove("hidden");
- document.getElementById("mobileNav").classList.remove("hidden");
- const name=user.user_metadata?.full_name||user.email;
- document.getElementById("welcome").textContent="Bienvenue, "+name.split(" ")[0];
- document.getElementById("topUser").textContent=name;
- document.getElementById("userAvatar").textContent=(name[0]||"M").toUpperCase();
- document.getElementById("profileEmail").textContent="Adresse e-mail : "+user.email;
- document.getElementById("profileName").textContent="Nom : "+name;
-
- const {data:adminData,error:adminError}=await db.rpc("is_mk_admin");
- isAdmin=!adminError&&adminData===true;
- document.getElementById("accountType").textContent=isAdmin?"Administrateur MK Academy":"Votre espace d'apprentissage personnel";
- document.getElementById("adminNav").classList.toggle("hidden",!isAdmin);
- document.getElementById("mobileAdminNav").classList.toggle("hidden",!isAdmin);
-
- loadAppearance();
- await loadMyEnrollments();
- await loadCourses();
- if(isAdmin){await loadAdminCourses();await loadAdminEnrollments()}
- showTab("coursesTab");
-}
-
-/* NAVIGATION CORRIGÉE */
-function showTab(id,button){
- if(id==="adminTab"&&!isAdmin)return;
-
- ["coursesTab","myTab","adminTab","settingsTab"].forEach(tab=>{
-  document.getElementById(tab).classList.add("hidden");
- });
- document.getElementById(id).classList.remove("hidden");
-
- document.querySelectorAll(".sidebar nav button").forEach(b=>b.classList.remove("active"));
- document.querySelectorAll(".mobile-nav button").forEach(b=>b.classList.remove("active"));
-
- if(button)button.classList.add("active");
-
- document.querySelectorAll('[data-tab="'+id+'"]').forEach(b=>b.classList.add("active"));
- document.querySelectorAll('[data-mobile-tab="'+id+'"]').forEach(b=>b.classList.add("active"));
-
- if(id==="settingsTab"){
-  document.getElementById("profileEmail").textContent="Adresse e-mail : "+(currentUser?.email||"");
- }
- window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function mobileTab(id,button){
- if(id==="adminTab"&&!isAdmin)return;
- showTab(id,button);
-}
-
-function focusSearch(){
- showTab("coursesTab");
- setTimeout(()=>{
-  const search=document.getElementById("courseSearch");
-  search.focus();
-  search.scrollIntoView({behavior:"smooth",block:"center"});
- },150);
-}
-
-function goCategories(){
- showTab("coursesTab");
- setTimeout(()=>{
-  document.getElementById("categorySection").scrollIntoView({behavior:"smooth"});
- },100);
-}
-
-/* CATÉGORIES ET CATALOGUE */
-function categoryFor(course){
- const text=(course.title+" "+(course.description||"")).toLowerCase();
- if(/anglais|français|langue|communication|orthographe/.test(text))return "Langues";
- if(/informatique|ordinateur|programm|web|excel|word|bureautique|code|développ/.test(text))return "Informatique";
- if(/marketing|publicité|tiktok|facebook|réseaux sociaux|community/.test(text))return "Marketing";
- if(/business|entrepren|commerce|vente|gestion d'entreprise/.test(text))return "Business";
- if(/design|graphique|photo|vidéo|création|montage/.test(text))return "Design";
- if(/emploi|carrière|cv|recrutement|profession/.test(text))return "Emploi";
- if(/finance|comptab|budget|banque|investissement/.test(text))return "Finance";
- return "Autres";
-}
-
-function filterCategory(category,button){
- selectedCategory=category;
- document.querySelectorAll(".category-card").forEach(b=>b.classList.remove("active"));
- if(button)button.classList.add("active");
- document.getElementById("catalogueTitle").textContent=category==="Toutes"?"Toutes les formations":"Formations : "+category;
- renderCourses();
- document.getElementById("catalogue").scrollIntoView({behavior:"smooth",block:"start"});
-}
-
-function setView(view){
- currentView=view;
- document.getElementById("gridButton").classList.toggle("active",view==="grid");
- document.getElementById("listButton").classList.toggle("active",view==="list");
- renderCourses();
-}
-
-async function loadCourses(){
- const catalogue=document.getElementById("catalogue"),message=document.getElementById("courseMessage");
- catalogue.innerHTML="Chargement des formations...";
- const {data,error}=await db.from("courses").select("id,title,description,duration_days,price_usd").eq("is_published",true).order("sort_order");
- if(error){message.textContent="Erreur : "+error.message;catalogue.innerHTML="";return}
- allCourses=data||[];
- document.getElementById("courseCount").textContent=allCourses.length;
- renderCourses();
- if(!allCourses.length)message.textContent="Nos prochaines formations seront bientôt disponibles.";
- else message.textContent="";
-}
-
-function renderCourses(){
- const catalogue=document.getElementById("catalogue"),message=document.getElementById("courseMessage");
- catalogue.className="grid"+(currentView==="list"?" list-view":"");
- catalogue.innerHTML="";
- const query=(document.getElementById("courseSearch")?.value||"").toLowerCase().trim();
- const filtered=allCourses.filter(course=>{
-  const matchesCategory=selectedCategory==="Toutes"||categoryFor(course)===selectedCategory;
-  const text=(course.title+" "+(course.description||"")).toLowerCase();
-  return matchesCategory&&text.includes(query);
- });
- if(!filtered.length){message.textContent="Aucune formation ne correspond à cette recherche.";return}
- message.textContent="";
- filtered.forEach(course=>{
-  const card=document.createElement("article");card.className="card";
-  const cover=document.createElement("div");cover.className="course-cover";
-  const coverLabel=document.createElement("span");coverLabel.textContent="MK ACADEMY / "+categoryFor(course).toUpperCase();cover.appendChild(coverLabel);
-  const body=document.createElement("div");body.className="card-body";
-  const title=document.createElement("h3");title.textContent=course.title;
-  const description=document.createElement("p");description.textContent=course.description||"Développez vos compétences avec MK Academy.";
-  const meta=document.createElement("div");meta.className="card-meta";
-  const duration=document.createElement("span");duration.textContent="◷ "+course.duration_days+" jours";
-  const format=document.createElement("span");format.textContent="Formation";
-  meta.append(duration,format);
-  const price=document.createElement("div");price.className="price";price.textContent=Number(course.price_usd).toLocaleString("fr-FR")+" USD";
-  const button=document.createElement("button");button.className="primary";
-  if(isAdmin){button.textContent="Formation publiée";button.disabled=true}
-  else if(enrollmentsMap[course.id]){button.textContent="Demande déjà envoyée";button.disabled=true}
-  else{button.textContent="Découvrir / S'inscrire";button.onclick=()=>enroll(course.id,button)}
-  body.append(title,description,meta,price,button);card.append(cover,body);catalogue.appendChild(card);
- });
-}
-
-async function enroll(courseId,button){
- button.disabled=true;button.textContent="Enregistrement...";
- try{
-  const {error}=await db.from("enrollments").insert({user_id:currentUser.id,course_id:courseId});
-  if(error){if(error.code==="23505")throw new Error("Tu es déjà inscrit à cette formation.");throw error}
-  enrollmentsMap[courseId]=true;button.textContent="Demande envoyée ✓";
-  document.getElementById("courseMessage").textContent="Ta demande est enregistrée et attend la validation de l'administration.";
-  await loadMyEnrollments();
- }catch(error){button.disabled=false;button.textContent="Découvrir / S'inscrire";document.getElementById("courseMessage").textContent=error.message}
-}
-
-/* ESPACE APPRENANT */
-async function loadMyEnrollments(){
- const container=document.getElementById("myEnrollments");container.innerHTML="";enrollmentsMap={};
- const {data,error}=await db.from("enrollments").select("course_id,enrollment_status,payment_status").eq("user_id",currentUser.id);
- if(error){container.textContent="Erreur : "+error.message;return}
- if(!data?.length){container.textContent="Tu n'as encore aucune inscription.";return}
- data.forEach(item=>enrollmentsMap[item.course_id]=item);
- const {data:courses,error:courseError}=await db.from("courses").select("id,title").in("id",data.map(item=>item.course_id));
- if(courseError){container.textContent="Impossible de récupérer les formations.";return}
- data.forEach(item=>{
-  const course=courses.find(c=>c.id===item.course_id);
-  const card=document.createElement("div");card.className="card";
-  const cover=document.createElement("div");cover.className="course-cover";
-  const label=document.createElement("span");label.textContent="MON PARCOURS";cover.appendChild(label);
-  const body=document.createElement("div");body.className="card-body";
-  const title=document.createElement("h3");title.textContent=course?.title||"Formation";
-  const status=document.createElement("p");status.textContent="Inscription : ";
-  const badge=document.createElement("span");badge.className="status";badge.textContent=statusText(item.enrollment_status);status.appendChild(badge);
-  const payment=document.createElement("p");payment.textContent="Paiement : ";
-  const payBadge=document.createElement("span");payBadge.className="status";payBadge.textContent=statusText(item.payment_status);payment.appendChild(payBadge);
-  body.append(title,status,payment);card.append(cover,body);container.appendChild(card);
- });
-}
-
-function statusText(status){
- return ({pending:"En attente",approved:"Validée",rejected:"Refusée",paid:"Payé"})[status]||status;
-}
-
-/* OUTILS D'ORIENTATION */
-function openCareer(type){
- if(type==="emploi")alert("L'espace Trouver un emploi sera développé dans une prochaine étape de MK Academy.");
- else alert("L'outil d'orientation selon votre profil sera développé dans une prochaine étape.");
-}
-function showMentor(){
- alert("MK Mentor : l'interface de présentation est prête. La connexion à un véritable assistant IA sera développée séparément.");
-}
-
-/* PERSONNALISATION */
-function preferenceKey(){return "mk_academy_appearance_"+(currentUser?.id||"guest")}
-function loadAppearance(){
- try{
-  const saved=JSON.parse(localStorage.getItem(preferenceKey())||"{}");
-  applyTheme(saved.theme||"dark");
-  if(saved.wallpaper)applyWallpaper(saved.wallpaper);
-  else{document.body.classList.remove("custom-wallpaper");document.body.style.removeProperty("--wallpaper")}
- }catch(error){console.warn(error);applyTheme("dark")}
-}
-function saveAppearance(settings){
- try{
-  const previous=JSON.parse(localStorage.getItem(preferenceKey())||"{}");
-  localStorage.setItem(preferenceKey(),JSON.stringify({...previous,...settings}));
- }catch(error){
-  document.getElementById("wallpaperMessage").textContent="Impossible de sauvegarder cette image. Essaie une photo plus petite.";
- }
-}
-function applyTheme(theme){
- document.body.classList.remove("light");
- document.body.style.removeProperty("--bg");
- if(theme==="light")document.body.classList.add("light");
- else if(theme==="blue")document.body.style.setProperty("--bg","#111b35");
- else if(theme==="gold")document.body.style.setProperty("--bg","#282318");
- else if(theme==="nature")document.body.style.setProperty("--bg","#14271f");
-}
-function setTheme(theme){applyTheme(theme);saveAppearance({theme})}
-function applyWallpaper(image){
- document.body.style.setProperty("--wallpaper",'url("'+image+'")');
- document.body.classList.add("custom-wallpaper");
-}
-
-document.getElementById("wallpaperFile").addEventListener("change",function(e){
- const file=e.target.files[0];if(!file)return;
- if(!file.type.startsWith("image/")){document.getElementById("wallpaperMessage").textContent="Choisis un fichier image.";return}
- document.getElementById("wallpaperMessage").textContent="Préparation de la photo...";
- const reader=new FileReader();
- reader.onload=function(event){
-  const image=new Image();
-  image.onload=function(){
-   const canvas=document.createElement("canvas"),maxWidth=1000,scale=Math.min(1,maxWidth/image.width);
-   canvas.width=image.width*scale;canvas.height=image.height*scale;
-   canvas.getContext("2d").drawImage(image,0,0,canvas.width,canvas.height);
-   const compressed=canvas.toDataURL("image/jpeg",0.65);
-   applyWallpaper(compressed);saveAppearance({wallpaper:compressed});
-   document.getElementById("wallpaperMessage").textContent="Ton fond d'écran a été personnalisé.";
-  };
-  image.onerror=()=>document.getElementById("wallpaperMessage").textContent="Impossible de lire cette image.";
-  image.src=event.target.result;
- };
- reader.onerror=()=>document.getElementById("wallpaperMessage").textContent="Erreur lors de la lecture de la photo.";
- reader.readAsDataURL(file);e.target.value="";
-});
-
-function removeWallpaper(){
- document.body.classList.remove("custom-wallpaper");document.body.style.removeProperty("--wallpaper");
- const saved=JSON.parse(localStorage.getItem(preferenceKey())||"{}");delete saved.wallpaper;
- localStorage.setItem(preferenceKey(),JSON.stringify(saved));
- document.getElementById("wallpaperMessage").textContent="Photo retirée.";
-}
-function resetAppearance(){
- localStorage.removeItem(preferenceKey());
- document.body.classList.remove("light","custom-wallpaper");
- document.body.style.removeProperty("--wallpaper");document.body.style.removeProperty("--bg");
- document.getElementById("wallpaperMessage").textContent="L'apparence originale est restaurée.";
-}
-
-/* PUBLICITÉ */
-function contactAdvertising(){
- const subject=encodeURIComponent("Demande de partenariat publicitaire - MK Academy");
- const body=encodeURIComponent("Bonjour MK Academy,\n\nJe souhaite obtenir des informations sur les possibilités de publicité et de partenariat sur votre plateforme.\n\nCordialement.");
- window.location.href="mailto:jeanmichelmanya993@gmail.com?subject="+subject+"&body="+body;
-}
-
-/* ADMINISTRATION DES FORMATIONS */
-async function loadAdminCourses(){
- if(!isAdmin)return;
- const container=document.getElementById("adminCourses");container.innerHTML="Chargement...";
- const {data,error}=await db.from("courses").select("*").order("sort_order");
- if(error){container.textContent="Erreur : "+error.message;return}
- container.innerHTML="";
- if(!data?.length){container.textContent="Aucune formation enregistrée.";return}
- data.forEach(course=>{
-  const card=document.createElement("div");card.className="card";
-  const cover=document.createElement("div");cover.className="course-cover";
-  const label=document.createElement("span");label.textContent="GESTION DE FORMATION";cover.appendChild(label);
-  const body=document.createElement("div");body.className="card-body";
-  const title=document.createElement("h3");title.textContent=course.title;
-  const info=document.createElement("p");info.textContent=course.price_usd+" USD • "+course.duration_days+" jours";
-  const status=document.createElement("p");status.textContent=course.is_published?"Publiée":"Non publiée";
-  const edit=document.createElement("button");edit.className="primary";edit.textContent="Modifier";edit.onclick=()=>editCourse(course);
-  const publish=document.createElement("button");publish.className="secondary";publish.textContent=course.is_published?"Masquer":"Publier";publish.onclick=()=>togglePublish(course);
-  const remove=document.createElement("button");remove.className="danger";remove.textContent="Supprimer";remove.onclick=()=>deleteCourse(course.id);
-  body.append(title,info,status,edit,publish,remove);card.append(cover,body);container.appendChild(card);
- });
-}
-
-function slugify(value){
- return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
-}
-
-document.getElementById("courseForm").addEventListener("submit",async e=>{
- e.preventDefault();if(!isAdmin)return;
- const id=document.getElementById("editId").value,title=document.getElementById("courseTitle").value.trim();
- const course={
-  slug:slugify(title),title,
-  description:document.getElementById("courseDescription").value.trim(),
-  duration_days:Number(document.getElementById("courseDuration").value),
-  price_usd:Number(document.getElementById("coursePrice").value),
-  sort_order:Number(document.getElementById("courseOrder").value),
-  is_published:document.getElementById("coursePublished").checked
- };
- const message=document.getElementById("adminCourseMessage");message.textContent="Enregistrement...";
- try{
-  let result=id?await db.from("courses").update(course).eq("id",id):await db.from("courses").insert(course);
-  if(result.error)throw result.error;
-  message.textContent="Formation enregistrée avec succès.";
-  resetCourseForm();await loadAdminCourses();await loadCourses();
- }catch(error){message.textContent="Erreur : "+error.message}
-});
-
-function editCourse(course){
- document.getElementById("editId").value=course.id;
- document.getElementById("courseTitle").value=course.title;
- document.getElementById("courseDescription").value=course.description;
- document.getElementById("courseDuration").value=course.duration_days;
- document.getElementById("coursePrice").value=course.price_usd;
- document.getElementById("courseOrder").value=course.sort_order;
- document.getElementById("coursePublished").checked=course.is_published;
- document.getElementById("saveCourse").textContent="Enregistrer les modifications";
- document.getElementById("courseForm").scrollIntoView({behavior:"smooth"});
-}
-function resetCourseForm(){
- document.getElementById("courseForm").reset();
- document.getElementById("editId").value="";
- document.getElementById("courseOrder").value=0;
- document.getElementById("coursePublished").checked=true;
- document.getElementById("saveCourse").textContent="Ajouter la formation";
-}
-async function togglePublish(course){
- const {error}=await db.from("courses").update({is_published:!course.is_published}).eq("id",course.id);
- if(error){alert("Erreur : "+error.message);return}
- await loadAdminCourses();await loadCourses();
-}
-async function deleteCourse(id){
- if(!confirm("Supprimer cette formation et ses inscriptions associées ?"))return;
- const {error}=await db.from("courses").delete().eq("id",id);
- if(error){alert("Erreur : "+error.message);return}
- await loadAdminCourses();await loadAdminEnrollments();await loadCourses();
-}
-
-/* GESTION DES INSCRIPTIONS */
-async function loadAdminEnrollments(){
- if(!isAdmin)return;
- const body=document.getElementById("adminEnrollments"),message=document.getElementById("enrollmentMessage");
- body.innerHTML="";message.textContent="Chargement des demandes...";
- const {data,error}=await db.rpc("mk_admin_enrollments");
- if(error){message.textContent="Erreur : "+error.message;return}
- if(!data?.length){message.textContent="Aucune demande d'inscription.";return}
- message.textContent=data.length+" demande(s) trouvée(s).";
- data.forEach(item=>{
-  const tr=document.createElement("tr");
-  const learner=document.createElement("td");learner.textContent=(item.learner_name||"Apprenant")+" • "+item.learner_email;
-  const course=document.createElement("td");course.textContent=item.course_title;
-  const status=document.createElement("td");status.textContent=statusText(item.enrollment_status);
-  const payment=document.createElement("td");payment.textContent=statusText(item.payment_status);
-  const actions=document.createElement("td");
-  if(item.enrollment_status==="pending"){
-   const approve=document.createElement("button");approve.className="success";approve.textContent="Valider";
-   approve.onclick=()=>updateEnrollment(item.enrollment_id,{enrollment_status:"approved"});
-   const reject=document.createElement("button");reject.className="danger";reject.textContent="Refuser";
-   reject.onclick=()=>updateEnrollment(item.enrollment_id,{enrollment_status:"rejected"});
-   actions.append(approve,reject);
-  }
-  if(item.enrollment_status==="approved"&&item.payment_status!=="paid"){
-   const paid=document.createElement("button");paid.className="success";paid.textContent="Confirmer paiement";
-   paid.onclick=()=>updateEnrollment(item.enrollment_id,{payment_status:"paid"});
-   actions.append(paid);
-  }
-  tr.append(learner,course,status,payment,actions);body.appendChild(tr);
- });
-}
-
-async function updateEnrollment(id,changes){
- if(!isAdmin)return;
- const {error}=await db.from("enrollments").update(changes).eq("id",id);
- if(error){alert("Erreur : "+error.message);return}
- await loadAdminEnrollments();
-}
-
-/* DÉCONNEXION */
-async function logout(){
- const {error}=await db.auth.signOut();
- if(error){alert(error.message);return}
- currentUser=null;isAdmin=false;enrollmentsMap={};allCourses=[];
- document.getElementById("appSection").classList.add("hidden");
- document.getElementById("mobileNav").classList.add("hidden");
- document.getElementById("authSection").classList.remove("hidden");
- document.getElementById("authForm").reset();
- document.body.classList.remove("light","custom-wallpaper");
- document.body.style.removeProperty("--wallpaper");document.body.style.removeProperty("--bg");
- showForm("login");
-}
-
-/* INITIALISATION */
-async function initialize(){
- const {data,error}=await db.auth.getSession();
- if(error){document.getElementById("authMessage").textContent=error.message;return}
- if(data.session)await enterApp(data.session.user);
-}
-
-db.auth.onAuthStateChange((event,session)=>{
- if(event==="SIGNED_OUT"){
-  currentUser=null;isAdmin=false;enrollmentsMap={};allCourses=[];
-  document.getElementById("appSection").classList.add("hidden");
-  document.getElementById("mobileNav").classList.add("hidden");
-  document.getElementById("authSection").classList.remove("hidden");
- }
-});
+/* DÉMARRAGE APRÈS CHARGEMENT DU MODULE */
 
 initialize();
-</script>
-</body>
- </html>
+ </script>
