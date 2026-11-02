@@ -773,6 +773,40 @@ let mkCurrentCourse = null;
 let mkCurrentChapter = null;
 let mkChapterAccess = [];
 let mkChapterOrders = [];
+let mkUsdToFc = 2850;
+
+function mkFormatFC(value) {
+  return Math.round(Number(value || 0)).toLocaleString("fr-FR") + " FC";
+}
+
+async function mkLoadExchangeRate() {
+  const { data, error } = await db.from("settings").select("value").eq("key", "usd_to_fc").maybeSingle();
+  if (!error && data && Number(data.value) > 0) mkUsdToFc = Number(data.value);
+  return mkUsdToFc;
+}
+
+async function mkSaveExchangeRate() {
+  if (!isAdmin) return;
+  const input = document.getElementById("mkExchangeRateInput");
+  const message = document.getElementById("mkExchangeRateMessage");
+  const rate = Number(input?.value);
+  if (!Number.isFinite(rate) || rate < 1) { message.textContent = "Entre un taux valide supérieur à 0."; return; }
+  const { data, error } = await db.from("settings").update({ value: rate }).eq("key", "usd_to_fc").select("key,value").maybeSingle();
+  if (error) { message.textContent = "Erreur : " + error.message; return; }
+  if (!data) { message.textContent = "Le taux n'a pas été enregistré. Vérifie les droits administrateur."; return; }
+  mkUsdToFc = Number(data.value);
+  message.textContent = "Taux enregistré : 1 USD = " + mkFormatFC(mkUsdToFc) + ".";
+  await loadCourses();
+}
+
+async function mkLoadExchangeRateAdmin() {
+  if (!isAdmin) return;
+  await mkLoadExchangeRate();
+  const input = document.getElementById("mkExchangeRateInput");
+  if (input) input.value = String(mkUsdToFc);
+  const message = document.getElementById("mkExchangeRateMessage");
+  if (message) message.textContent = "Taux actuel : 1 USD = " + mkFormatFC(mkUsdToFc) + ".";
+}
 
 function mkMessage(id, text) {
   const el = document.getElementById(id);
@@ -952,7 +986,7 @@ async function mkOpenCourse(courseId) {
       (unlocked ? "🔓 " : "🔒 ") +
       chapter.title +
       (chapter.is_free_intro ? " — GRATUIT" :
-        " — " + Number(chapter.price_usd || 0) + " USD");
+        " — " + Number(chapter.price_usd || 0).toLocaleString("fr-FR") + " USD • " + mkFormatFC(Number(chapter.price_usd || 0) * mkUsdToFc));
 
     button.onclick = () => mkOpenChapter(chapter);
     list.appendChild(button);
@@ -1271,8 +1305,14 @@ function mkShowPaymentForm(chapter, container) {
     return;
   }
 
-  const info = document.createElement("p");
-  info.textContent = "Prix du chapitre : " + price + " USD";
+  const info = document.createElement("div");
+  info.style.cssText = "margin:12px 0;padding:16px;border:1px solid var(--gold);border-radius:14px;background:var(--surface2);font-weight:800;line-height:1.8";
+  const priceUsd = document.createElement("div");
+  priceUsd.textContent = "Prix du chapitre complet : " + price.toLocaleString("fr-FR") + " USD";
+  const priceFc = document.createElement("div");
+  priceFc.textContent = "Soit " + mkFormatFC(price * mkUsdToFc);
+  priceFc.style.color = "var(--gold)";
+  info.append(priceUsd, priceFc);
 
   const method = document.createElement("select");
   method.className = "field";
@@ -1342,7 +1382,7 @@ function mkShowPaymentForm(chapter, container) {
 
   const button = document.createElement("button");
   button.className = "primary full";
-  button.textContent = "Envoyer la preuve de paiement";
+  button.textContent = "Acheter le chapitre complet et envoyer la preuve";
 
   button.onclick = async () => {
     const file = receipt.files?.[0];
@@ -1371,7 +1411,7 @@ function mkShowPaymentForm(chapter, container) {
     if (uploadError) {
       alert("Impossible d'envoyer la capture : " + uploadError.message);
       button.disabled = false;
-      button.textContent = "Envoyer la preuve de paiement";
+      button.textContent = "Acheter le chapitre complet et envoyer la preuve";
       return;
     }
 
@@ -1380,7 +1420,7 @@ function mkShowPaymentForm(chapter, container) {
       course_id: mkCurrentCourse.id,
       chapter_id: chapter.id,
       amount_usd: price,
-      amount_fc: null,
+      amount_fc: Math.round(price * mkUsdToFc),
       payment_method: method.value,
       transaction_reference: null,
       receipt_path: receiptPath,
@@ -1440,6 +1480,13 @@ function mkCreateAdminPanel() {
   panel.className = "panel";
 
   panel.innerHTML = `
+    <h3>Gestion du taux de change</h3>
+    <p class="message">Ce taux sert à calculer automatiquement les prix en francs congolais affichés aux apprenants.</p>
+    <label for="mkExchangeRateInput">1 dollar américain (USD) = combien de francs congolais (FC) ?</label>
+    <input id="mkExchangeRateInput" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="Ex. 2850">
+    <button id="mkExchangeRateSave" class="gold-button" type="button">Enregistrer le taux</button>
+    <p id="mkExchangeRateMessage" class="message"></p>
+    <hr style="border-color:var(--border);margin:25px 0">
     <h3>Gestion des chapitres et de leurs prix</h3>
     <select id="mkAdminCourse" class="field">
       <option value="">Choisir une formation</option>
@@ -1472,7 +1519,7 @@ function mkCreateAdminPanel() {
           <tr>
             <th>Apprenant</th>
             <th>Chapitre</th>
-            <th>Prix USD</th>
+            <th>Prix USD / FC</th>
             <th>Moyen</th>
             <th>Preuve de paiement</th>
             <th>Statut</th>
@@ -1489,6 +1536,7 @@ function mkCreateAdminPanel() {
   if (firstAdminPanel) adminTab.insertBefore(panel, firstAdminPanel);
   else adminTab.appendChild(panel);
 
+  document.getElementById("mkExchangeRateSave").onclick = mkSaveExchangeRate;
   document.getElementById("mkAdminCourse").onchange = () =>
     mkLoadAdminChapters();
 
@@ -1725,7 +1773,7 @@ async function mkLoadOrders() {
       (chapterResult.data?.title || "Chapitre");
 
     const amount = document.createElement("td");
-    amount.textContent = order.amount_usd + " USD";
+    amount.textContent = Number(order.amount_usd || 0).toLocaleString("fr-FR") + " USD / " + mkFormatFC(order.amount_fc ?? Number(order.amount_usd || 0) * mkUsdToFc);
 
     const method = document.createElement("td");
     method.textContent = order.payment_method || "";
@@ -1905,6 +1953,7 @@ async function enterApp(user){
  document.getElementById("mobileAdminNav").classList.toggle("hidden",!isAdmin);
 
  loadAppearance();
+ await mkLoadExchangeRate();
  await loadMyEnrollments();
  await loadMyReferrals();
  mkStartSupportRealtime();
@@ -1914,6 +1963,7 @@ async function enterApp(user){
   await loadAdminEnrollments();
   await loadAdminReferrals();
   mkCreateAdminPanel();
+  await mkLoadExchangeRateAdmin();
   const select = document.getElementById("mkAdminCourse");
   if(select) {
     select.innerHTML = '<option value="">Choisir une formation</option>';
@@ -2568,13 +2618,13 @@ initialize();
           if(ch.error){list.textContent="Erreur : "+ch.error.message;return;}list.innerHTML="";
           (ch.data||[]).forEach(function(chapter){
             var b=document.createElement("button");b.className="secondary full";b.style.margin="6px 0";
-            b.textContent=(chapter.is_free_intro?"🔓 ":"🔒 ")+chapter.title+(chapter.is_free_intro?" — GRATUIT":" — "+Number(chapter.price_usd||0)+" USD");
+            b.textContent=(chapter.is_free_intro?"🔓 ":"🔒 ")+chapter.title+(chapter.is_free_intro?" — GRATUIT":" — "+Number(chapter.price_usd||0).toLocaleString("fr-FR")+" USD • "+Math.round(Number(chapter.price_usd||0)*mkUsdToFc).toLocaleString("fr-FR")+" FC");
             b.onclick=async function(){
               var prior=reader.querySelector(".mkStandaloneChapter");if(prior)prior.remove();
               var section=document.createElement("div");section.className="panel mkStandaloneChapter";section.textContent="Chargement des leçons...";reader.appendChild(section);
               var access=await client.from("chapter_access").select("chapter_id").eq("user_id",user.id).eq("chapter_id",chapter.id).maybeSingle();
               if(access.error){section.textContent="Erreur d'accès : "+access.error.message;return;}
-              if(!chapter.is_free_intro&&!access.data){section.textContent="Ce chapitre est payant. Contacte l'administration pour demander son déblocage après paiement.";return;}
+              if(!chapter.is_free_intro&&!access.data){section.innerHTML="";var cost=document.createElement("p");cost.textContent="Acheter le chapitre complet : "+Number(chapter.price_usd||0).toLocaleString("fr-FR")+" USD / "+Math.round(Number(chapter.price_usd||0)*mkUsdToFc).toLocaleString("fr-FR")+" FC";section.appendChild(cost);var hint=document.createElement("p");hint.textContent="Le paiement et la preuve doivent être envoyés à l'administration pour validation.";section.appendChild(hint);return;}
               var lessons=await client.from("lessons").select("id,title,content,sort_order").eq("chapter_id",chapter.id).order("sort_order");
               if(lessons.error){section.textContent="Erreur : "+lessons.error.message;return;}section.innerHTML="";
               (lessons.data||[]).forEach(function(lesson){var item=document.createElement("article");item.className="panel";var h=document.createElement("h3");h.textContent=lesson.title;var p=document.createElement("p");p.textContent=lesson.content||"";item.append(h,p);section.appendChild(item);});
