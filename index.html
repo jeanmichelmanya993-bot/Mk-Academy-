@@ -970,8 +970,18 @@ async function mkOpenCourse(courseId) {
   }
 
   mkChapterAccess = (access || []).map(a => a.chapter_id);
+  const { data: courseGrant, error: courseGrantError } = await db.from("course_access").select("course_id").eq("user_id", currentUser.id).eq("course_id", courseId).maybeSingle();
+  if (courseGrantError) { list.textContent = "Erreur de vérification de l'accès à la formation : " + courseGrantError.message; return; }
 
   list.innerHTML = "";
+  if (!isAdmin && !courseGrant) {
+    const buyCourse = document.createElement("button");
+    buyCourse.className = "gold-button full";
+    buyCourse.style.marginBottom = "14px";
+    buyCourse.textContent = "🛒 Acheter toute la formation — " + Number(course.price_usd || 0).toLocaleString("fr-FR") + " USD / " + mkFormatFC(Number(course.price_usd || 0) * mkUsdToFc);
+    buyCourse.onclick = () => mkShowCoursePayment(course);
+    list.appendChild(buyCourse);
+  }
 
   chapters.forEach(chapter => {
     const unlocked =
@@ -1298,6 +1308,35 @@ function mkSafeUrl(value) {
   }
 }
 
+function mkShowCoursePayment(course) {
+  if (!currentUser || !course) return;
+  const old = document.getElementById("mkCoursePaymentModal"); if (old) old.remove();
+  const price = Number(course.price_usd || 0); if (price <= 0) return alert("Le prix de cette formation n'est pas encore défini.");
+  const modal = document.createElement("div"); modal.id = "mkCoursePaymentModal"; modal.style.cssText = "position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto";
+  const panel = document.createElement("div"); panel.className = "panel"; panel.style.cssText = "width:100%;max-width:520px;max-height:94vh;overflow:auto;background:var(--surface);border:1px solid var(--gold);border-radius:18px;padding:20px";
+  const title=document.createElement("h2");title.textContent="Acheter toute la formation";const courseTitle=document.createElement("h3");courseTitle.textContent=course.title;
+  const priceBox=document.createElement("div");priceBox.style.cssText="padding:14px;border:1px solid var(--gold);border-radius:12px;font-weight:800;line-height:1.8;margin:12px 0";const usd=document.createElement("div");usd.textContent=price.toLocaleString("fr-FR")+" USD";const fc=document.createElement("div");fc.textContent=mkFormatFC(price*mkUsdToFc);fc.style.color="var(--gold)";priceBox.append(usd,fc);
+  const methodLabel=document.createElement("label");methodLabel.textContent="Moyen de paiement";const method=document.createElement("select");method.className="field";["M-Pesa","Airtel Money","Orange Money","Autre"].forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;method.appendChild(o);});
+  const details=document.createElement("div");details.className="panel";details.style.cssText="padding:12px;margin:10px 0";const numbers={"M-Pesa":{number:"+243 830 514 531",name:"Jeans Michel Muambayi"},"Airtel Money":{number:"+243 993 933 155",name:"Mbenga Mbemga Jacques"},"Orange Money":{number:"+243 808 829 002",name:"Falonne Wa Banza"}};const updateDetails=()=>{const d=numbers[method.value];details.textContent=d?method.value+" : "+d.number+" — Bénéficiaire : "+d.name:"Contacte l'administration avant tout paiement.";};method.onchange=updateDetails;updateDetails();
+  const refLabel=document.createElement("label");refLabel.textContent="Référence de transaction (facultatif)";const reference=document.createElement("input");reference.className="field";reference.placeholder="Référence reçue après paiement";
+  const fileLabel=document.createElement("label");fileLabel.textContent="Capture d'écran du paiement (obligatoire)";const receipt=document.createElement("input");receipt.type="file";receipt.accept="image/jpeg,image/png,image/webp";receipt.className="field";
+  const hint=document.createElement("p");hint.className="message";hint.textContent="Après validation, tu auras accès à tous les chapitres et à toutes les leçons de cette formation.";
+  const send=document.createElement("button");send.className="gold-button full";send.textContent="Confirmer l'achat de la formation";const close=document.createElement("button");close.className="secondary full";close.style.marginTop="8px";close.textContent="Fermer";close.onclick=()=>modal.remove();
+  send.onclick=async()=>{const file=receipt.files?.[0];if(!file){alert("Ajoute la capture d'écran du paiement.");return;}if(method.value==="Autre"){alert("Contacte l'administration pour obtenir les coordonnées de paiement.");return;}if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024){alert("Choisis une image JPG, PNG ou WEBP de 5 Mo maximum.");return;}send.disabled=true;send.textContent="Envoi de la demande...";const ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";const path=currentUser.id+"/"+crypto.randomUUID()+"."+ext;const up=await db.storage.from("payment-receipts").upload(path,file,{contentType:file.type,upsert:false});if(up.error){alert("Impossible d'envoyer la capture : "+up.error.message);send.disabled=false;send.textContent="Réessayer";return;}const result=await db.from("course_orders").insert({user_id:currentUser.id,course_id:course.id,amount_usd:price,amount_fc:Math.round(price*mkUsdToFc),payment_method:method.value,transaction_reference:reference.value.trim()||null,receipt_path:path,status:"pending"});if(result.error){await db.storage.from("payment-receipts").remove([path]);alert("Erreur : "+result.error.message);send.disabled=false;send.textContent="Réessayer";return;}modal.remove();alert("Ta demande d'achat de la formation complète a été envoyée. L'accès sera ouvert après vérification du paiement.");};
+  panel.append(title,courseTitle,priceBox,methodLabel,method,details,refLabel,reference,fileLabel,receipt,hint,send,close);modal.appendChild(panel);modal.addEventListener("click",e=>{if(e.target===modal)modal.remove();});document.body.appendChild(modal);
+}
+
+async function mkLoadCourseOrders(){
+  if(!isAdmin)return;const rows=document.getElementById("mkCourseOrderRows");if(!rows)return;const message=document.getElementById("mkCourseOrderMessage");rows.innerHTML="";message.textContent="Chargement...";
+  const {data:orders,error}=await db.from("course_orders").select("*").order("created_at",{ascending:false});if(error){message.textContent="Erreur : "+error.message;return;}if(!orders?.length){message.textContent="Aucune demande d'achat de formation.";return;}message.textContent=orders.length+" demande(s).";
+  for(const order of orders){const [user,course]=await Promise.all([db.from("profiles").select("full_name").eq("id",order.user_id).maybeSingle(),db.from("courses").select("title").eq("id",order.course_id).maybeSingle()]);const tr=document.createElement("tr");const learner=document.createElement("td");learner.textContent=user.data?.full_name||order.user_id;const name=document.createElement("td");name.textContent=course.data?.title||"Formation";const amount=document.createElement("td");amount.textContent=Number(order.amount_usd).toLocaleString("fr-FR")+" USD / "+mkFormatFC(order.amount_fc);const methodCell=document.createElement("td");methodCell.textContent=order.payment_method+(order.transaction_reference?" — "+order.transaction_reference:"");const proof=document.createElement("td");if(order.receipt_path){const link=await db.storage.from("payment-receipts").createSignedUrl(order.receipt_path,300);if(!link.error&&link.data?.signedUrl){const a=document.createElement("a");a.href=link.data.signedUrl;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Voir la capture";proof.appendChild(a);}else proof.textContent="Indisponible";}else proof.textContent="Aucune";const status=document.createElement("td");status.textContent=statusText(order.status);const actions=document.createElement("td");if(order.status==="pending"){const approve=document.createElement("button");approve.className="success";approve.textContent="Valider";approve.onclick=()=>mkReviewCourseOrder(order,true);const reject=document.createElement("button");reject.className="danger";reject.textContent="Refuser";reject.onclick=()=>mkReviewCourseOrder(order,false);actions.append(approve,reject);}tr.append(learner,name,amount,methodCell,proof,status,actions);rows.appendChild(tr);}
+}
+async function mkReviewCourseOrder(order,approve){
+  if(!isAdmin)return;if(!confirm(approve?"Confirmer le paiement et débloquer toute la formation ?":"Refuser cette demande ?"))return;
+  if(approve){const grant=await db.from("course_access").upsert({user_id:order.user_id,course_id:order.course_id,order_id:order.id,granted_by:currentUser.id},{onConflict:"user_id,course_id"});if(grant.error){alert("Impossible de débloquer la formation : "+grant.error.message);return;}}
+  const update=await db.from("course_orders").update({status:approve?"approved":"rejected",reviewed_by:currentUser.id,reviewed_at:new Date().toISOString()}).eq("id",order.id);if(update.error){alert("Erreur : "+update.error.message);return;}alert(approve?"Formation complète débloquée.":"Demande refusée.");await mkLoadCourseOrders();
+}
+
 function mkShowPaymentForm(chapter, container) {
   const price = Number(chapter.price_usd || 0);
   if (price <= 0) {
@@ -1509,6 +1548,11 @@ function mkCreateAdminPanel() {
     <img id="mkMediaPreview" alt="Aperçu de l’illustration" style="display:none;max-width:100%;max-height:220px;border-radius:12px;margin:10px 0">
     <button id="mkMediaSave" class="primary full" type="button">Enregistrer la leçon</button>
     <p id="mkMediaMessage" class="message"></p>
+    <hr style="border-color:var(--border);margin:25px 0">
+    <h3>Demandes d’achat des formations complètes</h3>
+    <button class="secondary" onclick="mkLoadCourseOrders()">Actualiser</button>
+    <p id="mkCourseOrderMessage" class="message"></p>
+    <div class="table-wrap"><table><thead><tr><th>Apprenant</th><th>Formation</th><th>Prix USD / FC</th><th>Moyen</th><th>Preuve</th><th>Statut</th><th>Action</th></tr></thead><tbody id="mkCourseOrderRows"></tbody></table></div>
     <hr style="border-color:var(--border);margin:25px 0">
     <h3>Demandes de paiement des chapitres</h3>
     <button class="secondary" onclick="mkLoadOrders()">Actualiser</button>
@@ -1975,6 +2019,7 @@ async function enterApp(user){
     });
   }
   await mkLoadOrders();
+  await mkLoadCourseOrders();
  }
  showTab("coursesTab");
 }
@@ -2279,6 +2324,12 @@ function renderCourses(){
     button.textContent = "📚 Voir les chapitres";
     button.onclick = () => mkOpenCourse(course.id);
     card.querySelector(".card-body").appendChild(button);
+    const buyButton = document.createElement("button");
+    buyButton.className = "gold-button full";
+    buyButton.textContent = "🛒 Acheter toute la formation";
+    buyButton.style.marginTop = "8px";
+    buyButton.onclick = () => mkShowCoursePayment(course);
+    card.querySelector(".card-body").appendChild(buyButton);
   });
  }
 }
