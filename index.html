@@ -548,7 +548,7 @@ function mkCloseReader() {
 }
 
 function mkCreateInAppLessonPlayer(lesson, container) {
-  if (/qu.est-ce que l.intelligence artificielle|qu.est-ce que l.ia/i.test(lesson.title || "")) {
+  if (/intelligence artificielle/i.test(mkCurrentCourse?.title || "")) {
     mkCreateAIStoryLesson(lesson, container);
     return;
   }
@@ -581,6 +581,27 @@ function mkCreateAIStoryLesson(lesson, container) {
     {title:"Avantages et limites",tag:"À RETENIR",icon:"⚖️",visual:"Avantages : gagner du temps, apprendre, organiser. Limites : erreurs, informations inventées, confidentialité.",narration:"L'intelligence artificielle peut faire gagner du temps, aider à apprendre, organiser des informations et stimuler la créativité. Mais elle peut aussi produire des erreurs, inventer des informations ou donner une réponse inadaptée. Ne partagez pas de données personnelles ou confidentielles sans raison. Vérifiez toujours les informations importantes avant de les utiliser."},
     {title:"Vérifions ce que vous avez appris",tag:"EXERCICE PRATIQUE",icon:"❓",visual:"Question : qui vérifie les prix et les tailles avant de publier une annonce ? Réponse : le commerçant.",narration:"Petite question : si vous utilisez un outil d'intelligence artificielle pour rédiger une publicité pour votre boutique, qui doit vérifier les prix et les détails avant la publication ? La bonne réponse est : vous, ou la personne responsable de la boutique. L'IA est un assistant. Elle ne remplace pas votre jugement. Retenez cette idée : utilisez l'IA pour vous aider, puis vérifiez son travail."}
   ];
+  if (!/qu.est-ce que l.intelligence artificielle|qu.est-ce que l.ia/i.test(lesson.title || "")) {
+    const titleText=lesson.title||"Cette leçon";
+    const rawText=(lesson.content||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+    let example="Imaginez que vous gérez une petite activité à Kinshasa. Vous utilisez ChatGPT pour vous aider à réaliser cette tâche, puis vous vérifiez les informations avant de les utiliser.";
+    let icon="💡";
+    if(/CV|emploi|entretien|motivation/i.test(titleText)){example="Vous cherchez un emploi à Kinshasa. Vous donnez à ChatGPT votre expérience réelle et l'offre visée pour préparer un CV ou vous entraîner à l'entretien. Vous relisez chaque détail avant d'envoyer.";icon="💼";}
+    else if(/business|marché|coût|prix|promouvoir|idée/i.test(titleText)){example="Vous voulez lancer une petite activité à Kinshasa. Vous demandez à ChatGPT des idées, des questions d'étude de marché ou un premier budget. Vous vérifiez les chiffres auprès de vrais fournisseurs et clients.";icon="📊";}
+    else if(/prompt|rédiger|réponse/i.test(titleText)){example="Vous voulez obtenir une réponse utile. Vous précisez à l'outil le rôle, l'objectif, le contexte et le format attendu, puis vous améliorez votre demande si la réponse reste trop générale.";icon="✍️";}
+    else if(/tableau|rapport|résumer|organiser|automatiser/i.test(titleText)){example="Vous recevez plusieurs informations pour votre travail. Vous demandez à ChatGPT de les classer ou de les résumer, puis vous contrôlez les noms, les dates et les totaux.";icon="📋";}
+    else if(/compte|interface|fonctionnalité|ChatGPT/i.test(titleText)){example="Vous ouvrez ChatGPT sur votre téléphone. Vous découvrez où écrire une demande, lire la réponse et retrouver les fonctions utiles. Vous ne partagez jamais votre mot de passe ni vos données confidentielles.";icon="📱";}
+    const sentences=rawText.split(/(?<=[.!?])\s+/).filter(Boolean);
+    const midpoint=Math.max(1,Math.ceil(sentences.length/2));
+    const first=sentences.slice(0,midpoint).join(" ")||"Découvrez les notions essentielles de cette leçon.";
+    const second=sentences.slice(midpoint).join(" ")||"Retenez les points importants et vérifiez toujours les résultats.";
+    scenes.splice(0,scenes.length,
+      {title:"La situation concrète",tag:"EXEMPLE PRATIQUE",icon,visual:example,narration:example},
+      {title:"Comprendre la leçon",tag:"EXPLICATION",icon:"📘",visual:titleText,narration:first.slice(0,1500)},
+      {title:"Appliquer ce que vous apprenez",tag:"MISE EN PRATIQUE",icon:"🛠️",visual:"Observez, essayez, vérifiez et améliorez le résultat.",narration:second.slice(0,1500)},
+      {title:"Le point essentiel à retenir",tag:"RÉSUMÉ",icon:"✅",visual:"L'IA vous assiste : vous gardez le contrôle et vérifiez les informations.",narration:"Pour cette leçon, retenez le principe suivant : utilisez l'intelligence artificielle comme un assistant. Donnez-lui des consignes claires, vérifiez ses réponses et adaptez le résultat à votre situation réelle."}
+    );
+  }
   const styleId="mk-ai-story-style";
   if(!document.getElementById(styleId)){const st=document.createElement("style");st.id=styleId;st.textContent="@keyframes mkSceneFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}.mk-scene-visual{animation:mkSceneFloat 4s ease-in-out infinite}.mk-scene-controls button{border-radius:22px;padding:10px 13px;font-weight:700;cursor:pointer}";document.head.appendChild(st);}
   const player=document.createElement("section");player.className="mk-ai-story-player";player.style.cssText="margin:16px 0;padding:18px;border-radius:20px;background:linear-gradient(145deg,#102b52,#174d83);color:#fff;box-shadow:0 12px 30px rgba(10,35,70,.22)";
