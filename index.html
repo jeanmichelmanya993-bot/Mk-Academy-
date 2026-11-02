@@ -167,6 +167,11 @@ button:disabled{opacity:.55;cursor:not-allowed}
  .support-benefit p{font-size:12px}
 }
 
+/* NOTIFICATIONS EN DIRECT DE L'ASSISTANCE */
+.mk-support-nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:5px;border-radius:20px;background:#dc3545;color:#fff;font-size:10px;font-weight:800}
+.mk-support-toast{position:fixed;right:18px;bottom:90px;z-index:9999;max-width:min(360px,calc(100vw - 36px));display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:#172b4d;color:#fff;box-shadow:0 12px 35px #0004;font-size:13px}
+.mk-support-toast button{background:#fff;color:#172b4d;border:0;border-radius:9px;padding:8px 10px;font-weight:800}
+.mk-support-unread{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;margin-left:7px;border-radius:20px;background:#dc3545;color:#fff;font-size:10px;font-weight:800}
 /* MESSAGERIE INTERNE MK ACADEMY */
 .mk-support-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:18px}
 .mk-support-panel{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
@@ -383,7 +388,7 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
    <nav>
     <button class="active" data-tab="coursesTab" onclick="showTab('coursesTab',this)"><span class="nav-icon">⌂</span>Accueil</button>
     <button data-tab="myTab" onclick="showTab('myTab',this)"><span class="nav-icon">▣</span>Mes cours</button>
-    <button data-tab="supportTab" onclick="showTab('supportTab',this)"><span class="nav-icon">✉</span>Assistance MK</button>
+    <button data-tab="supportTab" onclick="showTab('supportTab',this)"><span class="nav-icon">✉</span>Assistance MK <span id="mkSupportDesktopBadge" class="mk-support-nav-badge hidden">0</span></button>
     <button data-tab="settingsTab" onclick="showTab('settingsTab',this)"><span class="nav-icon">⚙</span>Mon profil</button>
     <button id="adminNav" class="hidden" data-tab="adminTab" onclick="showTab('adminTab',this)"><span class="nav-icon">◆</span>Administration</button>
    </nav>
@@ -577,7 +582,7 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
  <button onclick="focusSearch()"><span>⌕</span>Recherche</button>
  <button onclick="goCategories()"><span>▦</span>Catégories</button>
  <button data-mobile-tab="myTab" onclick="mobileTab('myTab',this)"><span>▣</span>Mes cours</button>
- <button data-mobile-tab="supportTab" onclick="mobileTab('supportTab',this)"><span>✉</span>Aide MK</button>
+ <button data-mobile-tab="supportTab" onclick="mobileTab('supportTab',this)"><span>✉</span>Aide MK <span id="mkSupportMobileBadge" class="mk-support-nav-badge hidden">0</span></button>
  <button data-mobile-tab="settingsTab" onclick="mobileTab('settingsTab',this)"><span>◉</span>Profil</button>
  <button id="mobileAdminNav" class="hidden" data-mobile-tab="adminTab" onclick="mobileTab('adminTab',this)"><span>◆</span>Admin</button>
 </nav>
@@ -1706,6 +1711,7 @@ async function enterApp(user){
 
  loadAppearance();
  await loadMyEnrollments();
+ mkStartSupportRealtime();
  await loadCourses();
  if(isAdmin){
   await loadAdminCourses();
@@ -1732,8 +1738,72 @@ window.enterApp = enterApp;
 
 let mkSupportThreadId = null;
 let mkSupportAdminThreadId = null;
+let mkSupportRealtimeChannel = null;
+let mkSupportLearnerUnread = 0;
+let mkSupportAdminUnread = {};
+let mkSupportToastTimer = null;
+
+function mkSupportUnreadTotal(){
+ return Object.values(mkSupportAdminUnread).reduce((sum,value)=>sum+(Number(value)||0),0);
+}
+function mkUpdateSupportBadges(){
+ const count=isAdmin?mkSupportUnreadTotal():mkSupportLearnerUnread;
+ ["mkSupportDesktopBadge","mkSupportMobileBadge"].forEach(id=>{
+  const badge=document.getElementById(id);if(!badge)return;
+  badge.textContent=count>99?"99+":String(count);
+  badge.classList.toggle("hidden",count<1);
+ });
+}
+function mkNotifySupport(text){
+ let toast=document.getElementById("mkSupportToast");
+ if(!toast){
+  toast=document.createElement("div");toast.id="mkSupportToast";toast.className="mk-support-toast";
+  const label=document.createElement("span");label.id="mkSupportToastText";
+  const open=document.createElement("button");open.type="button";open.textContent="Voir";
+  open.onclick=()=>{toast.remove();showTab("supportTab");};
+  toast.append(label,open);document.body.appendChild(toast);
+ }
+ document.getElementById("mkSupportToastText").textContent=text;
+ if(mkSupportToastTimer)clearTimeout(mkSupportToastTimer);
+ mkSupportToastTimer=setTimeout(()=>{const el=document.getElementById("mkSupportToast");if(el)el.remove();},7000);
+}
+function mkStopSupportRealtime(){
+ if(mkSupportRealtimeChannel){db.removeChannel(mkSupportRealtimeChannel);mkSupportRealtimeChannel=null;}
+}
+function mkStartSupportRealtime(){
+ mkStopSupportRealtime();
+ if(!currentUser)return;
+ mkSupportRealtimeChannel=db.channel("mk-support-live-"+currentUser.id)
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"mk_support_messages"},payload=>{
+   const message=payload.new;
+   if(!message||message.sender_id===currentUser?.id)return;
+   if(isAdmin){
+    const selected=document.getElementById("supportTab")&&!document.getElementById("supportTab").classList.contains("hidden");
+    if(selected&&mkSupportAdminThreadId===message.thread_id){
+     mkRenderSupportMessages(message.thread_id,"mkSupportAdminMessages",true);
+    }else{
+     mkSupportAdminUnread[message.thread_id]=(mkSupportAdminUnread[message.thread_id]||0)+1;
+     mkNotifySupport("Nouveau message d'un apprenant.");
+    }
+    mkLoadAdminThreads();
+   }else if(mkSupportThreadId===message.thread_id){
+    const selected=document.getElementById("supportTab")&&!document.getElementById("supportTab").classList.contains("hidden");
+    if(selected){
+     mkRenderSupportMessages(message.thread_id,"mkSupportLearnerMessages",false);
+    }else{
+     mkSupportLearnerUnread++;
+     mkNotifySupport("Nouvelle réponse de l'administrateur.");
+    }
+   }
+   mkUpdateSupportBadges();
+  })
+  .subscribe(status=>{
+   if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")console.warn("MK support realtime:",status);
+  });
+}
 
 async function mkLoadSupport(){
+ if(!isAdmin){mkSupportLearnerUnread=0;mkUpdateSupportBadges();}
  const learnerPanel=document.getElementById("mkSupportLearnerPanel");
  const adminPanel=document.getElementById("mkSupportAdminPanel");
  if(isAdmin){
@@ -1784,6 +1854,8 @@ async function mkLoadAdminThreads(){
  threads.forEach(t=>{
   const btn=document.createElement("button");btn.type="button";btn.className="mk-support-thread";
   const title=document.createElement("strong");title.textContent=names[t.user_id]||("Apprenant "+t.user_id.slice(0,8));
+  const unread=mkSupportAdminUnread[t.id]||0;
+  if(unread){const badge=document.createElement("span");badge.className="mk-support-unread";badge.textContent=unread>99?"99+":String(unread);title.appendChild(badge);}
   const preview=document.createElement("small");
   const last=latest[t.id];
   preview.textContent=last?((last.sender_id===currentUser.id?"Vous : ":"Dernier message : ")+last.body.slice(0,110)):("Conversation ouverte le "+new Date(t.created_at).toLocaleDateString("fr-FR"));
@@ -1796,6 +1868,7 @@ async function mkLoadAdminThreads(){
 
 async function mkOpenAdminSupportThread(threadId,studentName){
  mkSupportAdminThreadId=threadId;
+ delete mkSupportAdminUnread[threadId];mkUpdateSupportBadges();
  document.getElementById("mkSupportAdminConversationTitle").textContent="Conversation avec "+studentName;
  document.getElementById("mkSupportAdminCompose").classList.remove("hidden");
  await mkRenderSupportMessages(threadId,"mkSupportAdminMessages",true);
@@ -2198,6 +2271,7 @@ async function updateEnrollment(id,changes){
 }
 
 async function logout(){
+ mkStopSupportRealtime();
  const {error}=await db.auth.signOut();
  if(error){alert(error.message);return}
  currentUser=null;isAdmin=false;enrollmentsMap={};allCourses=[];
@@ -2218,6 +2292,7 @@ async function initialize(){
 
 db.auth.onAuthStateChange((event,session)=>{
  if(event==="SIGNED_OUT"){
+  mkStopSupportRealtime();
   currentUser=null;isAdmin=false;enrollmentsMap={};allCourses=[];
   document.getElementById("appSection").classList.add("hidden");
   document.getElementById("mobileNav").classList.add("hidden");
