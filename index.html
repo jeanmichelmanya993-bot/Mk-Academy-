@@ -526,9 +526,9 @@ input[type=checkbox]{accent-color:#d4af37}
     <input id="email" type="email" placeholder="Adresse e-mail" autocomplete="email" required>
     <input id="password" type="password" placeholder="Mot de passe" minlength="6" autocomplete="current-password" required>
     <button type="submit" id="submitBtn" class="primary full">Créer mon compte</button>
+    <button type="button" id="resendConfirmationBtn" class="secondary full" style="display:block!important;margin-top:12px;background:#fff;color:#174ea6;border:2px solid #174ea6;padding:13px;font-weight:700" onclick="mkResendConfirmation()">📩 Renvoyer l’e-mail de confirmation</button>
    </form>
    <p id="authMessage" class="message"></p>
-   <button type="button" id="resendConfirmationBtn" class="secondary full" onclick="mkResendConfirmation()">Renvoyer l’e-mail de confirmation</button>
    <p class="message">En créant votre compte, vous rejoignez la communauté MK Academy.</p>
   </div>
  </div>
