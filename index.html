@@ -2311,6 +2311,7 @@ async function updateEnrollment(id,changes){
  const {error}=await db.from("enrollments").update(changes).eq("id",id);
  if(error){alert("Erreur : "+error.message);return}
  await loadAdminEnrollments();
+ await loadAdminReferrals();
 }
 
 async function logout(){
