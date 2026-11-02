@@ -548,10 +548,8 @@ function mkCloseReader() {
 }
 
 function mkCreateInAppLessonPlayer(lesson, container) {
-  if (/intelligence artificielle/i.test(mkCurrentCourse?.title || "")) {
-    mkCreateAIStoryLesson(lesson, container);
-    return;
-  }
+  mkCreateAIStoryLesson(lesson, container);
+  return;
   const raw=(lesson.content||"").replace(/\r/g,"").trim();
   const lines=raw.split("\n").map(x=>x.trim()).filter(Boolean);
   const slides=[]; let heading=lesson.title||"Leçon", body=[];
@@ -581,16 +579,25 @@ function mkCreateAIStoryLesson(lesson, container) {
     {title:"Avantages et limites",tag:"À RETENIR",icon:"⚖️",visual:"Avantages : gagner du temps, apprendre, organiser. Limites : erreurs, informations inventées, confidentialité.",narration:"L'intelligence artificielle peut faire gagner du temps, aider à apprendre, organiser des informations et stimuler la créativité. Mais elle peut aussi produire des erreurs, inventer des informations ou donner une réponse inadaptée. Ne partagez pas de données personnelles ou confidentielles sans raison. Vérifiez toujours les informations importantes avant de les utiliser."},
     {title:"Vérifions ce que vous avez appris",tag:"EXERCICE PRATIQUE",icon:"❓",visual:"Question : qui vérifie les prix et les tailles avant de publier une annonce ? Réponse : le commerçant.",narration:"Petite question : si vous utilisez un outil d'intelligence artificielle pour rédiger une publicité pour votre boutique, qui doit vérifier les prix et les détails avant la publication ? La bonne réponse est : vous, ou la personne responsable de la boutique. L'IA est un assistant. Elle ne remplace pas votre jugement. Retenez cette idée : utilisez l'IA pour vous aider, puis vérifiez son travail."}
   ];
-  if (!/qu.est-ce que l.intelligence artificielle|qu.est-ce que l.ia/i.test(lesson.title || "")) {
+  if (!( /intelligence artificielle/i.test(mkCurrentCourse?.title || "") && /qu.est-ce que l.intelligence artificielle|qu.est-ce que l.ia/i.test(lesson.title || "") )) {
     const titleText=lesson.title||"Cette leçon";
     const rawText=(lesson.content||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
-    let example="Imaginez que vous gérez une petite activité à Kinshasa. Vous utilisez ChatGPT pour vous aider à réaliser cette tâche, puis vous vérifiez les informations avant de les utiliser.";
+    const courseText=mkCurrentCourse?.title||"Formation";
+    let example="Imaginez une situation réelle à Kinshasa liée à la formation « "+courseText+" ». Vous appliquez cette leçon étape par étape, vous contrôlez le résultat et vous corrigez les erreurs.";
     let icon="💡";
-    if(/CV|emploi|entretien|motivation/i.test(titleText)){example="Vous cherchez un emploi à Kinshasa. Vous donnez à ChatGPT votre expérience réelle et l'offre visée pour préparer un CV ou vous entraîner à l'entretien. Vous relisez chaque détail avant d'envoyer.";icon="💼";}
-    else if(/business|marché|coût|prix|promouvoir|idée/i.test(titleText)){example="Vous voulez lancer une petite activité à Kinshasa. Vous demandez à ChatGPT des idées, des questions d'étude de marché ou un premier budget. Vous vérifiez les chiffres auprès de vrais fournisseurs et clients.";icon="📊";}
-    else if(/prompt|rédiger|réponse/i.test(titleText)){example="Vous voulez obtenir une réponse utile. Vous précisez à l'outil le rôle, l'objectif, le contexte et le format attendu, puis vous améliorez votre demande si la réponse reste trop générale.";icon="✍️";}
-    else if(/tableau|rapport|résumer|organiser|automatiser/i.test(titleText)){example="Vous recevez plusieurs informations pour votre travail. Vous demandez à ChatGPT de les classer ou de les résumer, puis vous contrôlez les noms, les dates et les totaux.";icon="📋";}
-    else if(/compte|interface|fonctionnalité|ChatGPT/i.test(titleText)){example="Vous ouvrez ChatGPT sur votre téléphone. Vous découvrez où écrire une demande, lire la réponse et retrouver les fonctions utiles. Vous ne partagez jamais votre mot de passe ni vos données confidentielles.";icon="📱";}
+    if(/marketing digital|vente sur internet/i.test(courseText)){example="Une petite entreprise de Kinshasa veut vendre davantage. Elle définit ses clients, prépare une publication claire pour Facebook et WhatsApp, présente le prix et les avantages, puis répond aux questions des clients.";icon="📣";}
+    else if(/business rentable|business en rdc/i.test(courseText)){example="Vous voulez lancer une petite activité à Kinshasa. Vous observez les besoins du quartier, interrogez des clients potentiels, calculez les dépenses et comparez les prix avant d'investir.";icon="📊";}
+    else if(/design graphique/i.test(courseText)){example="Un commerçant vous demande une affiche pour annoncer une promotion. Avec votre téléphone, vous choisissez un format lisible, une image adaptée, deux ou trois couleurs et des coordonnées exactes.";icon="🎨";}
+    else if(/chine|alibaba/i.test(courseText)){example="Vous cherchez un fournisseur sur Alibaba. Vous comparez plusieurs vendeurs, vérifiez les avis, demandez le prix total, les frais de livraison et les conditions avant d'envoyer de l'argent.";icon="📦";}
+    else if(/emploi|entretien/i.test(courseText)){example="Vous cherchez un emploi à Kinshasa. Vous adaptez votre CV à une offre réelle, préparez une présentation de votre expérience et vous entraînez à répondre clairement aux questions d'entretien.";icon="💼";}
+    else if(/informatique de bureau|word et excel/i.test(courseText)){example="Au bureau, votre responsable vous demande une lettre professionnelle et un tableau de suivi des ventes. Vous préparez le document dans Word et organisez les chiffres dans Excel.";icon="🖥️";}
+    else if(/tiktok|création de contenu/i.test(courseText)){example="Vous gérez une petite boutique et voulez présenter un produit sur TikTok. Vous choisissez une idée utile, filmez avec votre téléphone, ajoutez un message clair et publiez au bon format.";icon="🎬";}
+    else if(/boutique en ligne|gérer une boutique/i.test(courseText)){example="Vous ouvrez une boutique en ligne. Vous ajoutez une photo nette, une description honnête, le prix, les moyens de paiement et les modalités de livraison, puis vous suivez les commandes.";icon="🛍️";}
+    else if(/anglais/i.test(courseText)){example="Vous accueillez un client étranger. Vous le saluez en anglais, vous lui demandez ce qu'il recherche, vous écoutez sa réponse et vous utilisez des phrases simples pour l'aider.";icon="🗣️";}
+    if(/CV|emploi|entretien|motivation/i.test(titleText)){example="Vous cherchez un emploi à Kinshasa. Vous utilisez les conseils de cette leçon pour préparer votre CV ou vous entraîner à l'entretien. Vous relisez chaque détail avant d'envoyer.";icon="💼";}
+    else if(/prompt|rédiger|réponse/i.test(titleText) && /intelligence artificielle/i.test(courseText)){example="Vous voulez obtenir une réponse utile. Vous précisez à l'outil le rôle, l'objectif, le contexte et le format attendu, puis vous améliorez votre demande si la réponse reste trop générale.";icon="✍️";}
+    else if(/tableau|rapport|résumer|organiser|automatiser/i.test(titleText) && /intelligence artificielle/i.test(courseText)){example="Vous recevez plusieurs informations pour votre travail. Vous demandez à ChatGPT de les classer ou de les résumer, puis vous contrôlez les noms, les dates et les totaux.";icon="📋";}
+    else if(/compte|interface|fonctionnalité|ChatGPT/i.test(titleText) && /intelligence artificielle/i.test(courseText)){example="Vous ouvrez ChatGPT sur votre téléphone. Vous découvrez où écrire une demande, lire la réponse et retrouver les fonctions utiles. Vous ne partagez jamais votre mot de passe ni vos données confidentielles.";icon="📱";}
     const sentences=rawText.split(/(?<=[.!?])\s+/).filter(Boolean);
     const midpoint=Math.max(1,Math.ceil(sentences.length/2));
     const first=sentences.slice(0,midpoint).join(" ")||"Découvrez les notions essentielles de cette leçon.";
@@ -605,7 +612,7 @@ function mkCreateAIStoryLesson(lesson, container) {
   const styleId="mk-ai-story-style";
   if(!document.getElementById(styleId)){const st=document.createElement("style");st.id=styleId;st.textContent="@keyframes mkSceneFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}.mk-scene-visual{animation:mkSceneFloat 4s ease-in-out infinite}.mk-scene-controls button{border-radius:22px;padding:10px 13px;font-weight:700;cursor:pointer}";document.head.appendChild(st);}
   const player=document.createElement("section");player.className="mk-ai-story-player";player.style.cssText="margin:16px 0;padding:18px;border-radius:20px;background:linear-gradient(145deg,#102b52,#174d83);color:#fff;box-shadow:0 12px 30px rgba(10,35,70,.22)";
-  const brand=document.createElement("div");brand.textContent="MK ACADEMY  •  LEÇON ILLUSTRÉE ET NARRÉE";brand.style.cssText="font-size:10px;font-weight:800;letter-spacing:1px;color:#b9dcff";
+  const brand=document.createElement("div");brand.textContent="MK ACADEMY  •  LEÇON ILLUSTRÉE ET EXPLIQUÉE";brand.style.cssText="font-size:10px;font-weight:800;letter-spacing:1px;color:#b9dcff";
   const heading=document.createElement("h3");heading.style.cssText="color:#fff;font-size:21px;margin:10px 0";
   const tag=document.createElement("div");tag.style.cssText="font-size:10px;font-weight:800;letter-spacing:1px;color:#8ed0ff;margin:8px 0";
   const visual=document.createElement("div");visual.className="mk-scene-visual";visual.style.cssText="min-height:185px;border-radius:16px;background:linear-gradient(135deg,#e3f2ff,#f8fbff);color:#17385f;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;margin:12px 0";
