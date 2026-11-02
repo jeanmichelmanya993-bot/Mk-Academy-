@@ -772,6 +772,7 @@ let allCourses = [], selectedCategory = "Toutes", currentView = "grid";
 let mkCurrentCourse = null;
 let mkCurrentChapter = null;
 let mkChapterAccess = [];
+let mkHasCourseAccess = false;
 let mkChapterOrders = [];
 let mkUsdToFc = 2850;
 
@@ -932,6 +933,7 @@ async function mkOpenCourse(courseId) {
 
   mkCurrentCourse = course;
   mkChapterAccess = [];
+  mkHasCourseAccess = false;
 
   document.getElementById("mkReader").classList.remove("hidden");
   document.getElementById("mkCourseTitle").textContent = course.title;
@@ -972,6 +974,7 @@ async function mkOpenCourse(courseId) {
   mkChapterAccess = (access || []).map(a => a.chapter_id);
   const { data: courseGrant, error: courseGrantError } = await db.from("course_access").select("course_id").eq("user_id", currentUser.id).eq("course_id", courseId).maybeSingle();
   if (courseGrantError) { list.textContent = "Erreur de vérification de l'accès à la formation : " + courseGrantError.message; return; }
+  mkHasCourseAccess = !!courseGrant;
 
   list.innerHTML = "";
   if (!isAdmin && !courseGrant) {
@@ -986,6 +989,7 @@ async function mkOpenCourse(courseId) {
   chapters.forEach(chapter => {
     const unlocked =
       isAdmin ||
+      mkHasCourseAccess ||
       chapter.is_free_intro ||
       mkChapterAccess.includes(chapter.id);
 
@@ -1030,6 +1034,7 @@ async function mkOpenChapter(chapter) {
 
   const unlocked =
     isAdmin ||
+    mkHasCourseAccess ||
     chapter.is_free_intro ||
     mkChapterAccess.includes(chapter.id);
 
