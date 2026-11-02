@@ -460,6 +460,38 @@ input[type=checkbox]{accent-color:#d4af37}
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
 
+
+/* CATALOGUE — CARTES COMPACTES EN GRILLE (CHOIX 4) */
+#catalogue.course-grid-compact{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:13px;
+ align-items:stretch;
+}
+#catalogue.course-grid-compact .card{min-width:0;border-radius:14px}
+#catalogue.course-grid-compact .course-cover{height:94px;padding:11px}
+#catalogue.course-grid-compact .course-cover:after{font-size:48px;right:12px}
+#catalogue.course-grid-compact .course-cover span{font-size:9px;letter-spacing:.8px}
+#catalogue.course-grid-compact .card-body{padding:12px}
+#catalogue.course-grid-compact .card h3{font-size:13px;line-height:1.35;margin-bottom:5px}
+#catalogue.course-grid-compact .card p{font-size:10px;line-height:1.45;margin:5px 0}
+#catalogue.course-grid-compact .card .price{font-size:16px;margin:8px 0}
+#catalogue.course-grid-compact .card-meta{font-size:9px;gap:5px;flex-wrap:wrap}
+#catalogue.course-grid-compact .card button{font-size:11px;padding:9px 7px;margin-top:6px}
+@media(max-width:900px){
+ #catalogue.course-grid-compact{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ #catalogue.course-grid-compact .course-cover{height:88px}
+ #catalogue.course-grid-compact .card-body{padding:10px}
+}
+@media(max-width:380px){
+ #catalogue.course-grid-compact{gap:8px}
+ #catalogue.course-grid-compact .course-cover{height:76px}
+ #catalogue.course-grid-compact .card-body{padding:9px}
+ #catalogue.course-grid-compact .card h3{font-size:12px}
+ #catalogue.course-grid-compact .card p{font-size:9px}
+ #catalogue.course-grid-compact .card .price{font-size:14px}
+}
+
 </style>
 </head>
 
@@ -553,7 +585,7 @@ input[type=checkbox]{accent-color:#d4af37}
       <span class="hero-tag">L'APPRENTISSAGE SANS LIMITES</span>
       <h2>Bienvenue sur MK Academy, apprenez, progressez et réussissez.</h2>
       <p>Découvrez des compétences utiles, développez votre potentiel et préparez votre avenir professionnel.</p>
-      <button class="gold-button" onclick="document.getElementById('categorySection').scrollIntoView({behavior:'smooth'})">Explorer les catégories →</button>
+      <button class="gold-button" onclick="document.getElementById('catalogue').scrollIntoView({behavior:'smooth'})">Voir les formations →</button>
      </div>
     </div>
     <section class="support-benefit" aria-label="Avantage permanent : accompagnement MK Academy">
@@ -571,24 +603,6 @@ input[type=checkbox]{accent-color:#d4af37}
      <div class="stat-card"><div class="stat-icon">✦</div><div><strong>Votre avenir</strong><small>Votre réussite compte</small></div></div>
     </div>
 
-    <div id="categorySection">
-     <div class="page-heading">
-      <div class="eyebrow">EXPLOREZ NOS DOMAINES</div>
-      <h2>Choisir par Catégories</h2>
-      <p>Trouvez un domaine qui correspond à vos ambitions.</p>
-     </div>
-     <div class="category-grid" id="categoryGrid">
-      <button class="category-card cat-blue" onclick="filterCategory('Informatique',this)"><span class="category-emoji">💻</span><span><strong>L'informatique</strong><small>Technologie et numérique</small></span></button>
-      <button class="category-card cat-orange" onclick="filterCategory('Langues',this)"><span class="category-emoji">🌍</span><span><strong>Langues et communication</strong><small>Parler et communiquer</small></span></button>
-      <button class="category-card cat-purple" onclick="filterCategory('Business',this)"><span class="category-emoji">💼</span><span><strong>Business</strong><small>Entreprendre et gérer</small></span></button>
-      <button class="category-card cat-green" onclick="filterCategory('Marketing',this)"><span class="category-emoji">📣</span><span><strong>Marketing digital</strong><small>Développer son activité</small></span></button>
-      <button class="category-card cat-pink" onclick="filterCategory('Design',this)"><span class="category-emoji">🎨</span><span><strong>Design et créativité</strong><small>Créer et innover</small></span></button>
-      <button class="category-card cat-teal" onclick="filterCategory('Emploi',this)"><span class="category-emoji">🧑‍💼</span><span><strong>Emploi et carrière</strong><small>Préparer son avenir</small></span></button>
-      <button class="category-card cat-gold" onclick="filterCategory('Finance',this)"><span class="category-emoji">📊</span><span><strong>Finance et gestion</strong><small>Gérer ses ressources</small></span></button>
-      <button class="category-card cat-gray" onclick="filterCategory('Autres',this)"><span class="category-emoji">✨</span><span><strong>Autres domaines</strong><small>Découvrir davantage</small></span></button>
-     </div>
-    </div>
-
     <div class="category-tools">
      <h3 id="catalogueTitle">Toutes les formations</h3>
      <div class="view-switch">
@@ -597,7 +611,7 @@ input[type=checkbox]{accent-color:#d4af37}
      </div>
     </div>
     <div class="search-box"><span>⌕</span><input id="courseSearch" type="search" placeholder="Rechercher une formation..." oninput="renderCourses()"></div>
-    <div id="catalogue" class="grid"></div>
+    <div id="catalogue" class="grid course-grid-compact"></div>
     <p id="courseMessage" class="message"></p>
 
     <div class="page-heading">
@@ -733,7 +747,6 @@ input[type=checkbox]{accent-color:#d4af37}
 <nav class="mobile-nav hidden" id="mobileNav">
  <button class="active" data-mobile-tab="coursesTab" onclick="mobileTab('coursesTab',this)"><span>⌂</span>Accueil</button>
  <button onclick="focusSearch()"><span>⌕</span>Recherche</button>
- <button onclick="goCategories()"><span>▦</span>Catégories</button>
  <button data-mobile-tab="myTab" onclick="mobileTab('myTab',this)"><span>▣</span>Mes cours</button>
  <button data-mobile-tab="supportTab" onclick="mobileTab('supportTab',this)"><span>✉</span>Aide MK <span id="mkSupportMobileBadge" class="mk-support-nav-badge hidden">0</span></button>
  <button data-mobile-tab="settingsTab" onclick="mobileTab('settingsTab',this)"><span>◉</span>Profil</button>
