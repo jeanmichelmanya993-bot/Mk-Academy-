@@ -2716,7 +2716,7 @@ initialize();
   };
 
   if (form) form.addEventListener("submit", async function (event) {
-    if (mode !== "login" && window.mkAuthMode !== "login") return;
+    if ((window.mkAuthMode || mode) === "signup") return;
     event.preventDefault();
     event.stopImmediatePropagation();
     var message = document.getElementById("authMessage");
