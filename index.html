@@ -186,6 +186,14 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .mk-support-thread strong,.mk-support-thread small{display:block}
 .mk-support-thread small{color:var(--muted);margin-top:5px;overflow-wrap:anywhere}
 .mk-support-empty{padding:18px;border:1px dashed var(--border);border-radius:13px;color:var(--muted);font-size:13px;line-height:1.6}
+.mk-referral-code{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:13px;border-radius:12px;background:var(--surface2);border:1px dashed var(--border);font-weight:800;letter-spacing:1px}
+.mk-referral-code code{color:var(--gold);font-size:17px}
+.mk-referral-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.mk-referral-stat{padding:13px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
+.mk-referral-stat strong{display:block;font:800 18px 'Manrope';color:var(--gold)}
+.mk-referral-stat small{font-size:10px;color:var(--muted)}
+.mk-referral-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.mk-referral-stats{grid-template-columns:1fr 1fr}.mk-referral-actions{grid-template-columns:1fr}}
 @media(max-width:560px){.mk-support-panel{padding:13px}.mk-support-compose{flex-direction:column;align-items:stretch}.mk-support-compose button{width:100%}.mk-support-bubble{max-width:94%}}
 
 /* STATISTIQUES */
@@ -358,6 +366,7 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
    </div>
    <form id="authForm">
     <div id="nameArea"><input id="fullname" placeholder="Nom complet" autocomplete="name"></div>
+    <div id="referralArea" class="hidden"><input id="referralCodeInput" placeholder="Code de parrainage (facultatif)" autocomplete="off" maxlength="20"></div>
     <input id="email" type="email" placeholder="Adresse e-mail" autocomplete="email" required>
     <input id="password" type="password" placeholder="Mot de passe" minlength="6" autocomplete="current-password" required>
     <button type="submit" id="submitBtn" class="primary full">Créer mon compte</button>
@@ -493,6 +502,11 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
    <section id="settingsTab" class="section hidden">
     <div class="page-heading"><div class="eyebrow">VOTRE ESPACE, VOTRE STYLE</div><h2>Mon profil et mes préférences</h2><p>Personnalisez votre environnement d'apprentissage.</p></div>
     <div class="panel"><h3>Mon compte</h3><p id="profileEmail" class="preference-note"></p><p id="profileName" class="preference-note"></p></div>
+     <div class="panel" id="mkReferralPanel"><h3>🎁 Parrainage MK Academy</h3><p class="preference-note">Invite un nouvel étudiant. Après la validation de son premier paiement, tu gagnes 1 USD.</p><div id="mkReferralCode" class="mk-referral-code">Chargement...</div>
+      <div class="mk-referral-stats"><div class="mk-referral-stat"><strong id="mkReferralCount">0</strong><small>Étudiants parrainés</small></div><div class="mk-referral-stat"><strong id="mkReferralAvailable">0,00 $</strong><small>Solde disponible</small></div><div class="mk-referral-stat"><strong id="mkReferralEarned">0,00 $</strong><small>Total gagné</small></div></div>
+      <button class="secondary" type="button" onclick="mkCopyReferralLink()">Copier mon lien de parrainage</button>
+      <div class="section"><h3>Demander mon retrait</h3><p class="preference-note">Retrait possible dès 1 USD. Paiement manuel par l'administration.</p><div class="mk-referral-actions"><select id="mkReferralMethod" class="field"><option value="M-Pesa">M-Pesa</option><option value="Orange Money">Orange Money</option><option value="Airtel Money">Airtel Money</option></select><input id="mkReferralPhone" class="field" placeholder="Numéro Mobile Money" inputmode="tel"></div><button class="gold-button" type="button" onclick="mkRequestReferralPayout()">Demander mon retrait</button><p id="mkReferralStatus" class="message"></p></div>
+      <div class="section"><h3>Historique des retraits</h3><div id="mkReferralPayoutHistory" class="mk-support-empty">Chargement...</div></div></div>
     <div class="panel">
      <h3>Choisir mon thème</h3><p class="preference-note">Sélectionnez une ambiance visuelle.</p>
      <button class="theme-choice" style="background:#f3f4fa" title="Clair" onclick="setTheme('light')"></button>
@@ -569,7 +583,8 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
      <p id="enrollmentMessage" class="message"></p>
      <div class="table-wrap"><table><thead><tr><th>Apprenant</th><th>Formation</th><th>Inscription</th><th>Paiement</th><th>Actions</th></tr></thead><tbody id="adminEnrollments"></tbody></table></div>
     </div>
-    <div class="panel"><h3>Espace publicitaire</h3><p class="preference-note">La bannière partenaire est actuellement un emplacement de présentation. La gestion des annonces, images, liens et dates de diffusion sera développée ultérieurement.</p></div>
+    <div class="panel"><h3>🎁 Programme de parrainage — Administration</h3><p class="preference-note">Commission de 1 USD après le premier paiement validé de chaque nouvel étudiant.</p><button class="secondary" type="button" onclick="loadAdminReferrals()">Actualiser</button><p id="mkAdminReferralStatus" class="message"></p><h3>Commissions enregistrées</h3><div class="table-wrap"><table><thead><tr><th>Parrain</th><th>Nouvel étudiant</th><th>Commission</th><th>État</th></tr></thead><tbody id="mkAdminReferralRows"></tbody></table></div><h3 class="section">Demandes de retrait Mobile Money</h3><div class="table-wrap"><table><thead><tr><th>Parrain</th><th>Montant</th><th>Moyen / numéro</th><th>État</th><th>Action</th></tr></thead><tbody id="mkAdminPayoutRows"></tbody></table></div></div>
+     <div class="panel"><h3>Espace publicitaire</h3><p class="preference-note">La bannière partenaire est actuellement un emplacement de présentation. La gestion des annonces, images, liens et dates de diffusion sera développée ultérieurement.</p></div>
    </section>
    <footer>© 2026 MK Academy — Apprendre • Progresser • Réussir</footer>
   </main>
@@ -1652,12 +1667,35 @@ async function mkReviewOrder(order, approve) {
 }
 
 
+/* PROGRAMME DE PARRAINAGE MK ACADEMY */
+function mkMoney(v){return Number(v||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" $";}
+async function loadMyReferrals(){
+ if(!currentUser)return;const box=document.getElementById("mkReferralCode");if(!box)return;
+ const [pr,rr,pp]=await Promise.all([db.from("profiles").select("referral_code").eq("id",currentUser.id).maybeSingle(),db.from("mk_referrals").select("commission_usd,status,payout_id").eq("referrer_id",currentUser.id),db.from("mk_referral_payouts").select("*").eq("referrer_id",currentUser.id).order("requested_at",{ascending:false})]);
+ if(pr.error){box.textContent="Code indisponible : "+pr.error.message;return;}box.innerHTML="";const lab=document.createElement("span");lab.textContent="TON CODE";const code=document.createElement("code");code.textContent=pr.data?.referral_code||"Non attribué";box.append(lab,code);
+ const refs=rr.data||[],avail=refs.filter(x=>x.status==="available"&&!x.payout_id).reduce((a,x)=>a+Number(x.commission_usd),0),earned=refs.reduce((a,x)=>a+Number(x.commission_usd),0);
+ document.getElementById("mkReferralCount").textContent=refs.length;document.getElementById("mkReferralAvailable").textContent=mkMoney(avail);document.getElementById("mkReferralEarned").textContent=mkMoney(earned);
+ const hist=document.getElementById("mkReferralPayoutHistory");hist.innerHTML="";if(pp.error){hist.textContent="Impossible de charger les retraits.";return;}if(!(pp.data||[]).length){hist.textContent="Aucune demande de retrait.";return;}
+ pp.data.forEach(p=>{const item=document.createElement("div");item.className="mk-support-thread";const t=document.createElement("strong");t.textContent=mkMoney(p.amount_usd)+" • "+p.payment_method+" • "+p.phone_number;const d=document.createElement("small");d.textContent=(p.status==="paid"?"Payé":p.status==="rejected"?"Refusé":"En attente")+" • "+new Date(p.requested_at).toLocaleDateString("fr-FR")+(p.transaction_reference?" • Réf. "+p.transaction_reference:"");item.append(t,d);hist.append(item);});
+}
+function mkCopyReferralLink(){const code=document.querySelector("#mkReferralCode code")?.textContent;if(!code||code==="Non attribué"){alert("Code indisponible.");return;}const link=location.origin+location.pathname+"?ref="+encodeURIComponent(code);if(navigator.clipboard?.writeText)navigator.clipboard.writeText(link).then(()=>alert("Lien copié !")).catch(()=>prompt("Copie ton lien :",link));else prompt("Copie ton lien :",link);}
+async function mkRequestReferralPayout(){const method=document.getElementById("mkReferralMethod").value,phone=document.getElementById("mkReferralPhone").value.trim(),status=document.getElementById("mkReferralStatus");status.textContent="Envoi...";const {error}=await db.rpc("mk_request_referral_payout",{p_payment_method:method,p_phone_number:phone});if(error){status.textContent="Erreur : "+error.message;return;}status.textContent="Demande envoyée. L'administration va traiter ton paiement.";await loadMyReferrals();}
+async function loadAdminReferrals(){if(!isAdmin)return;const status=document.getElementById("mkAdminReferralStatus"),tb=document.getElementById("mkAdminReferralRows"),pb=document.getElementById("mkAdminPayoutRows");if(!status||!tb||!pb)return;status.textContent="Chargement...";tb.innerHTML="";pb.innerHTML="";
+ const [rr,pr,profiles]=await Promise.all([db.from("mk_referrals").select("*").order("earned_at",{ascending:false}),db.from("mk_referral_payouts").select("*").order("requested_at",{ascending:false}),db.from("profiles").select("id,full_name")]);if(rr.error||pr.error||profiles.error){status.textContent="Erreur : "+(rr.error||pr.error||profiles.error).message;return;}
+ const names={};(profiles.data||[]).forEach(p=>names[p.id]=p.full_name||"Apprenant");const refs=rr.data||[],payouts=pr.data||[];
+ if(!refs.length){const tr=tb.insertRow(),td=tr.insertCell();td.colSpan=4;td.textContent="Aucune commission.";}
+ refs.forEach(x=>{const tr=tb.insertRow();[names[x.referrer_id]||"Parrain",names[x.referred_user_id]||"Étudiant",mkMoney(x.commission_usd),x.status==="paid"?"Payée":x.payout_id?"Retrait demandé":"Disponible"].forEach(v=>tr.insertCell().textContent=v);});
+ if(!payouts.length){const tr=pb.insertRow(),td=tr.insertCell();td.colSpan=5;td.textContent="Aucune demande de retrait.";}
+ payouts.forEach(p=>{const tr=pb.insertRow();[names[p.referrer_id]||"Parrain",mkMoney(p.amount_usd),p.payment_method+" • "+p.phone_number,p.status==="paid"?"Payé":p.status==="rejected"?"Refusé":"À payer"].forEach(v=>tr.insertCell().textContent=v);const c=tr.insertCell();if(p.status==="requested"){const b=document.createElement("button");b.className="success";b.textContent="Confirmer le paiement";b.onclick=()=>mkMarkReferralPayoutPaid(p.id);c.append(b);}else c.textContent=p.transaction_reference||"—";});status.textContent=refs.length+" commission(s) • "+payouts.length+" retrait(s).";}
+async function mkMarkReferralPayoutPaid(id){if(!isAdmin)return;const ref=prompt("Référence de la transaction Mobile Money :");if(ref===null)return;if(!ref.trim()){alert("Entre la référence du paiement.");return;}const {error}=await db.from("mk_referral_payouts").update({status:"paid",transaction_reference:ref.trim(),paid_at:new Date().toISOString(),reviewed_by:currentUser.id}).eq("id",id);if(error){alert("Erreur : "+error.message);return;}alert("Retrait marqué comme payé.");await loadAdminReferrals();}
+
 /* LOGIQUE AUTHENTIFICATION ET NAVIGATION STANDARD */
 window.showForm = function(mode){
  currentMode=mode;
  window.mkAuthMode=mode;
  document.getElementById("authMessage").textContent="";
  document.getElementById("nameArea").classList.toggle("hidden",mode==="login");
+  document.getElementById("referralArea").classList.toggle("hidden",mode==="login");
  document.getElementById("submitBtn").textContent=mode==="signup"?"Créer mon compte":"Se connecter";
  document.getElementById("authTitle").textContent=mode==="signup"?"Créez votre compte.":"Heureux de vous revoir.";
  document.getElementById("authSubtitle").textContent=mode==="signup"?"Rejoignez MK Academy et commencez votre parcours.":"Connectez-vous pour retrouver votre espace d'apprentissage.";
@@ -1665,6 +1703,8 @@ window.showForm = function(mode){
  document.getElementById("loginChoice").className=mode==="login"?"primary":"secondary";
 };
 
+const mkReferralFromUrl=new URLSearchParams(window.location.search).get("ref");
+if(mkReferralFromUrl){document.getElementById("referralCodeInput").value=mkReferralFromUrl.toUpperCase();window.showForm("signup");}
 document.getElementById("authForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const message=document.getElementById("authMessage");
@@ -1677,7 +1717,7 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
    if(!name)throw new Error("Entre ton nom complet.");
    const {data,error}=await db.auth.signUp({
     email,password,
-    options:{data:{full_name:name},emailRedirectTo:"https://jeanmichelmanya993-bot.github.io/Mk-Academy-/"}
+    options:{data:{full_name:name,referral_code:(document.getElementById("referralCodeInput").value.trim().toUpperCase()||null)},emailRedirectTo:"https://jeanmichelmanya993-bot.github.io/Mk-Academy-/"}
    });
    if(error)throw error;
    if(data.session)await enterApp(data.session.user);
@@ -1711,11 +1751,13 @@ async function enterApp(user){
 
  loadAppearance();
  await loadMyEnrollments();
+ await loadMyReferrals();
  mkStartSupportRealtime();
  await loadCourses();
  if(isAdmin){
   await loadAdminCourses();
   await loadAdminEnrollments();
+  await loadAdminReferrals();
   mkCreateAdminPanel();
   const select = document.getElementById("mkAdminCourse");
   if(select) {
