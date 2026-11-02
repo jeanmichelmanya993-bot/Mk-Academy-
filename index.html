@@ -548,84 +548,62 @@ function mkCloseReader() {
 }
 
 function mkCreateInAppLessonPlayer(lesson, container) {
-  const raw = (lesson.content || "").replace(/\r/g, "").trim();
-  const lines = raw.split("\n").map(line => line.trim()).filter(Boolean);
-  const slides = [];
-  let heading = lesson.title || "Leçon";
-  let body = [];
-  const flush = () => {
-    if (body.length) {
-      const text = body.join("\n").trim();
-      for (let i = 0; i < text.length; i += 360) {
-        slides.push({ heading, text: text.slice(i, i + 360) });
-      }
-      body = [];
-    }
-  };
-  for (const line of lines) {
-    const isHeading = /^(OBJECTIF|À RETENIR|A RETENIR|EXEMPLE|EXERCICE|EXERCICE PRATIQUE|CONCLUSION|CONSEIL|ATTENTION|ÉVALUATION|EVALUATION|CORRECTION|RAPPEL|ATELIER|FÉLICITATIONS|FELICITATIONS|\d+[.)]\s+[A-ZÀ-Ÿ])/i.test(line) && line.length < 100;
-    if (isHeading) {
-      flush();
-      heading = line.replace(/^\d+[.)]\s*/, "");
-    } else {
-      body.push(line);
-    }
+  if (/qu.est-ce que l.intelligence artificielle|qu.est-ce que l.ia/i.test(lesson.title || "")) {
+    mkCreateAIStoryLesson(lesson, container);
+    return;
   }
-  flush();
-  if (!slides.length) slides.push({ heading: lesson.title || "Leçon", text: raw || "Bienvenue dans cette leçon." });
+  const raw=(lesson.content||"").replace(/\r/g,"").trim();
+  const lines=raw.split("\n").map(x=>x.trim()).filter(Boolean);
+  const slides=[]; let heading=lesson.title||"Leçon", body=[];
+  const flush=()=>{if(body.length){const t=body.join("\n").trim();for(let i=0;i<t.length;i+=360)slides.push({heading,text:t.slice(i,i+360)});body=[];}};
+  for(const line of lines){if(/^(OBJECTIF|À RETENIR|A RETENIR|EXEMPLE|EXERCICE|CONCLUSION|CONSEIL|ATTENTION|ÉVALUATION|CORRECTION|RAPPEL|\d+[.)]\s+[A-ZÀ-Ÿ])/i.test(line)&&line.length<100){flush();heading=line.replace(/^\d+[.)]\s*/,"");}else body.push(line);}
+  flush(); if(!slides.length)slides.push({heading:lesson.title||"Leçon",text:raw||"Bienvenue."});
+  const player=document.createElement("section");player.style.cssText="margin:14px 0;padding:18px;border-radius:18px;background:linear-gradient(145deg,#102b52,#174d83);color:#fff";
+  const top=document.createElement("div");top.textContent="MK ACADEMY · COURS AUDIO";top.style.cssText="font-size:10px;font-weight:800;letter-spacing:1px;color:#b9dcff;margin-bottom:12px";
+  const title=document.createElement("h3");title.style.color="#fff";
+  const screen=document.createElement("div");screen.style.cssText="min-height:130px;white-space:pre-line;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;line-height:1.65;background:rgba(255,255,255,.08);border-radius:13px";
+  const count=document.createElement("div");count.style.cssText="font-size:11px;color:#c7ddf5;text-align:right;margin:9px 0";
+  const controls=document.createElement("div");controls.style.cssText="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px";
+  const btn=(label,fn,primary)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.style.cssText="border-radius:22px;padding:10px 14px;background:"+(primary?"#fff":"rgba(255,255,255,.12)")+";color:"+(primary?"#12365d":"#fff")+";font-weight:700";b.addEventListener("click",fn);return b;};
+  let index=0,playing=false;const stop=()=>{if("speechSynthesis"in window)window.speechSynthesis.cancel();};
+  const show=()=>{title.textContent=slides[index].heading;screen.textContent=slides[index].text;count.textContent="Partie "+(index+1)+" / "+slides.length;};
+  const speak=()=>{stop();if(!("speechSynthesis"in window)){count.textContent="Lecture vocale indisponible.";return;}playing=true;const u=new SpeechSynthesisUtterance(slides[index].heading+". "+slides[index].text);u.lang="fr-FR";u.rate=.9;u.onend=()=>{if(playing&&index<slides.length-1){index++;show();speak();}else playing=false;};window.speechSynthesis.speak(u);};
+  controls.append(btn("◀ Précédent",()=>{stop();playing=false;index=Math.max(0,index-1);show();}),btn("▶ Écouter",speak,true),btn("Ⅱ Pause",()=>{playing=false;if("speechSynthesis"in window)window.speechSynthesis.pause();}),btn("Suivant ▶",()=>{stop();playing=false;index=Math.min(slides.length-1,index+1);show();}));
+  player.append(top,title,screen,count,controls);container.appendChild(player);show();
+}
 
-  const player = document.createElement("section");
-  player.className = "mk-inapp-player";
-  player.style.cssText = "margin:14px 0;padding:18px;border-radius:18px;background:linear-gradient(145deg,#102b52,#174d83);color:#fff;box-shadow:0 10px 28px rgba(10,35,70,.2)";
-  const top = document.createElement("div");
-  top.textContent = "MK ACADEMY · LEÇON AUDIOVISUELLE";
-  top.style.cssText = "font-size:10px;font-weight:800;letter-spacing:1.1px;color:#b9dcff;margin-bottom:14px";
-  const title = document.createElement("div");
-  title.style.cssText = "font-size:17px;font-weight:800;line-height:1.35;margin-bottom:10px;color:#fff";
-  const screen = document.createElement("div");
-  screen.style.cssText = "min-height:145px;white-space:pre-line;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px 10px;font-size:16px;line-height:1.65;font-weight:550;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);border-radius:13px";
-  const counter = document.createElement("div");
-  counter.style.cssText = "font-size:11px;color:#c7ddf5;text-align:right;margin:9px 0";
-  const track = document.createElement("div");
-  track.style.cssText = "height:5px;border-radius:8px;background:rgba(255,255,255,.22);overflow:hidden";
-  const fill = document.createElement("div");
-  fill.style.cssText = "height:100%;width:0%;background:#61c5ff;transition:width .25s";
-  track.appendChild(fill);
-  const controls = document.createElement("div");
-  controls.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px";
-  const makeButton = (label, action, primary=false) => {
-    const b=document.createElement("button"); b.type="button"; b.textContent=label;
-    b.style.cssText="border:1px solid rgba(255,255,255,.3);border-radius:22px;padding:10px 14px;background:"+(primary?"#fff":"rgba(255,255,255,.12)")+";color:"+(primary?"#12365d":"#fff")+";font-weight:700;font-size:12px;cursor:pointer";
-    b.addEventListener("click",action); return b;
-  };
-  let index=0, playing=false;
-  const stopVoice=()=>{ if ("speechSynthesis" in window) window.speechSynthesis.cancel(); };
-  const show=()=>{
-    title.textContent=slides[index].heading;
-    screen.textContent=slides[index].text;
-    counter.textContent="Diapositive "+(index+1)+" / "+slides.length;
-    fill.style.width=((index+1)/slides.length*100)+"%";
-  };
-  const speak=()=>{
-    stopVoice();
-    if(!("speechSynthesis" in window)){counter.textContent="La lecture vocale n'est pas disponible sur cet appareil.";return;}
-    const utter=new SpeechSynthesisUtterance(slides[index].heading+". "+slides[index].text);
-    utter.lang="fr-FR"; utter.rate=0.9;
-    utter.onend=()=>{
-      if(playing&&index<slides.length-1){index++;show();speak();}
-      else {playing=false;}
-    };
-    window.speechSynthesis.speak(utter);
-  };
-  controls.append(
-    makeButton("◀ Précédent",()=>{stopVoice();playing=false;index=Math.max(0,index-1);show();}),
-    makeButton("▶ Écouter le cours",()=>{playing=true;speak();},true),
-    makeButton("Ⅱ Pause",()=>{playing=false;if("speechSynthesis" in window)window.speechSynthesis.pause();}),
-    makeButton("Suivant ▶",()=>{stopVoice();playing=false;index=Math.min(slides.length-1,index+1);show();})
-  );
-  player.append(top,title,screen,counter,track,controls);
-  container.appendChild(player);
-  show();
+function mkCreateAIStoryLesson(lesson, container) {
+  const scenes=[
+    {title:"Une question, une réponse",tag:"EXEMPLE QUOTIDIEN",icon:"📱",visual:"Un téléphone reçoit une question, analyse les mots et affiche une réponse météo.",narration:"Imaginez que vous demandez à votre téléphone : quelle sera la météo demain à Kinshasa ? Un système intelligent peut analyser votre question, traiter les informations disponibles et vous présenter une réponse. C'est une application de l'intelligence artificielle : une technologie qui permet à un ordinateur d'accomplir certaines tâches qui demandent normalement des capacités humaines, comme comprendre une demande ou reconnaître une image."},
+    {title:"L'IA dans notre quotidien",tag:"DANS LA VIE RÉELLE",icon:"🧭",visual:"Navigation : trajet conseillé  •  Musique : suggestions  •  Photo : amélioration d'image",narration:"L'intelligence artificielle est déjà présente dans notre quotidien. Une application de navigation peut proposer un itinéraire. Une plateforme peut recommander une musique. Un téléphone peut reconnaître un visage ou améliorer une photo. Ces outils analysent des informations pour proposer un résultat utile. Ils ne pensent pas comme un être humain : ils exécutent des modèles informatiques."},
+    {title:"Comment une IA apprend",tag:"COMMENT ÇA FONCTIONNE",icon:"🐶",visual:"Images d'exemples → analyse des caractéristiques → prédiction à vérifier",narration:"Prenons un exemple simple : apprendre à reconnaître un chien. On montre au système de nombreuses images de chiens et d'autres animaux. Il repère des caractéristiques et des régularités dans ces exemples. Lorsqu'il reçoit une nouvelle photo, il calcule quel résultat semble le plus probable. Il peut se tromper : les données et les vérifications humaines restent importantes."},
+    {title:"Un commerce utilise l'IA",tag:"MISE EN SITUATION À KINSHASA",icon:"🏪",visual:"Une boutique prépare une annonce WhatsApp pour sa nouvelle collection de chaussures.",narration:"Imaginez une petite boutique qui vend des chaussures. Le commerçant utilise un outil d'intelligence artificielle pour rédiger une annonce WhatsApp : nouvelle collection, plusieurs tailles disponibles, contactez-nous pour commander. L'outil propose un texte en quelques secondes. Le commerçant vérifie les prix, les tailles et les informations avant de publier. L'IA aide à travailler plus vite, mais la décision finale reste humaine."},
+    {title:"Avantages et limites",tag:"À RETENIR",icon:"⚖️",visual:"Avantages : gagner du temps, apprendre, organiser. Limites : erreurs, informations inventées, confidentialité.",narration:"L'intelligence artificielle peut faire gagner du temps, aider à apprendre, organiser des informations et stimuler la créativité. Mais elle peut aussi produire des erreurs, inventer des informations ou donner une réponse inadaptée. Ne partagez pas de données personnelles ou confidentielles sans raison. Vérifiez toujours les informations importantes avant de les utiliser."},
+    {title:"Vérifions ce que vous avez appris",tag:"EXERCICE PRATIQUE",icon:"❓",visual:"Question : qui vérifie les prix et les tailles avant de publier une annonce ? Réponse : le commerçant.",narration:"Petite question : si vous utilisez un outil d'intelligence artificielle pour rédiger une publicité pour votre boutique, qui doit vérifier les prix et les détails avant la publication ? La bonne réponse est : vous, ou la personne responsable de la boutique. L'IA est un assistant. Elle ne remplace pas votre jugement. Retenez cette idée : utilisez l'IA pour vous aider, puis vérifiez son travail."}
+  ];
+  const styleId="mk-ai-story-style";
+  if(!document.getElementById(styleId)){const st=document.createElement("style");st.id=styleId;st.textContent="@keyframes mkSceneFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}.mk-scene-visual{animation:mkSceneFloat 4s ease-in-out infinite}.mk-scene-controls button{border-radius:22px;padding:10px 13px;font-weight:700;cursor:pointer}";document.head.appendChild(st);}
+  const player=document.createElement("section");player.className="mk-ai-story-player";player.style.cssText="margin:16px 0;padding:18px;border-radius:20px;background:linear-gradient(145deg,#102b52,#174d83);color:#fff;box-shadow:0 12px 30px rgba(10,35,70,.22)";
+  const brand=document.createElement("div");brand.textContent="MK ACADEMY  •  LEÇON ILLUSTRÉE ET NARRÉE";brand.style.cssText="font-size:10px;font-weight:800;letter-spacing:1px;color:#b9dcff";
+  const heading=document.createElement("h3");heading.style.cssText="color:#fff;font-size:21px;margin:10px 0";
+  const tag=document.createElement("div");tag.style.cssText="font-size:10px;font-weight:800;letter-spacing:1px;color:#8ed0ff;margin:8px 0";
+  const visual=document.createElement("div");visual.className="mk-scene-visual";visual.style.cssText="min-height:185px;border-radius:16px;background:linear-gradient(135deg,#e3f2ff,#f8fbff);color:#17385f;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;margin:12px 0";
+  const symbol=document.createElement("div");symbol.style.cssText="font-size:76px;line-height:1.2;margin-bottom:15px";
+  const caption=document.createElement("div");caption.style.cssText="font-size:15px;font-weight:700;line-height:1.55;max-width:520px";
+  visual.append(symbol,caption);
+  const narration=document.createElement("div");narration.style.cssText="font-size:15px;line-height:1.7;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);padding:15px;border-radius:14px;min-height:115px";
+  const count=document.createElement("div");count.style.cssText="font-size:11px;color:#c7ddf5;text-align:right;margin:9px 0";
+  const track=document.createElement("div");track.style.cssText="height:5px;border-radius:8px;background:rgba(255,255,255,.22);overflow:hidden";
+  const bar=document.createElement("div");bar.style.cssText="height:100%;width:0;background:#61c5ff;transition:width .3s";track.appendChild(bar);
+  const controls=document.createElement("div");controls.className="mk-scene-controls";controls.style.cssText="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px";
+  const btn=(label,fn,primary)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.style.cssText="background:"+(primary?"#fff":"rgba(255,255,255,.12)")+";color:"+(primary?"#12365d":"#fff")+";border:1px solid rgba(255,255,255,.3)";b.addEventListener("click",fn);return b;};
+  let index=0,playing=false;
+  const stop=()=>{if("speechSynthesis"in window)window.speechSynthesis.cancel();playing=false;};
+  const render=()=>{const s=scenes[index];heading.textContent=s.title;tag.textContent=s.tag;symbol.textContent=s.icon;caption.textContent=s.visual;narration.textContent=s.narration;count.textContent="Scène "+(index+1)+" sur "+scenes.length;bar.style.width=((index+1)/scenes.length*100)+"%";};
+  const play=()=>{stop();if(!("speechSynthesis"in window)){count.textContent="La narration vocale n'est pas disponible sur cet appareil.";return;}playing=true;const u=new SpeechSynthesisUtterance(scenes[index].title+". "+scenes[index].narration);u.lang="fr-FR";u.rate=.92;u.onend=()=>{if(playing&&index<scenes.length-1){index++;render();play();}else playing=false;};window.speechSynthesis.speak(u);};
+  controls.append(btn("◀ Précédent",()=>{stop();index=Math.max(0,index-1);render();}),btn("▶ Lire la leçon",play,true),btn("Ⅱ Pause",()=>{playing=false;if("speechSynthesis"in window)window.speechSynthesis.pause();}),btn("Suivant ▶",()=>{stop();index=Math.min(scenes.length-1,index+1);render();}));
+  const note=document.createElement("div");note.textContent="Écoutez la narration et avancez scène par scène.";note.style.cssText="font-size:11px;color:#c7ddf5;margin-top:12px;text-align:center";
+  player.append(brand,heading,tag,visual,narration,count,track,controls,note);container.appendChild(player);render();
 }
 
 async function mkOpenCourse(courseId) {
