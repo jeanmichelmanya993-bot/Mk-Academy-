@@ -1872,6 +1872,7 @@ async function mkOpenAdminSupportThread(threadId,studentName){
  document.getElementById("mkSupportAdminConversationTitle").textContent="Conversation avec "+studentName;
  document.getElementById("mkSupportAdminCompose").classList.remove("hidden");
  await mkRenderSupportMessages(threadId,"mkSupportAdminMessages",true);
+ await mkLoadAdminThreads();
 }
 
 async function mkRenderSupportMessages(threadId,containerId,adminView){
