@@ -167,6 +167,22 @@ button:disabled{opacity:.55;cursor:not-allowed}
  .support-benefit p{font-size:12px}
 }
 
+/* MESSAGERIE INTERNE MK ACADEMY */
+.mk-support-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:18px}
+.mk-support-panel{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+.mk-support-messages{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow:auto;padding:12px 2px}
+.mk-support-bubble{max-width:85%;padding:11px 13px;border-radius:14px;background:var(--bg);border:1px solid var(--border);align-self:flex-start;overflow-wrap:anywhere}
+.mk-support-bubble.mine{align-self:flex-end;background:#eeeaff;border-color:#d9d1ff}
+.mk-support-bubble small{display:block;color:var(--muted);font-size:10px;margin-bottom:5px}
+.mk-support-bubble p{margin:0;white-space:pre-wrap;line-height:1.55;font-size:13px}
+.mk-support-compose{display:flex;gap:9px;align-items:flex-end;margin-top:12px}
+.mk-support-compose textarea{flex:1;min-height:74px;resize:vertical}
+.mk-support-thread{width:100%;text-align:left;padding:13px;margin:7px 0;background:var(--bg);border:1px solid var(--border);border-radius:12px;color:var(--text)}
+.mk-support-thread strong,.mk-support-thread small{display:block}
+.mk-support-thread small{color:var(--muted);margin-top:5px;overflow-wrap:anywhere}
+.mk-support-empty{padding:18px;border:1px dashed var(--border);border-radius:13px;color:var(--muted);font-size:13px;line-height:1.6}
+@media(max-width:560px){.mk-support-panel{padding:13px}.mk-support-compose{flex-direction:column;align-items:stretch}.mk-support-compose button{width:100%}.mk-support-bubble{max-width:94%}}
+
 /* STATISTIQUES */
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0 30px}
 .stat-card,.panel,.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
@@ -367,6 +383,7 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
    <nav>
     <button class="active" data-tab="coursesTab" onclick="showTab('coursesTab',this)"><span class="nav-icon">⌂</span>Accueil</button>
     <button data-tab="myTab" onclick="showTab('myTab',this)"><span class="nav-icon">▣</span>Mes cours</button>
+    <button data-tab="supportTab" onclick="showTab('supportTab',this)"><span class="nav-icon">✉</span>Assistance MK</button>
     <button data-tab="settingsTab" onclick="showTab('settingsTab',this)"><span class="nav-icon">⚙</span>Mon profil</button>
     <button id="adminNav" class="hidden" data-tab="adminTab" onclick="showTab('adminTab',this)"><span class="nav-icon">◆</span>Administration</button>
    </nav>
@@ -397,6 +414,7 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
       <span class="support-benefit-tag">AVANTAGE PERMANENT MK ACADEMY</span>
       <h3>Vous n'apprenez jamais seul.</h3>
       <p>Après l'achat et la validation d'une <strong>formation complète</strong>, vous bénéficiez gratuitement de l'accompagnement de MK Academy. Posez vos questions et échangez directement avec l'administrateur, <strong>sans quitter l'application</strong>, chaque fois que vous en avez besoin.</p>
+      <button class="gold-button" style="margin-top:12px" onclick="showTab('supportTab',document.querySelector('[data-tab=&quot;supportTab&quot;]'))">Accéder à l'assistance →</button>
      </div>
     </section>
     <div class="stats-grid">
@@ -487,6 +505,40 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
     <div class="panel"><h3>Déconnexion</h3><p class="preference-note">Fermez votre session MK Academy sur cet appareil.</p><button class="danger" onclick="logout()">↪ Déconnexion</button></div>
    </section>
 
+   <section id="supportTab" class="section hidden">
+    <div class="page-heading"><div class="eyebrow">ACCOMPAGNEMENT PERMANENT</div><h2>Assistance MK Academy</h2><p>Posez vos questions et échangez directement avec l'équipe MK Academy, sans quitter l'application.</p></div>
+    <div id="mkSupportLearnerPanel" class="mk-support-panel">
+     <div id="mkSupportAccessMessage" class="mk-support-empty">Vérification de votre accès à l'accompagnement...</div>
+     <div id="mkSupportLearnerChat" class="hidden">
+      <div class="row" style="justify-content:space-between;align-items:center;gap:10px"><strong>Votre conversation avec l'administrateur</strong><button class="secondary" type="button" onclick="mkLoadSupport()">Actualiser</button></div>
+      <div id="mkSupportLearnerMessages" class="mk-support-messages"></div>
+      <form class="mk-support-compose" onsubmit="mkSendSupportMessage(false);return false">
+       <textarea id="mkSupportLearnerInput" maxlength="5000" placeholder="Écrivez votre question ici..." required></textarea>
+       <button class="primary" type="submit">Envoyer</button>
+      </form>
+      <p id="mkSupportLearnerStatus" class="message"></p>
+     </div>
+    </div>
+    <div id="mkSupportAdminPanel" class="hidden">
+     <div class="mk-support-wrap">
+      <div class="mk-support-panel">
+       <div class="row" style="justify-content:space-between;align-items:center;gap:10px"><h3>Messages des apprenants</h3><button class="secondary" type="button" onclick="mkLoadAdminThreads()">Actualiser</button></div>
+       <p id="mkSupportAdminListStatus" class="message"></p>
+       <div id="mkSupportAdminThreads"></div>
+      </div>
+      <div class="mk-support-panel">
+       <h3 id="mkSupportAdminConversationTitle">Sélectionnez une conversation</h3>
+       <div id="mkSupportAdminMessages" class="mk-support-messages"><div class="mk-support-empty">Les messages s'afficheront ici.</div></div>
+       <form id="mkSupportAdminCompose" class="mk-support-compose hidden" onsubmit="mkSendSupportMessage(true);return false">
+        <textarea id="mkSupportAdminInput" maxlength="5000" placeholder="Répondre à l'apprenant..." required></textarea>
+        <button class="primary" type="submit">Répondre</button>
+       </form>
+       <p id="mkSupportAdminStatus" class="message"></p>
+      </div>
+     </div>
+    </div>
+   </section>
+
    <section id="adminTab" class="section hidden">
     <div class="page-heading"><div class="eyebrow">ESPACE DE GESTION</div><h2>Administration</h2><p>Gérez les formations, les inscriptions et les paiements.</p></div>
     <div class="panel">
@@ -525,6 +577,7 @@ footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
  <button onclick="focusSearch()"><span>⌕</span>Recherche</button>
  <button onclick="goCategories()"><span>▦</span>Catégories</button>
  <button data-mobile-tab="myTab" onclick="mobileTab('myTab',this)"><span>▣</span>Mes cours</button>
+ <button data-mobile-tab="supportTab" onclick="mobileTab('supportTab',this)"><span>✉</span>Aide MK</button>
  <button data-mobile-tab="settingsTab" onclick="mobileTab('settingsTab',this)"><span>◉</span>Profil</button>
  <button id="mobileAdminNav" class="hidden" data-mobile-tab="adminTab" onclick="mobileTab('adminTab',this)"><span>◆</span>Admin</button>
 </nav>
@@ -1676,10 +1729,112 @@ async function enterApp(user){
 // Expose explicitement le chargeur d'espace à la connexion de secours.
 window.enterApp = enterApp;
 
+
+let mkSupportThreadId = null;
+let mkSupportAdminThreadId = null;
+
+async function mkLoadSupport(){
+ const learnerPanel=document.getElementById("mkSupportLearnerPanel");
+ const adminPanel=document.getElementById("mkSupportAdminPanel");
+ if(isAdmin){
+  learnerPanel.classList.add("hidden");
+  adminPanel.classList.remove("hidden");
+  await mkLoadAdminThreads();
+  return;
+ }
+ adminPanel.classList.add("hidden");
+ learnerPanel.classList.remove("hidden");
+ const accessMessage=document.getElementById("mkSupportAccessMessage");
+ const chat=document.getElementById("mkSupportLearnerChat");
+ chat.classList.add("hidden");
+ accessMessage.classList.remove("hidden");
+ accessMessage.textContent="Vérification de votre accès à l'accompagnement...";
+ const {data:grants,error:grantError}=await db.from("course_access").select("course_id").eq("user_id",currentUser.id).limit(1);
+ if(grantError){accessMessage.textContent="Impossible de vérifier votre accès pour le moment. Réessayez.";return;}
+ if(!grants||!grants.length){accessMessage.textContent="L'assistance personnelle est offerte après l'achat et la validation d'une formation complète. Dès que votre paiement est confirmé, vous pourrez écrire directement à l'administrateur ici.";return;}
+ let {data:thread,error}=await db.from("mk_support_threads").select("id").eq("user_id",currentUser.id).maybeSingle();
+ if(error){accessMessage.textContent="Impossible d'ouvrir votre conversation : "+error.message;return;}
+ if(!thread){
+  const created=await db.from("mk_support_threads").insert({user_id:currentUser.id}).select("id").single();
+  if(created.error){accessMessage.textContent="Impossible de créer votre conversation : "+created.error.message;return;}
+  thread=created.data;
+ }
+ mkSupportThreadId=thread.id;
+ accessMessage.classList.add("hidden");
+ chat.classList.remove("hidden");
+ await mkRenderSupportMessages(mkSupportThreadId,"mkSupportLearnerMessages",false);
+}
+
+async function mkLoadAdminThreads(){
+ const list=document.getElementById("mkSupportAdminThreads");
+ const status=document.getElementById("mkSupportAdminListStatus");
+ if(!isAdmin)return;
+ status.textContent="Chargement des conversations...";
+ list.innerHTML="";
+ const {data:threads,error}=await db.from("mk_support_threads").select("id,user_id,created_at").order("created_at",{ascending:false});
+ if(error){status.textContent="Erreur : "+error.message;return;}
+ if(!threads||!threads.length){status.textContent="Aucune conversation pour le moment.";return;}
+ const ids=threads.map(t=>t.user_id);
+ const [profilesResult,messagesResult]=await Promise.all([
+  db.from("profiles").select("id,full_name").in("id",ids),
+  db.from("mk_support_messages").select("thread_id,body,created_at,sender_id").in("thread_id",threads.map(t=>t.id)).order("created_at",{ascending:false})
+ ]);
+ const names={};(profilesResult.data||[]).forEach(p=>names[p.id]=p.full_name);
+ const latest={};(messagesResult.data||[]).forEach(m=>{if(!latest[m.thread_id])latest[m.thread_id]=m;});
+ threads.forEach(t=>{
+  const btn=document.createElement("button");btn.type="button";btn.className="mk-support-thread";
+  const title=document.createElement("strong");title.textContent=names[t.user_id]||("Apprenant "+t.user_id.slice(0,8));
+  const preview=document.createElement("small");
+  const last=latest[t.id];
+  preview.textContent=last?((last.sender_id===currentUser.id?"Vous : ":"Dernier message : ")+last.body.slice(0,110)):("Conversation ouverte le "+new Date(t.created_at).toLocaleDateString("fr-FR"));
+  btn.append(title,preview);
+  btn.addEventListener("click",()=>mkOpenAdminSupportThread(t.id,names[t.user_id]||"Apprenant"));
+  list.appendChild(btn);
+ });
+ status.textContent=threads.length+" conversation(s).";
+}
+
+async function mkOpenAdminSupportThread(threadId,studentName){
+ mkSupportAdminThreadId=threadId;
+ document.getElementById("mkSupportAdminConversationTitle").textContent="Conversation avec "+studentName;
+ document.getElementById("mkSupportAdminCompose").classList.remove("hidden");
+ await mkRenderSupportMessages(threadId,"mkSupportAdminMessages",true);
+}
+
+async function mkRenderSupportMessages(threadId,containerId,adminView){
+ const container=document.getElementById(containerId);
+ container.innerHTML="";
+ const {data:messages,error}=await db.from("mk_support_messages").select("id,sender_id,body,created_at").eq("thread_id",threadId).order("created_at",{ascending:true});
+ if(error){const p=document.createElement("div");p.className="mk-support-empty";p.textContent="Erreur de chargement : "+error.message;container.appendChild(p);return;}
+ if(!messages||!messages.length){const p=document.createElement("div");p.className="mk-support-empty";p.textContent="Votre conversation commence ici. Écrivez votre première question.";container.appendChild(p);return;}
+ messages.forEach(m=>{
+  const bubble=document.createElement("div");bubble.className="mk-support-bubble"+(m.sender_id===currentUser.id?" mine":"");
+  const meta=document.createElement("small");meta.textContent=(m.sender_id===currentUser.id?(isAdmin?"Administrateur MK Academy":"Vous"):(adminView?"Apprenant":"Administrateur MK Academy"))+" • "+new Date(m.created_at).toLocaleString("fr-FR");
+  const body=document.createElement("p");body.textContent=m.body;
+  bubble.append(meta,body);container.appendChild(bubble);
+ });
+ container.scrollTop=container.scrollHeight;
+}
+
+async function mkSendSupportMessage(adminReply){
+ const threadId=adminReply?mkSupportAdminThreadId:mkSupportThreadId;
+ const input=document.getElementById(adminReply?"mkSupportAdminInput":"mkSupportLearnerInput");
+ const status=document.getElementById(adminReply?"mkSupportAdminStatus":"mkSupportLearnerStatus");
+ const body=(input.value||"").trim();
+ if(!threadId||!body)return;
+ status.textContent="Envoi...";
+ const {error}=await db.from("mk_support_messages").insert({thread_id:threadId,sender_id:currentUser.id,body});
+ if(error){status.textContent="Message non envoyé : "+error.message;return;}
+ input.value="";
+ status.textContent="Message envoyé.";
+ await mkRenderSupportMessages(threadId,adminReply?"mkSupportAdminMessages":"mkSupportLearnerMessages",adminReply);
+ if(adminReply)await mkLoadAdminThreads();
+}
+
 function showTab(id,button){
  if(id==="adminTab"&&!isAdmin)return;
 
- ["coursesTab","myTab","adminTab","settingsTab"].forEach(tab=>{
+ ["coursesTab","myTab","supportTab","adminTab","settingsTab"].forEach(tab=>{
   document.getElementById(tab).classList.add("hidden");
  });
  document.getElementById(id).classList.remove("hidden");
@@ -1692,6 +1847,7 @@ function showTab(id,button){
  document.querySelectorAll('[data-tab="'+id+'"]').forEach(b=>b.classList.add("active"));
  document.querySelectorAll('[data-mobile-tab="'+id+'"]').forEach(b=>b.classList.add("active"));
 
+ if(id==="supportTab")mkLoadSupport();
  if(id==="settingsTab"){
   document.getElementById("profileEmail").textContent="Adresse e-mail : "+(currentUser?.email||"");
  }
