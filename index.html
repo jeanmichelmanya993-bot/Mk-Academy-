@@ -1388,10 +1388,66 @@ function mkShowCoursePayment(course) {
 }
 
 async function mkLoadCourseOrders(){
-  if(!isAdmin)return;const rows=document.getElementById("mkCourseOrderRows");if(!rows)return;const message=document.getElementById("mkCourseOrderMessage");rows.innerHTML="";message.textContent="Chargement...";
-  const {data:orders,error}=await db.from("course_orders").select("*").order("created_at",{ascending:false});if(error){message.textContent="Erreur : "+error.message;return;}if(!orders?.length){message.textContent="Aucune demande d'achat de formation.";return;}message.textContent=orders.length+" demande(s).";
-  for(const order of orders){const [user,course]=await Promise.all([db.from("profiles").select("full_name").eq("id",order.user_id).maybeSingle(),db.from("courses").select("title").eq("id",order.course_id).maybeSingle()]);const tr=document.createElement("tr");const learner=document.createElement("td");learner.textContent=user.data?.full_name||order.user_id;const name=document.createElement("td");name.textContent=course.data?.title||"Formation";const amount=document.createElement("td");amount.textContent=Number(order.amount_usd).toLocaleString("fr-FR")+" USD / "+mkFormatFC(order.amount_fc);const methodCell=document.createElement("td");methodCell.textContent=order.payment_method+(order.transaction_reference?" — "+order.transaction_reference:"");const proof=document.createElement("td");if(order.receipt_path){const link=await db.storage.from("payment-receipts").createSignedUrl(order.receipt_path,300);if(!link.error&&link.data?.signedUrl){const a=document.createElement("a");a.href=link.data.signedUrl;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Voir la capture";proof.appendChild(a);}else proof.textContent="Indisponible";}else proof.textContent="Aucune";const status=document.createElement("td");status.textContent=statusText(order.status);const actions=document.createElement("td");if(order.status==="pending"){const approve=document.createElement("button");approve.className="success";approve.textContent="Valider";approve.onclick=()=>mkReviewCourseOrder(order,true);const reject=document.createElement("button");reject.className="danger";reject.textContent="Refuser";reject.onclick=()=>mkReviewCourseOrder(order,false);actions.append(approve,reject);}tr.append(learner,name,amount,methodCell,proof,status,actions);rows.appendChild(tr);}
+  if(!isAdmin)return;
+  const rows=document.getElementById("mkCourseOrderRows");
+  if(!rows)return;
+  const message=document.getElementById("mkCourseOrderMessage");
+  rows.innerHTML="";
+  message.textContent="Chargement...";
+  const {data:orders,error}=await db.from("course_orders").select("*").order("created_at",{ascending:false});
+  if(error){message.textContent="Erreur : "+error.message;return;}
+  if(!orders?.length){message.textContent="Aucune demande d'achat de formation.";return;}
+  message.textContent=orders.length+" demande(s) dans l'historique.";
+  for(const order of orders){
+    const [user,course]=await Promise.all([
+      db.from("profiles").select("full_name").eq("id",order.user_id).maybeSingle(),
+      db.from("courses").select("title").eq("id",order.course_id).maybeSingle()
+    ]);
+    const tr=document.createElement("tr");
+    const learner=document.createElement("td");learner.textContent=user.data?.full_name||order.user_id;
+    const name=document.createElement("td");name.textContent=course.data?.title||"Formation";
+    const amount=document.createElement("td");amount.textContent=Number(order.amount_usd).toLocaleString("fr-FR")+" USD / "+mkFormatFC(order.amount_fc);
+    const methodCell=document.createElement("td");methodCell.textContent=order.payment_method+(order.transaction_reference?" — "+order.transaction_reference:"");
+    const proof=document.createElement("td");
+    if(order.receipt_path){
+      const link=await db.storage.from("payment-receipts").createSignedUrl(order.receipt_path,300);
+      if(!link.error&&link.data?.signedUrl){const a=document.createElement("a");a.href=link.data.signedUrl;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Voir la capture";proof.appendChild(a);}
+      else proof.textContent="Indisponible";
+    }else proof.textContent="Aucune";
+    const status=document.createElement("td");status.textContent=statusText(order.status);
+    const actions=document.createElement("td");
+    if(order.status==="pending"){
+      const approve=document.createElement("button");approve.className="success";approve.textContent="Valider";approve.onclick=()=>mkReviewCourseOrder(order,true);
+      const reject=document.createElement("button");reject.className="danger";reject.textContent="Refuser";reject.onclick=()=>mkReviewCourseOrder(order,false);
+      actions.append(approve,reject);
+    }
+    const remove=document.createElement("button");remove.className="danger";remove.textContent="Supprimer";remove.onclick=()=>mkDeletePaymentOrder("course_orders",order,"la demande d'achat de formation");
+    actions.appendChild(remove);
+    tr.append(learner,name,amount,methodCell,proof,status,actions);rows.appendChild(tr);
+  }
 }
+
+async function mkDeletePaymentOrder(tableName,order,label){
+  if(!isAdmin||!order?.id)return;
+  if(!confirm("Supprimer définitivement "+label+" de l'historique ? L'accès déjà accordé à l'apprenant sera conservé."))return;
+  const accessTable=tableName==="chapter_orders"?"chapter_access":"course_access";
+  const {error:unlinkError}=await db.from(accessTable).update({order_id:null}).eq("order_id",order.id);
+  if(unlinkError){alert("Suppression annulée : impossible de préserver l'accès existant. "+unlinkError.message);return;}
+  const {data,error}=await db.from(tableName).delete().eq("id",order.id).select("id").maybeSingle();
+  if(error||!data){
+    alert("Impossible de supprimer cette demande : "+(error?.message||"aucune ligne supprimée. Vérifie les droits administrateur."));
+    return;
+  }
+  let receiptWarning="";
+  if(order.receipt_path){
+    const {error:storageError}=await db.storage.from("payment-receipts").remove([order.receipt_path]);
+    if(storageError)receiptWarning=" Le reçu joint n'a pas pu être supprimé du stockage : "+storageError.message;
+  }
+  alert("Demande supprimée de l'historique. L'accès déjà accordé est conservé."+receiptWarning);
+  if(tableName==="chapter_orders")await mkLoadOrders();
+  else await mkLoadCourseOrders();
+}
+
 async function mkReviewCourseOrder(order,approve){
   if(!isAdmin)return;if(!confirm(approve?"Confirmer le paiement et débloquer toute la formation ?":"Refuser cette demande ?"))return;
   if(approve){const grant=await db.from("course_access").upsert({user_id:order.user_id,course_id:order.course_id,order_id:order.id,granted_by:currentUser.id},{onConflict:"user_id,course_id"});if(grant.error){alert("Impossible de débloquer la formation : "+grant.error.message);return;}}
@@ -1959,6 +2015,12 @@ async function mkLoadOrders() {
 
       actions.append(approve, reject);
     }
+
+    const remove = document.createElement("button");
+    remove.className = "danger";
+    remove.textContent = "Supprimer";
+    remove.onclick = () => mkDeletePaymentOrder("chapter_orders", order, "la demande de paiement du chapitre");
+    actions.appendChild(remove);
 
     tr.append(learner, chapter, amount, method, reference, status, actions);
     rows.appendChild(tr);
