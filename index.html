@@ -945,7 +945,9 @@ async function mkOpenCourse(courseId) {
   mkChapterAccess = [];
   mkHasCourseAccess = false;
 
-  document.getElementById("mkReader").classList.remove("hidden");
+  const reader = document.getElementById("mkReader");
+  reader.classList.remove("hidden");
+  reader.scrollTop = 0;
   document.getElementById("mkCourseTitle").textContent = course.title;
 
   const list = document.getElementById("mkChapterList");
@@ -1052,10 +1054,17 @@ async function mkOpenChapter(chapter) {
   heading.textContent = chapter.title;
   content.appendChild(heading);
 
+  const reader = document.getElementById("mkReader");
+  const showChapterAtTop = () => {
+    if (reader) reader.scrollTo({ top: Math.max(0, content.offsetTop - 18), behavior: "smooth" });
+  };
+
   if (!unlocked) {
     mkShowPaymentForm(chapter, content);
+    showChapterAtTop();
     return;
   }
+  showChapterAtTop();
 
   const { data: lessons, error } = await db
     .from("lessons")
@@ -1338,7 +1347,7 @@ function mkShowCoursePayment(course) {
   const hint=document.createElement("p");hint.className="message";hint.textContent="Après validation, tu auras accès à tous les chapitres et à toutes les leçons de cette formation.";
   const send=document.createElement("button");send.className="gold-button full";send.textContent="Confirmer l'achat de la formation";const close=document.createElement("button");close.className="secondary full";close.style.marginTop="8px";close.textContent="Fermer";close.onclick=()=>modal.remove();
   send.onclick=async()=>{const file=receipt.files?.[0];if(!file){alert("Ajoute la capture d'écran du paiement.");return;}if(method.value==="Autre"){alert("Contacte l'administration pour obtenir les coordonnées de paiement.");return;}if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024){alert("Choisis une image JPG, PNG ou WEBP de 5 Mo maximum.");return;}send.disabled=true;send.textContent="Envoi de la demande...";const ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";const path=currentUser.id+"/"+crypto.randomUUID()+"."+ext;const up=await db.storage.from("payment-receipts").upload(path,file,{contentType:file.type,upsert:false});if(up.error){alert("Impossible d'envoyer la capture : "+up.error.message);send.disabled=false;send.textContent="Réessayer";return;}const result=await db.from("course_orders").insert({user_id:currentUser.id,course_id:course.id,amount_usd:price,amount_fc:Math.round(price*mkUsdToFc),payment_method:method.value,transaction_reference:reference.value.trim()||null,receipt_path:path,status:"pending"});if(result.error){await db.storage.from("payment-receipts").remove([path]);alert("Erreur : "+result.error.message);send.disabled=false;send.textContent="Réessayer";return;}modal.remove();alert("Ta demande d'achat de la formation complète a été envoyée. L'accès sera ouvert après vérification du paiement.");};
-  panel.append(title,courseTitle,priceBox,methodLabel,method,details,refLabel,reference,fileLabel,receipt,hint,send,close);modal.appendChild(panel);modal.addEventListener("click",e=>{if(e.target===modal)modal.remove();});document.body.appendChild(modal);
+  panel.append(title,courseTitle,priceBox,methodLabel,method,details,refLabel,reference,fileLabel,receipt,hint,send,close);modal.appendChild(panel);modal.addEventListener("click",e=>{if(e.target===modal)modal.remove();});document.body.appendChild(modal);panel.scrollTop=0;modal.scrollTop=0;title.tabIndex=-1;title.focus({preventScroll:true});
 }
 
 async function mkLoadCourseOrders(){
@@ -1491,8 +1500,11 @@ function mkShowPaymentForm(chapter, container) {
 
     container.innerHTML = "";
     const success = document.createElement("p");
-    success.textContent = "Capture envoyée avec succès. Ta demande attend maintenant la vérification de l'administration.";
+    success.textContent = "✓ Paiement envoyé ! Ta demande est bien enregistrée et attend la validation de l'administration. Tu recevras l'accès au chapitre après vérification.";
+    success.style.cssText = "padding:18px;margin:12px 0;border:1px solid #2eaa79;border-radius:14px;background:#123d30;color:#d8ffeb;font-weight:800;line-height:1.7";
     container.appendChild(success);
+    const reader = document.getElementById("mkReader");
+    if (reader) reader.scrollTo({ top: Math.max(0, container.offsetTop - 18), behavior: "smooth" });
   };
 
   container.append(info, method, paymentDetails, uploadLabel, receipt, hint, preview, note, button);
@@ -2703,7 +2715,7 @@ initialize();
           var back=document.createElement("button");back.className="secondary";back.textContent="← Retour aux formations";back.onclick=function(){reader.remove();};
           var heading=document.createElement("h2");heading.textContent=course.title;
           var list=document.createElement("div");list.textContent="Chargement des chapitres...";
-          reader.append(back,heading,list);catalogue.parentNode.insertBefore(reader,catalogue);
+          reader.append(back,heading,list);catalogue.parentNode.insertBefore(reader,catalogue);reader.scrollIntoView({behavior:"smooth",block:"start"});
           var ch=await client.from("chapters").select("id,title,is_free_intro,sort_order,price_usd").eq("course_id",course.id).order("sort_order");
           if(ch.error){list.textContent="Erreur : "+ch.error.message;return;}list.innerHTML="";
           (ch.data||[]).forEach(function(chapter){
