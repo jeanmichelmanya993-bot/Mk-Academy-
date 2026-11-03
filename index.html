@@ -2715,32 +2715,9 @@ initialize();
     } catch(err) { byId("catalogue").innerHTML="";byId("courseMessage").textContent="Catalogue : "+(err.message||"Erreur inconnue"); }
   };
 
-  if (form) form.addEventListener("submit", async function (event) {
-    if ((window.mkAuthMode || mode) === "signup") return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    var message = document.getElementById("authMessage");
-    var button = document.getElementById("submitBtn");
-    var email = document.getElementById("email").value.trim();
-    var password = document.getElementById("password").value;
-    message.textContent = "Vérification de vos identifiants...";
-    button.disabled = true;
-    try {
-      if (!window.supabase) throw new Error("Le service de connexion ne s'est pas chargé. Recharge la page.");
-      var client = window.mkDb || window.supabase.createClient(
-        "https://symnweeensaeituthxdb.supabase.co",
-        "sb_publishable_IobwmYlux9WOJHYUal_LkA_9Y2JyqcH"
-      );
-      var result = await client.auth.signInWithPassword({ email: email, password: password });
-      if (result.error) throw result.error;
-      if (typeof window.enterApp !== "function") throw new Error("Le chargement complet de MK Academy n’est pas disponible. Recharge la page.");
-      await window.enterApp(result.data.user);
-    } catch (error) {
-      message.textContent = "Connexion impossible : " + (error.message || "Erreur inconnue");
-    } finally {
-      button.disabled = false;
-    }
-  }, true);
+  // Le formulaire principal gère désormais inscription et connexion.
+  // Ne pas intercepter submit ici : ce secours de connexion forçait parfois
+  // signInWithPassword pendant une création de compte.
 })();
 </script>
 
