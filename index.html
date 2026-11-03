@@ -492,6 +492,12 @@ input[type=checkbox]{accent-color:#d4af37}
  #catalogue.course-grid-compact .card .price{font-size:14px}
 }
 
+
+/* VISIBILITÉ DU MOT DE PASSE */
+.password-field{display:flex;align-items:center;gap:8px;margin:8px 0}
+.password-field input{flex:1;min-width:0;margin:0!important;padding-right:14px}
+.password-toggle{flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--text);font-size:19px;margin:0}
+.password-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </style>
 </head>
 
@@ -524,7 +530,10 @@ input[type=checkbox]{accent-color:#d4af37}
     <div id="nameArea"><input id="fullname" placeholder="Nom complet" autocomplete="name"></div>
     <div id="referralArea" class="hidden"><input id="referralCodeInput" placeholder="Code de parrainage (facultatif)" autocomplete="off" maxlength="20"></div>
     <input id="email" type="email" placeholder="Adresse e-mail" autocomplete="email" required>
-    <input id="password" type="password" placeholder="Mot de passe" minlength="6" autocomplete="current-password" required>
+    <div class="password-field">
+     <input id="password" type="password" placeholder="Mot de passe" minlength="6" autocomplete="current-password" required>
+     <button type="button" class="password-toggle" id="passwordToggle" aria-label="Afficher le mot de passe" aria-pressed="false" onclick="togglePasswordVisibility()">👁️</button>
+    </div>
     <button type="submit" id="submitBtn" class="primary full">Créer mon compte</button>
     <button type="button" id="resendConfirmationBtn" class="secondary full" style="display:block!important;margin-top:12px;background:#fff;color:#174ea6;border:2px solid #174ea6;padding:13px;font-weight:700" onclick="mkResendConfirmation()">📩 Renvoyer l’e-mail de confirmation</button>
    </form>
@@ -2756,5 +2765,18 @@ document.addEventListener("keydown",function(event){
 });
 </script>
 
+
+<script>
+function togglePasswordVisibility(){
+ const input=document.getElementById("password");
+ const button=document.getElementById("passwordToggle");
+ if(!input||!button)return;
+ const showing=input.type==="password";
+ input.type=showing?"text":"password";
+ button.textContent=showing?"🙈":"👁️";
+ button.setAttribute("aria-label",showing?"Masquer le mot de passe":"Afficher le mot de passe");
+ button.setAttribute("aria-pressed",showing?"true":"false");
+}
+</script>
 </body>
 </html>
