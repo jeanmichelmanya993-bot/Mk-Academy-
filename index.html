@@ -1946,15 +1946,18 @@ async function mkMarkReferralPayoutPaid(id){if(!isAdmin)return;const ref=prompt(
 window.showForm = function(mode){
  currentMode=mode;
  window.mkAuthMode=mode;
+ document.getElementById("authForm").dataset.mode=mode;
  document.getElementById("authMessage").textContent="";
  document.getElementById("nameArea").classList.toggle("hidden",mode==="login");
-  document.getElementById("referralArea").classList.toggle("hidden",mode==="login");
+ document.getElementById("referralArea").classList.toggle("hidden",mode==="login");
  document.getElementById("submitBtn").textContent=mode==="signup"?"Créer mon compte":"Se connecter";
  document.getElementById("authTitle").textContent=mode==="signup"?"Créez votre compte.":"Heureux de vous revoir.";
  document.getElementById("authSubtitle").textContent=mode==="signup"?"Rejoignez MK Academy et commencez votre parcours.":"Connectez-vous pour retrouver votre espace d'apprentissage.";
  document.getElementById("signupChoice").className=mode==="signup"?"primary":"secondary";
  document.getElementById("loginChoice").className=mode==="login"?"primary":"secondary";
 };
+// L'écran affiche le formulaire d'inscription par défaut : son mode doit suivre.
+window.showForm("signup");
 
 const mkReferralFromUrl=new URLSearchParams(window.location.search).get("ref");
 if(mkReferralFromUrl){document.getElementById("referralCodeInput").value=mkReferralFromUrl.toUpperCase();window.showForm("signup");}
@@ -1966,7 +1969,8 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
  const name=document.getElementById("fullname").value.trim();
  message.textContent="Connexion en cours...";
  try{
-  if((window.mkAuthMode || currentMode || "login")==="signup"){
+  const formMode=document.getElementById("authForm").dataset.mode || window.mkAuthMode || currentMode || "login";
+  if(formMode==="signup"){
    if(!name)throw new Error("Entre ton nom complet.");
    const {data,error}=await db.auth.signUp({
     email,password,
