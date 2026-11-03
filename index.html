@@ -783,6 +783,7 @@ let mkCurrentChapter = null;
 let mkChapterAccess = [];
 let mkHasCourseAccess = false;
 let mkChapterOrders = [];
+let mkPaymentStatusTimer = null;
 let mkUsdToFc = 2850;
 
 function mkFormatFC(value) {
@@ -846,6 +847,7 @@ function mkCreateReader() {
 function mkCloseReader() {
   document.getElementById("mkReader")?.classList.add("hidden");
   document.body.style.overflow = "";
+  if (mkPaymentStatusTimer) { clearInterval(mkPaymentStatusTimer); mkPaymentStatusTimer = null; }
 }
 
 function mkBackToChapterList() {
@@ -1386,6 +1388,30 @@ async function mkReviewCourseOrder(order,approve){
   const update=await db.from("course_orders").update({status:approve?"approved":"rejected",reviewed_by:currentUser.id,reviewed_at:new Date().toISOString()}).eq("id",order.id);if(update.error){alert("Erreur : "+update.error.message);return;}alert(approve?"Formation complète débloquée.":"Demande refusée.");await mkLoadCourseOrders();
 }
 
+async function mkRefreshChapterPaymentStatus(chapter, message, button) {
+  if (!currentUser || !chapter || !message) return;
+  if (button) { button.disabled = true; button.textContent = "Vérification..."; }
+  const { data, error } = await db
+    .from("chapter_access")
+    .select("chapter_id")
+    .eq("user_id", currentUser.id)
+    .eq("chapter_id", chapter.id)
+    .maybeSingle();
+  if (button) { button.disabled = false; button.textContent = "Actualiser le statut"; }
+  if (error) {
+    message.textContent = "Demande envoyée. Impossible de vérifier le statut pour le moment. Réessaie dans quelques instants.";
+    return;
+  }
+  if (data) {
+    message.textContent = "✓ Paiement validé ! Ton chapitre est débloqué. Tu peux maintenant revenir à la liste des chapitres.";
+    message.style.borderColor = "#2eaa79";
+    message.style.background = "#123d30";
+    message.style.color = "#d8ffeb";
+    if (button) button.classList.add("hidden");
+    if (mkPaymentStatusTimer) { clearInterval(mkPaymentStatusTimer); mkPaymentStatusTimer = null; }
+  }
+}
+
 function mkShowPaymentForm(chapter, container) {
   const price = Number(chapter.price_usd || 0);
   if (price <= 0) {
@@ -1525,9 +1551,19 @@ function mkShowPaymentForm(chapter, container) {
 
     container.innerHTML = "";
     const success = document.createElement("p");
-    success.textContent = "✓ Paiement envoyé ! Ta demande est bien enregistrée et attend la validation de l'administration. Tu recevras l'accès au chapitre après vérification.";
-    success.style.cssText = "padding:18px;margin:12px 0;border:1px solid #2eaa79;border-radius:14px;background:#123d30;color:#d8ffeb;font-weight:800;line-height:1.7";
-    container.appendChild(success);
+    success.textContent = "✓ Demande envoyée. Nous vérifions ton paiement...";
+    success.style.cssText = "padding:18px;margin:12px 0;border:1px solid var(--gold);border-radius:14px;background:var(--surface2);color:var(--text);font-weight:800;line-height:1.7";
+    const refreshStatus = document.createElement("button");
+    refreshStatus.type = "button";
+    refreshStatus.className = "gold-button full";
+    refreshStatus.textContent = "Actualiser le statut";
+    refreshStatus.onclick = () => mkRefreshChapterPaymentStatus(chapter, success, refreshStatus);
+    container.append(success, refreshStatus);
+    if (mkPaymentStatusTimer) clearInterval(mkPaymentStatusTimer);
+    mkPaymentStatusTimer = setInterval(() => {
+      mkRefreshChapterPaymentStatus(chapter, success, refreshStatus);
+    }, 8000);
+    await mkRefreshChapterPaymentStatus(chapter, success, refreshStatus);
     const reader = document.getElementById("mkReader");
     if (reader) reader.scrollTo({ top: Math.max(0, container.offsetTop - 18), behavior: "smooth" });
   };
